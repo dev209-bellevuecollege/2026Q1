@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Client-Side Web Programming - Lesson 2</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f3f4f6;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+    .container {
+      background: white;
+      border-radius: 1rem;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+      max-width: 800px;
+      width: 100%;
+      padding: 3rem;
+    }
+    h1 {
+      font-size: 2.5rem;
+      color: #1f2937;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+    .subtitle {
+      color: #6b7280;
+      text-align: center;
+      margin-bottom: 3rem;
+      font-size: 1.1rem;
+    }
+    .parts-grid {
+      display: grid;
+      gap: 1.5rem;
+    }
+    .part-link {
+      display: block;
+      padding: 1.5rem;
+      background: #f9fafb;
+      border: 2px solid #e5e7eb;
+      border-radius: 0.75rem;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+    .part-link:hover {
+      border-color: #3b82f6;
+      background: #eff6ff;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .part-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 0.5rem;
+    }
+    .part-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+    .icon-cyan { background: #cffafe; }
+    .icon-orange { background: #ffedd5; }
+    .icon-purple { background: #f3e8ff; }
+    .icon-blue { background: #dbeafe; }
+    .icon-green { background: #dcfce7; }
+    .icon-amber { background: #fef3c7; }
+    .icon-pink { background: #fce7f3; }
+    .part-title {
+      font-size: 1.25rem;
+      color: #1f2937;
+      font-weight: 600;
+    }
+    .part-description {
+      color: #6b7280;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+    .duration {
+      display: inline-block;
+      background: #e5e7eb;
+      color: #4b5563;
+      padding: 0.25rem 0.75rem;
+      border-radius: 1rem;
+      font-size: 0.85rem;
+      margin-top: 0.75rem;
+    }
+    footer {
+      margin-top: 3rem;
+      padding-top: 2rem;
+      border-top: 1px solid #e5e7eb;
+      text-align: center;
+      color: #6b7280;
+      font-size: 0.9rem;
+    }
+    @media (max-width: 640px) {
+      body { padding: 1rem; }
+      .container { padding: 2rem; }
+      h1 { font-size: 2rem; }
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <header>
+      <h1>Client-Side Web Programming</h1>
+      <p class="subtitle">Lesson 2: Advanced Layouts & AI-Driven Styling</p>
+    </header>
+
+    <nav class="parts-grid">
+      <a href="part1-slides.html" class="part-link" aria-label="Part 1: Quick Review & Warm-Up">
+        <article class="part-header">
+          <div class="part-icon icon-cyan" aria-hidden="true">&#9889;</div>
+          <h2 class="part-title">Part 1: Quick Review & Warm-Up</h2>
+        </article>
+        <p class="part-description">30-second challenge! Each student answers one question to review Week 1 concepts.</p>
+        <time class="duration">10 minutes</time>
+      </a>
+
+      <a href="part2-slides.html" class="part-link" aria-label="Part 2: CSS Selectors & Specificity">
+        <article class="part-header">
+          <div class="part-icon icon-orange" aria-hidden="true">&#127919;</div>
+          <h2 class="part-title">Part 2: CSS Selectors & Specificity</h2>
+        </article>
+        <p class="part-description">Master the three basic selectors, complex selectors, and learn how specificity determines which styles win.</p>
+        <time class="duration">20 minutes</time>
+      </a>
+
+      <a href="part3-slides.html" class="part-link" aria-label="Part 3: AI Browser Debugging & Layout Land">
+        <article class="part-header">
+          <div class="part-icon icon-purple" aria-hidden="true">&#129302;</div>
+          <h2 class="part-title">Part 3: AI Browser Debugging & Layout Land</h2>
+        </article>
+        <p class="part-description">Explore Jen Simmons' Layout Labs and use AI tools to understand complex CSS layouts.</p>
+        <time class="duration">20 minutes</time>
+      </a>
+
+      <a href="part4-slides.html" class="part-link" aria-label="Part 4: Flexbox vs CSS Grid">
+        <article class="part-header">
+          <div class="part-icon icon-blue" aria-hidden="true">&#9638;</div>
+          <h2 class="part-title">Part 4: Flexbox vs CSS Grid</h2>
+        </article>
+        <p class="part-description">Learn when to use Flexbox (1D) vs CSS Grid (2D) and build responsive layouts without media queries.</p>
+        <time class="duration">30 minutes</time>
+      </a>
+
+      <a href="part5-slides.html" class="part-link" aria-label="Part 5: Responsive Design & Mobile-First">
+        <article class="part-header">
+          <div class="part-icon icon-green" aria-hidden="true">&#128241;</div>
+          <h2 class="part-title">Part 5: Responsive Design & Mobile-First</h2>
+        </article>
+        <p class="part-description">Embrace intrinsic web design, mobile-first approach, and the clamp() function for fluid layouts.</p>
+        <time class="duration">20 minutes</time>
+      </a>
+
+      <a href="part6-slides.html" class="part-link" aria-label="Part 6: Homework 2 Brief">
+        <article class="part-header">
+          <div class="part-icon icon-amber" aria-hidden="true">&#128203;</div>
+          <h2 class="part-title">Part 6: Homework 2 Brief</h2>
+        </article>
+        <p class="part-description">Build a QR Code card component and create a responsive grid layout with a 1000px breakpoint.</p>
+        <time class="duration">5 minutes</time>
+      </a>
+
+      <a href="part7-slides.html" class="part-link" aria-label="Part 7: Kahoot Quiz">
+        <article class="part-header">
+          <div class="part-icon icon-pink" aria-hidden="true">&#127918;</div>
+          <h2 class="part-title">Part 7: Kahoot Quiz</h2>
+        </article>
+        <p class="part-description">Test your knowledge with a fun, interactive quiz covering today's topics!</p>
+        <time class="duration">15 minutes</time>
+      </a>
+    </nav>
+  </main>
+
+  <footer>
+    <p>Use arrow keys or click to navigate within each presentation</p>
+  </footer>
+</body>
+</html>

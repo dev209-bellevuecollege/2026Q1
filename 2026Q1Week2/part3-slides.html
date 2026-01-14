@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Part 3: AI Browser Debugging & Layout Land</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; }
+    .slideshow { height: 100vh; display: flex; flex-direction: column; }
+    .slide-container { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+    .slide { background: white; border-radius: 1rem; box-shadow: 0 10px 40px rgba(0,0,0,0.1); width: 100%; max-width: 1000px; height: 600px; padding: 3rem; display: none; flex-direction: column; }
+    .slide.active { display: flex; }
+    .controls { background: white; border-top: 1px solid #e5e7eb; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+    .btn { padding: 0.5rem 1.5rem; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; }
+    .btn-prev, .btn-next { background: #7c3aed; color: white; }
+    .btn:disabled { background: #d1d5db; cursor: not-allowed; }
+    .dots { display: flex; gap: 0.5rem; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #d1d5db; border: none; cursor: pointer; }
+    .dot.active { background: #7c3aed; width: 20px; border-radius: 5px; }
+    .slide-title { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+    .icon { width: 50px; height: 50px; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+    .icon-purple { background: #f3e8ff; }
+    .icon-blue { background: #dbeafe; }
+    .icon-green { background: #dcfce7; }
+    h1 { font-size: 2.5rem; color: #1f2937; }
+    h2 { font-size: 1.75rem; color: #1f2937; }
+    h3 { font-size: 1.25rem; color: #374151; margin-bottom: 0.5rem; }
+    .subtitle { color: #6b7280; font-size: 1.1rem; }
+    .content { flex: 1; display: flex; flex-direction: column; gap: 1rem; }
+    .card { background: #f9fafb; border-radius: 0.75rem; padding: 1.25rem; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; flex: 1; }
+    .title-slide { align-items: center; justify-content: center; text-align: center; }
+    .title-slide .icon { width: 80px; height: 80px; font-size: 2.5rem; margin-bottom: 1.5rem; border-radius: 50%; }
+    .title-slide h1 { margin-bottom: 1rem; }
+    .title-slide .subtitle { margin-bottom: 1.5rem; font-size: 1.25rem; }
+    .badge { background: #f3e8ff; color: #7c3aed; padding: 0.5rem 1rem; border-radius: 2rem; font-size: 0.9rem; }
+    .counter { color: #6b7280; font-size: 0.9rem; }
+    .resource-box { background: linear-gradient(135deg, #f3e8ff, #ede9fe); border: 2px solid #c4b5fd; border-radius: 1rem; padding: 2rem; text-align: center; flex: 1; display: flex; flex-direction: column; justify-content: center; }
+    .resource-box h3 { color: #5b21b6; font-size: 1.75rem; margin-bottom: 1rem; }
+    .resource-url { font-family: monospace; font-size: 1.25rem; color: #7c3aed; background: white; padding: 0.75rem 1.5rem; border-radius: 0.5rem; display: inline-block; margin-bottom: 1rem; }
+    .demo-steps { display: flex; flex-direction: column; gap: 1rem; }
+    .demo-step { display: flex; align-items: flex-start; gap: 1rem; padding: 1rem; background: #f3e8ff; border-radius: 0.75rem; border-left: 4px solid #7c3aed; }
+    .step-num { background: #7c3aed; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0; }
+    .prompt-box { background: #1f2937; color: #a5f3fc; padding: 1.5rem; border-radius: 0.75rem; font-family: monospace; font-size: 0.95rem; line-height: 1.6; }
+    .prompt-label { color: #9ca3af; font-size: 0.85rem; margin-bottom: 0.5rem; display: block; }
+    .highlight-box { background: #fef3c7; border: 2px solid #fcd34d; border-radius: 0.75rem; padding: 1rem; margin-top: 1rem; }
+    .highlight-box p { color: #92400e; font-weight: 500; }
+    .list-card { border-radius: 0.75rem; padding: 1.5rem; background: #f3e8ff; border: 1px solid #c4b5fd; }
+    .list-card ul { list-style: none; }
+    .list-card li { padding: 0.5rem 0; display: flex; align-items: flex-start; gap: 0.5rem; color: #374151; font-size: 1.1rem; }
+    .check { color: #7c3aed; font-weight: bold; }
+    .learning-point { background: linear-gradient(135deg, #dcfce7, #d1fae5); border: 2px solid #86efac; border-radius: 1rem; padding: 1.5rem; }
+    .learning-point h3 { color: #166534; margin-bottom: 1rem; }
+    .learning-point ul { list-style: none; }
+    .learning-point li { padding: 0.5rem 0; color: #15803d; display: flex; align-items: flex-start; gap: 0.5rem; }
+  </style>
+</head>
+<body>
+  <main class="slideshow">
+    <div class="slide-container">
+      <!-- Slide 1: Title -->
+      <section class="slide active title-slide">
+        <div class="icon icon-purple">&#129302;</div>
+        <h1>Part 3: AI Browser Debugging & Layout Land</h1>
+        <p class="subtitle">Using AI to Understand Complex Layouts</p>
+        <span class="badge">20 Minutes</span>
+      </section>
+
+      <!-- Slide 2: The Resource -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-purple">&#127912;</div>
+          <div><h2>The Resource: Jen Simmons' Labs</h2><p class="subtitle">A Playground for Modern CSS</p></div>
+        </header>
+        <div class="resource-box">
+          <h3>&#128640; Experimental Layout Lab</h3>
+          <div class="resource-url">labs.jensimmons.com</div>
+          <p style="color: #5b21b6; font-size: 1.1rem; max-width: 600px; margin: 0 auto;">
+            Jen Simmons is a designer advocate at Apple who creates stunning examples of what's possible with modern CSS Grid and layout techniques.
+          </p>
+        </div>
+        <div class="highlight-box">
+          <p>&#128161; These examples show layouts that were impossible just a few years ago!</p>
+        </div>
+      </section>
+
+      <!-- Slide 3: AI Demo Setup -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-blue">&#128270;</div>
+          <div><h2>AI Demo: Explain This Element</h2><p class="subtitle">Let AI Be Your CSS Tutor</p></div>
+        </header>
+        <div class="content">
+          <div class="demo-steps">
+            <div class="demo-step">
+              <div class="step-num">1</div>
+              <div>
+                <h3>Open Jen Simmons' Lab</h3>
+                <p style="color: #6b7280;">Navigate to labs.jensimmons.com and pick a complex layout example</p>
+              </div>
+            </div>
+            <div class="demo-step">
+              <div class="step-num">2</div>
+              <div>
+                <h3>Right-Click a Complex Element</h3>
+                <p style="color: #6b7280;">Find an element that looks interesting or confusing</p>
+              </div>
+            </div>
+            <div class="demo-step">
+              <div class="step-num">3</div>
+              <div>
+                <h3>Use "Explain This Element"</h3>
+                <p style="color: #6b7280;">Chrome's AI feature (or copy the CSS to ChatGPT/Claude)</p>
+              </div>
+            </div>
+            <div class="demo-step">
+              <div class="step-num">4</div>
+              <div>
+                <h3>Learn from the Explanation</h3>
+                <p style="color: #6b7280;">Understand why the layout works the way it does</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 4: The Learning Point -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-green">&#128218;</div>
+          <div><h2>The Learning Point</h2><p class="subtitle">What AI Can Reveal About Layouts</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="learning-point">
+            <h3>&#129504; AI Can Help You Understand:</h3>
+            <ul style="font-size: 1.15rem;">
+              <li>&#10003; How <code style="background: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem;">grid-template-areas</code> creates named layout regions</li>
+              <li>&#10003; Why certain items overlap or span multiple cells</li>
+              <li>&#10003; The relationship between parent grid and child positioning</li>
+              <li>&#10003; How <code style="background: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem;">writing-mode</code> creates art-direction layouts</li>
+              <li>&#10003; The cascade of styles that produces the final result</li>
+            </ul>
+          </div>
+          <div class="highlight-box">
+            <p>&#128161; AI is like having a patient CSS expert who can explain any code you show it!</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 5: Practical AI Constraint -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-purple">&#128172;</div>
+          <div><h2>Practical AI Constraint</h2><p class="subtitle">A Well-Crafted Prompt for Learning</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="prompt-box">
+            <span class="prompt-label">Example Prompt:</span>
+            "Look at this element from Jen Simmons' lab. Explain the relationship between the parent <strong>display: grid</strong> and this specific child's <strong>grid-column span</strong>. Why does it overlap the other items?"
+          </div>
+          <div class="grid-2" style="margin-top: 1.5rem; flex: none;">
+            <div class="card">
+              <h3>&#10003; What makes this prompt good:</h3>
+              <ul style="list-style: none; color: #6b7280; font-size: 0.95rem;">
+                <li>&#8226; Provides context (Jen Simmons' lab)</li>
+                <li>&#8226; Asks about specific properties</li>
+                <li>&#8226; Asks "why" not just "what"</li>
+              </ul>
+            </div>
+            <div class="card">
+              <h3>&#128161; Try adding:</h3>
+              <ul style="list-style: none; color: #6b7280; font-size: 0.95rem;">
+                <li>&#8226; The actual CSS code</li>
+                <li>&#8226; Screenshots of the result</li>
+                <li>&#8226; What you expected vs. actual</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 6: Summary -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-purple">&#10004;</div>
+          <div><h2>Part 3 Complete!</h2><p class="subtitle">AI-Assisted Learning</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="list-card">
+            <ul style="font-size: 1.2rem;">
+              <li><span class="check">&#10003;</span> Discovered Jen Simmons' Layout Labs as a learning resource</li>
+              <li><span class="check">&#10003;</span> Learned to use AI to explain complex CSS</li>
+              <li><span class="check">&#10003;</span> Practiced writing effective prompts for layout questions</li>
+              <li><span class="check">&#10003;</span> Understanding the "why" behind modern layouts</li>
+            </ul>
+          </div>
+          <p style="text-align: center; color: #7c3aed; font-size: 1.25rem; margin-top: 1.5rem; font-weight: 500;">Next up: Part 4 — Flexbox vs CSS Grid &#8594;</p>
+        </div>
+      </section>
+    </div>
+
+    <nav class="controls">
+      <button class="btn btn-prev" onclick="prevSlide()">&#8592; Previous</button>
+      <div class="dots" id="dots"></div>
+      <div style="display:flex;align-items:center;gap:1rem">
+        <span class="counter" id="counter">1 / 6</span>
+        <button class="btn btn-next" onclick="nextSlide()">Next &#8594;</button>
+      </div>
+    </nav>
+  </main>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const dotsContainer = document.getElementById('dots');
+    const counter = document.getElementById('counter');
+    let current = 0;
+    slides.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.className = 'dot' + (i === 0 ? ' active' : '');
+      dot.onclick = () => goToSlide(i);
+      dotsContainer.appendChild(dot);
+    });
+    function updateSlide() {
+      slides.forEach((s, i) => s.classList.toggle('active', i === current));
+      document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
+      counter.textContent = `${current + 1} / ${slides.length}`;
+      document.querySelector('.btn-prev').disabled = current === 0;
+      document.querySelector('.btn-next').disabled = current === slides.length - 1;
+    }
+    function nextSlide() { if (current < slides.length - 1) { current++; updateSlide(); } }
+    function prevSlide() { if (current > 0) { current--; updateSlide(); } }
+    function goToSlide(i) { current = i; updateSlide(); }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+      if (e.key === 'ArrowLeft') prevSlide();
+    });
+  </script>
+</body>
+</html>

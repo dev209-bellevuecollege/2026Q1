@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Part 2: CSS Selectors & Specificity</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; }
+    .slideshow { height: 100vh; display: flex; flex-direction: column; }
+    .slide-container { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+    .slide { background: white; border-radius: 1rem; box-shadow: 0 10px 40px rgba(0,0,0,0.1); width: 100%; max-width: 1000px; height: 600px; padding: 3rem; display: none; flex-direction: column; }
+    .slide.active { display: flex; }
+    .controls { background: white; border-top: 1px solid #e5e7eb; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+    .btn { padding: 0.5rem 1.5rem; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; }
+    .btn-prev, .btn-next { background: #f97316; color: white; }
+    .btn:disabled { background: #d1d5db; cursor: not-allowed; }
+    .dots { display: flex; gap: 0.5rem; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #d1d5db; border: none; cursor: pointer; }
+    .dot.active { background: #f97316; width: 20px; border-radius: 5px; }
+    .slide-title { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+    .icon { width: 50px; height: 50px; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+    .icon-orange { background: #ffedd5; }
+    .icon-blue { background: #dbeafe; }
+    .icon-green { background: #dcfce7; }
+    .icon-purple { background: #f3e8ff; }
+    .icon-amber { background: #fef3c7; }
+    h1 { font-size: 2.5rem; color: #1f2937; }
+    h2 { font-size: 1.75rem; color: #1f2937; }
+    h3 { font-size: 1.25rem; color: #374151; margin-bottom: 0.5rem; }
+    .subtitle { color: #6b7280; font-size: 1.1rem; }
+    .content { flex: 1; display: flex; flex-direction: column; gap: 1rem; }
+    .card { background: #f9fafb; border-radius: 0.75rem; padding: 1.25rem; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; flex: 1; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; flex: 1; }
+    .title-slide { align-items: center; justify-content: center; text-align: center; }
+    .title-slide .icon { width: 80px; height: 80px; font-size: 2.5rem; margin-bottom: 1.5rem; border-radius: 50%; }
+    .title-slide h1 { margin-bottom: 1rem; }
+    .title-slide .subtitle { margin-bottom: 1.5rem; font-size: 1.25rem; }
+    .badge { background: #ffedd5; color: #ea580c; padding: 0.5rem 1rem; border-radius: 2rem; font-size: 0.9rem; }
+    .counter { color: #6b7280; font-size: 0.9rem; }
+    .code-block { background: #1f2937; color: #fbbf24; padding: 1rem 1.25rem; border-radius: 0.5rem; font-family: 'SF Mono', Monaco, 'Courier New', monospace; font-size: 1.1rem; margin-top: 0.75rem; }
+    .code-comment { color: #9ca3af; font-size: 0.9rem; }
+    .selector-card { background: linear-gradient(135deg, #fff7ed, #ffedd5); border: 2px solid #fed7aa; border-radius: 1rem; padding: 1.5rem; text-align: center; }
+    .selector-card h3 { color: #c2410c; font-size: 1.5rem; margin-bottom: 0.5rem; }
+    .selector-card .syntax { font-family: monospace; font-size: 1.25rem; color: #ea580c; background: white; padding: 0.5rem 1rem; border-radius: 0.5rem; display: inline-block; margin: 0.75rem 0; }
+    .selector-card p { color: #9a3412; }
+    .highlight-box { background: #fef3c7; border: 2px solid #fcd34d; border-radius: 0.75rem; padding: 1rem; margin-top: 1rem; }
+    .highlight-box p { color: #92400e; font-weight: 500; }
+    .specificity-box { display: flex; align-items: center; justify-content: center; gap: 0.5rem; font-family: monospace; font-size: 1.5rem; padding: 1rem; background: #f9fafb; border-radius: 0.5rem; margin-top: 0.5rem; }
+    .spec-id { background: #fee2e2; color: #dc2626; padding: 0.5rem 1rem; border-radius: 0.25rem; }
+    .spec-class { background: #dbeafe; color: #2563eb; padding: 0.5rem 1rem; border-radius: 0.25rem; }
+    .spec-type { background: #dcfce7; color: #16a34a; padding: 0.5rem 1rem; border-radius: 0.25rem; }
+    .example-row { display: flex; align-items: center; gap: 1rem; padding: 0.75rem; background: #f9fafb; border-radius: 0.5rem; margin-bottom: 0.5rem; }
+    .example-selector { font-family: monospace; font-size: 1.1rem; color: #ea580c; min-width: 250px; }
+    .example-score { font-family: monospace; font-size: 1rem; }
+    .list-card { border-radius: 0.75rem; padding: 1.5rem; background: #fff7ed; border: 1px solid #fed7aa; }
+    .list-card ul { list-style: none; }
+    .list-card li { padding: 0.5rem 0; display: flex; align-items: flex-start; gap: 0.5rem; color: #374151; font-size: 1.1rem; }
+    .check { color: #f97316; font-weight: bold; }
+    .tool-demo { background: linear-gradient(135deg, #f9fafb, #f3f4f6); border: 2px dashed #d1d5db; border-radius: 1rem; padding: 2rem; text-align: center; flex: 1; display: flex; flex-direction: column; justify-content: center; }
+    .summary-table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+    .summary-table th { background: #ffedd5; color: #c2410c; padding: 0.75rem; text-align: left; }
+    .summary-table td { padding: 0.75rem; border-bottom: 1px solid #e5e7eb; }
+    .summary-table code { background: #f3f4f6; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <main class="slideshow">
+    <div class="slide-container">
+      <!-- Slide 1: Title -->
+      <section class="slide active title-slide">
+        <div class="icon icon-orange">&#127919;</div>
+        <h1>Part 2: CSS Selectors & Specificity</h1>
+        <p class="subtitle">Targeting Elements with Precision</p>
+        <span class="badge">20 Minutes</span>
+      </section>
+
+      <!-- Slide 2: The 3 Basic Selectors Overview -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-orange">&#128218;</div>
+          <div><h2>The 3 Basic Selectors</h2><p class="subtitle">The Foundation of CSS Targeting</p></div>
+        </header>
+        <div class="grid-3">
+          <article class="selector-card">
+            <h3>Type</h3>
+            <div class="syntax">p { }</div>
+            <p>Select by tag name</p>
+          </article>
+          <article class="selector-card">
+            <h3>Class</h3>
+            <div class="syntax">.name { }</div>
+            <p>Select by class attribute</p>
+          </article>
+          <article class="selector-card">
+            <h3>ID</h3>
+            <div class="syntax">#name { }</div>
+            <p>Select unique element</p>
+          </article>
+        </div>
+        <div class="highlight-box">
+          <p>&#128161; These three selectors are the building blocks of all CSS styling!</p>
+        </div>
+      </section>
+
+      <!-- Slide 3: Type Selector -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-orange">&#128196;</div>
+          <div><h2>Type Selector</h2><p class="subtitle">Select by HTML Tag Name</p></div>
+        </header>
+        <div class="content">
+          <div class="card">
+            <h3>What it does</h3>
+            <p style="color: #6b7280; font-size: 1.1rem;">Selects <strong>all elements</strong> with the specified tag name</p>
+          </div>
+          <div class="card">
+            <h3>Syntax</h3>
+            <div class="code-block">elementname { property: value; }</div>
+          </div>
+          <div class="card">
+            <h3>Example</h3>
+            <div class="code-block">
+              p { color: purple; }<br>
+              <span class="code-comment">/* All paragraphs will be purple */</span>
+            </div>
+          </div>
+          <div class="highlight-box">
+            <p>&#128161; Type selectors are broad — they affect every matching element on the page!</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 4: Class Selector -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-blue">&#128309;</div>
+          <div><h2>Class Selector</h2><p class="subtitle">Select by Class Attribute</p></div>
+        </header>
+        <div class="content">
+          <div class="card">
+            <h3>What it does</h3>
+            <p style="color: #6b7280; font-size: 1.1rem;">Selects all elements with a specific <strong>class</strong> attribute. Multiple elements can share the same class.</p>
+          </div>
+          <div class="card">
+            <h3>Syntax</h3>
+            <div class="code-block">.classname { property: value; }</div>
+          </div>
+          <div class="card">
+            <h3>Example</h3>
+            <div class="code-block">
+              .highlighted { background-color: yellow; }<br>
+              <span class="code-comment">/* &lt;p class="highlighted"&gt; gets yellow background */</span>
+            </div>
+          </div>
+          <div class="highlight-box">
+            <p>&#128161; Classes are reusable — the most common way to style elements!</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 5: ID Selector -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-purple">&#128308;</div>
+          <div><h2>ID Selector</h2><p class="subtitle">Select a Unique Element</p></div>
+        </header>
+        <div class="content">
+          <div class="card">
+            <h3>What it does</h3>
+            <p style="color: #6b7280; font-size: 1.1rem;">Selects a <strong>single unique element</strong> by its ID. Each ID should only appear once per page.</p>
+          </div>
+          <div class="card">
+            <h3>Syntax</h3>
+            <div class="code-block">#idname { property: value; }</div>
+          </div>
+          <div class="card">
+            <h3>Example</h3>
+            <div class="code-block">
+              #sidebar { background-color: lightgray; }<br>
+              <span class="code-comment">/* &lt;aside id="sidebar"&gt; gets gray background */</span>
+            </div>
+          </div>
+          <div class="highlight-box">
+            <p>&#9888;&#65039; IDs are less flexible than classes — use sparingly for unique elements only!</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 6: Complex Selectors Overview -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-orange">&#128295;</div>
+          <div><h2>Complex Selectors</h2><p class="subtitle">Combining Selectors for Precision</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="grid-2" style="flex: none;">
+            <article class="card" style="text-align: center; padding: 1.5rem;">
+              <div style="font-size: 2rem; margin-bottom: 0.5rem;">&#128279;</div>
+              <h3>Grouping</h3>
+              <p style="color: #6b7280;">Apply one rule to multiple selectors</p>
+              <code style="display: block; margin-top: 0.5rem; color: #ea580c;">h1, h2, h3 { }</code>
+            </article>
+            <article class="card" style="text-align: center; padding: 1.5rem;">
+              <div style="font-size: 2rem; margin-bottom: 0.5rem;">&#128178;</div>
+              <h3>Compound</h3>
+              <p style="color: #6b7280;">Combine for more specificity</p>
+              <code style="display: block; margin-top: 0.5rem; color: #ea580c;">p.alert { }</code>
+            </article>
+            <article class="card" style="text-align: center; padding: 1.5rem;">
+              <div style="font-size: 2rem; margin-bottom: 0.5rem;">&#128722;</div>
+              <h3>Descendant</h3>
+              <p style="color: #6b7280;">Select nested elements</p>
+              <code style="display: block; margin-top: 0.5rem; color: #ea580c;">header p { }</code>
+            </article>
+            <article class="card" style="text-align: center; padding: 1.5rem;">
+              <div style="font-size: 2rem; margin-bottom: 0.5rem;">&#128073;</div>
+              <h3>Pseudo-class</h3>
+              <p style="color: #6b7280;">Select by state or position</p>
+              <code style="display: block; margin-top: 0.5rem; color: #ea580c;">a:hover { }</code>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 7: Grouping Selector -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-orange">&#128279;</div>
+          <div><h2>Grouping Selector</h2><p class="subtitle">One Rule, Multiple Targets</p></div>
+        </header>
+        <div class="content">
+          <div class="card">
+            <h3>What it does</h3>
+            <p style="color: #6b7280; font-size: 1.1rem;">Applies the <strong>same styles</strong> to multiple selectors using commas</p>
+          </div>
+          <div class="card">
+            <h3>Syntax</h3>
+            <div class="code-block">selector1, selector2, selector3 { property: value; }</div>
+          </div>
+          <div class="card">
+            <h3>Example</h3>
+            <div class="code-block">
+              h1, h2, h3 { font-family: Helvetica; }<br>
+              <span class="code-comment">/* All three heading levels get the same font */</span>
+            </div>
+          </div>
+          <div class="highlight-box">
+            <p>&#128161; DRY Principle: Don't Repeat Yourself — group similar styles together!</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 8: Compound Selector -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-orange">&#128178;</div>
+          <div><h2>Compound Selector</h2><p class="subtitle">Combining for Greater Specificity</p></div>
+        </header>
+        <div class="content">
+          <div class="card">
+            <h3>What it does</h3>
+            <p style="color: #6b7280; font-size: 1.1rem;">Combines selectors <strong>without spaces</strong> — element must match ALL parts</p>
+          </div>
+          <div class="card">
+            <h3>Syntax</h3>
+            <div class="code-block">element.class { } &nbsp;&nbsp;or&nbsp;&nbsp; .class1.class2 { }</div>
+          </div>
+          <div class="card">
+            <h3>Example</h3>
+            <div class="code-block">
+              p.alert { color: red; }<br>
+              <span class="code-comment">/* Only &lt;p&gt; elements with class "alert" — not &lt;div class="alert"&gt; */</span>
+            </div>
+          </div>
+          <div class="highlight-box">
+            <p>&#128161; No space = AND logic. The element must be a &lt;p&gt; AND have class "alert"</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 9: Descendant Selector -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-orange">&#128722;</div>
+          <div><h2>Descendant Selector</h2><p class="subtitle">Targeting Nested Elements</p></div>
+        </header>
+        <div class="content">
+          <div class="card">
+            <h3>What it does</h3>
+            <p style="color: #6b7280; font-size: 1.1rem;">Selects elements <strong>nested inside</strong> other elements using a space</p>
+          </div>
+          <div class="grid-2" style="flex: none;">
+            <div class="card">
+              <h3>Descendant (space)</h3>
+              <div class="code-block">
+                header p { color: blue; }<br>
+                <span class="code-comment">/* Any &lt;p&gt; inside &lt;header&gt; */</span>
+              </div>
+            </div>
+            <div class="card">
+              <h3>Child (&gt;)</h3>
+              <div class="code-block">
+                body &gt; p { color: red; }<br>
+                <span class="code-comment">/* Only direct children */</span>
+              </div>
+            </div>
+          </div>
+          <div class="highlight-box">
+            <p>&#128161; Space = any descendant. &gt; = direct child only (one level deep)</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 10: Pseudo-classes -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-orange">&#128073;</div>
+          <div><h2>Pseudo-classes</h2><p class="subtitle">Select by State or Position</p></div>
+        </header>
+        <div class="content">
+          <div class="card">
+            <h3>What it does</h3>
+            <p style="color: #6b7280; font-size: 1.1rem;">Selects elements based on their <strong>state</strong> or <strong>position</strong> in the DOM</p>
+          </div>
+          <div class="grid-2" style="flex: none;">
+            <div class="card">
+              <h3>State-based</h3>
+              <div class="code-block" style="font-size: 0.95rem;">
+                a:hover { color: red; }<br>
+                input:focus { border: blue; }<br>
+                button:active { scale: 0.95; }
+              </div>
+            </div>
+            <div class="card">
+              <h3>Position-based</h3>
+              <div class="code-block" style="font-size: 0.95rem;">
+                li:first-of-type { ... }<br>
+                li:last-child { ... }<br>
+                li:nth-of-type(even) { ... }
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <h3>Example</h3>
+            <div class="code-block">
+              li:nth-of-type(even) { background-color: #eee; }<br>
+              <span class="code-comment">/* Zebra stripes on even list items */</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 11: Selector Specificity -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-amber">&#9878;</div>
+          <div><h2>Selector Specificity</h2><p class="subtitle">How the Browser Decides Which Rule Wins</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="card" style="text-align: center; padding: 2rem;">
+            <h3 style="font-size: 1.5rem; margin-bottom: 1rem;">The Specificity Hierarchy</h3>
+            <div class="specificity-box" style="font-size: 2rem; gap: 1rem;">
+              <span class="spec-id">ID</span>
+              <span style="color: #9ca3af;">&gt;</span>
+              <span class="spec-class">Class</span>
+              <span style="color: #9ca3af;">&gt;</span>
+              <span class="spec-type">Type</span>
+            </div>
+            <p style="color: #6b7280; margin-top: 1.5rem; font-size: 1.1rem;">
+              When multiple rules target the same element, <strong>higher specificity wins</strong>
+            </p>
+          </div>
+          <div class="highlight-box">
+            <p>&#128161; Think of it like a scoring system: ID = 100 points, Class = 10 points, Type = 1 point</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 12: Specificity Calculation -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-amber">&#129518;</div>
+          <div><h2>Specificity Calculation</h2><p class="subtitle">Counting (ID, Class, Type)</p></div>
+        </header>
+        <div class="content">
+          <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+            <div style="flex: 1; text-align: center; padding: 0.75rem; background: #fee2e2; border-radius: 0.5rem;">
+              <strong style="color: #dc2626;">ID</strong><br><span style="font-size: 0.9rem; color: #6b7280;">1st position</span>
+            </div>
+            <div style="flex: 1; text-align: center; padding: 0.75rem; background: #dbeafe; border-radius: 0.5rem;">
+              <strong style="color: #2563eb;">Class / Pseudo</strong><br><span style="font-size: 0.9rem; color: #6b7280;">2nd position</span>
+            </div>
+            <div style="flex: 1; text-align: center; padding: 0.75rem; background: #dcfce7; border-radius: 0.5rem;">
+              <strong style="color: #16a34a;">Type</strong><br><span style="font-size: 0.9rem; color: #6b7280;">3rd position</span>
+            </div>
+          </div>
+          <div class="example-row">
+            <span class="example-selector">p</span>
+            <span class="example-score">= (<span class="spec-id">0</span>, <span class="spec-class">0</span>, <span class="spec-type">1</span>)</span>
+          </div>
+          <div class="example-row">
+            <span class="example-selector">.highlighted</span>
+            <span class="example-score">= (<span class="spec-id">0</span>, <span class="spec-class">1</span>, <span class="spec-type">0</span>)</span>
+          </div>
+          <div class="example-row">
+            <span class="example-selector">p.alert</span>
+            <span class="example-score">= (<span class="spec-id">0</span>, <span class="spec-class">1</span>, <span class="spec-type">1</span>)</span>
+          </div>
+          <div class="example-row">
+            <span class="example-selector">#sidebar a</span>
+            <span class="example-score">= (<span class="spec-id">1</span>, <span class="spec-class">0</span>, <span class="spec-type">1</span>)</span>
+          </div>
+          <div class="example-row" style="background: #fef3c7; border: 2px solid #fcd34d;">
+            <span class="example-selector">div.alert.success strong</span>
+            <span class="example-score">= (<span class="spec-id">0</span>, <span class="spec-class">2</span>, <span class="spec-type">2</span>)</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 13: Specificity in VS Code -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-blue">&#128187;</div>
+          <div><h2>Specificity in VS Code</h2><p class="subtitle">See the Score Before You Save</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="tool-demo">
+            <h3 style="color: #1f2937; font-size: 1.5rem; margin-bottom: 1rem;">&#128065; Hover Tooltip Demo</h3>
+            <p style="color: #6b7280; font-size: 1.1rem; margin-bottom: 1.5rem;">
+              In VS Code, hover over any CSS selector to see its specificity score
+            </p>
+            <div style="background: #1f2937; color: #e5e7eb; padding: 1.5rem 2rem; border-radius: 0.5rem; display: inline-block; text-align: left; font-family: monospace;">
+              <span style="color: #fbbf24;">.card</span> <span style="color: #9ca3af;">{</span><br>
+              &nbsp;&nbsp;<span style="color: #a5f3fc;">padding</span>: <span style="color: #86efac;">1rem</span>;<br>
+              <span style="color: #9ca3af;">}</span>
+              <div style="background: #374151; margin-top: 1rem; padding: 0.75rem; border-radius: 0.25rem; font-size: 0.9rem;">
+                Selector Specificity: (0, 1, 0)
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 14: Specificity in Chrome DevTools -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-green">&#128270;</div>
+          <div><h2>Specificity in Chrome DevTools</h2><p class="subtitle">Debugging Why Styles Are Overridden</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="tool-demo">
+            <h3 style="color: #1f2937; font-size: 1.5rem; margin-bottom: 1rem;">&#128269; The Strikethrough Tells the Story</h3>
+            <p style="color: #6b7280; font-size: 1.1rem; margin-bottom: 1.5rem;">
+              In DevTools Styles pane, overridden properties show as <s>strikethrough</s>
+            </p>
+            <div style="background: white; border: 1px solid #e5e7eb; padding: 1.5rem; border-radius: 0.5rem; text-align: left; max-width: 400px; margin: 0 auto;">
+              <div style="font-size: 0.85rem; color: #6b7280; margin-bottom: 0.5rem;">element.style { }</div>
+              <div style="font-size: 0.85rem; margin-bottom: 0.75rem;">
+                <span style="color: #7c3aed;">#sidebar</span> {<br>
+                &nbsp;&nbsp;background: <span style="color: #16a34a;">lightgray</span>; &#10004;<br>
+                }
+              </div>
+              <div style="font-size: 0.85rem; color: #9ca3af;">
+                <span style="color: #6b7280;">.container</span> {<br>
+                &nbsp;&nbsp;<s>background: white;</s><br>
+                }
+              </div>
+            </div>
+            <p style="color: #6b7280; margin-top: 1rem; font-size: 0.95rem;">ID selector wins over class selector!</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 15: Summary -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-orange">&#10004;</div>
+          <div><h2>Part 2 Complete!</h2><p class="subtitle">CSS Selectors Quick Reference</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <table class="summary-table">
+            <thead>
+              <tr>
+                <th>Selector</th>
+                <th>Syntax</th>
+                <th>Example</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Type</td><td><code>element</code></td><td><code>p { }</code></td></tr>
+              <tr><td>Class</td><td><code>.classname</code></td><td><code>.alert { }</code></td></tr>
+              <tr><td>ID</td><td><code>#idname</code></td><td><code>#sidebar { }</code></td></tr>
+              <tr><td>Grouping</td><td><code>sel1, sel2</code></td><td><code>h1, h2 { }</code></td></tr>
+              <tr><td>Compound</td><td><code>element.class</code></td><td><code>p.alert { }</code></td></tr>
+              <tr><td>Descendant</td><td><code>parent child</code></td><td><code>nav a { }</code></td></tr>
+              <tr><td>Pseudo-class</td><td><code>:state</code></td><td><code>a:hover { }</code></td></tr>
+            </tbody>
+          </table>
+          <p style="text-align: center; color: #ea580c; font-size: 1.25rem; margin-top: 1.5rem; font-weight: 500;">Next up: Part 3 — AI Browser Debugging & Layout Land &#8594;</p>
+        </div>
+      </section>
+    </div>
+
+    <nav class="controls">
+      <button class="btn btn-prev" onclick="prevSlide()">&#8592; Previous</button>
+      <div class="dots" id="dots"></div>
+      <div style="display:flex;align-items:center;gap:1rem">
+        <span class="counter" id="counter">1 / 15</span>
+        <button class="btn btn-next" onclick="nextSlide()">Next &#8594;</button>
+      </div>
+    </nav>
+  </main>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const dotsContainer = document.getElementById('dots');
+    const counter = document.getElementById('counter');
+    let current = 0;
+    slides.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.className = 'dot' + (i === 0 ? ' active' : '');
+      dot.onclick = () => goToSlide(i);
+      dotsContainer.appendChild(dot);
+    });
+    function updateSlide() {
+      slides.forEach((s, i) => s.classList.toggle('active', i === current));
+      document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
+      counter.textContent = `${current + 1} / ${slides.length}`;
+      document.querySelector('.btn-prev').disabled = current === 0;
+      document.querySelector('.btn-next').disabled = current === slides.length - 1;
+    }
+    function nextSlide() { if (current < slides.length - 1) { current++; updateSlide(); } }
+    function prevSlide() { if (current > 0) { current--; updateSlide(); } }
+    function goToSlide(i) { current = i; updateSlide(); }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+      if (e.key === 'ArrowLeft') prevSlide();
+    });
+  </script>
+</body>
+</html>

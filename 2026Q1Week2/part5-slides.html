@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Part 5: Responsive Design & Mobile-First</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; }
+    .slideshow { height: 100vh; display: flex; flex-direction: column; }
+    .slide-container { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+    .slide { background: white; border-radius: 1rem; box-shadow: 0 10px 40px rgba(0,0,0,0.1); width: 100%; max-width: 1000px; height: 600px; padding: 3rem; display: none; flex-direction: column; }
+    .slide.active { display: flex; }
+    .controls { background: white; border-top: 1px solid #e5e7eb; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+    .btn { padding: 0.5rem 1.5rem; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; }
+    .btn-prev, .btn-next { background: #16a34a; color: white; }
+    .btn:disabled { background: #d1d5db; cursor: not-allowed; }
+    .dots { display: flex; gap: 0.5rem; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #d1d5db; border: none; cursor: pointer; }
+    .dot.active { background: #16a34a; width: 20px; border-radius: 5px; }
+    .slide-title { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+    .icon { width: 50px; height: 50px; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+    .icon-green { background: #dcfce7; }
+    .icon-blue { background: #dbeafe; }
+    .icon-purple { background: #f3e8ff; }
+    .icon-amber { background: #fef3c7; }
+    h1 { font-size: 2.5rem; color: #1f2937; }
+    h2 { font-size: 1.75rem; color: #1f2937; }
+    h3 { font-size: 1.25rem; color: #374151; margin-bottom: 0.5rem; }
+    .subtitle { color: #6b7280; font-size: 1.1rem; }
+    .content { flex: 1; display: flex; flex-direction: column; gap: 1rem; }
+    .card { background: #f9fafb; border-radius: 0.75rem; padding: 1.25rem; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; flex: 1; }
+    .title-slide { align-items: center; justify-content: center; text-align: center; }
+    .title-slide .icon { width: 80px; height: 80px; font-size: 2.5rem; margin-bottom: 1.5rem; border-radius: 50%; }
+    .title-slide h1 { margin-bottom: 1rem; }
+    .title-slide .subtitle { margin-bottom: 1.5rem; font-size: 1.25rem; }
+    .badge { background: #dcfce7; color: #16a34a; padding: 0.5rem 1rem; border-radius: 2rem; font-size: 0.9rem; }
+    .counter { color: #6b7280; font-size: 0.9rem; }
+    .concept-box { background: linear-gradient(135deg, #dcfce7, #d1fae5); border: 2px solid #86efac; border-radius: 1rem; padding: 2rem; text-align: center; flex: 1; display: flex; flex-direction: column; justify-content: center; }
+    .concept-box h3 { color: #166534; font-size: 1.75rem; margin-bottom: 1rem; }
+    .concept-box p { color: #15803d; font-size: 1.15rem; max-width: 700px; margin: 0 auto; line-height: 1.6; }
+    .quote-box { background: #f0fdf4; border-left: 4px solid #16a34a; padding: 1.5rem; border-radius: 0 0.75rem 0.75rem 0; margin-top: 1rem; }
+    .quote-box p { color: #166534; font-style: italic; font-size: 1.1rem; }
+    .quote-box cite { color: #15803d; font-size: 0.95rem; display: block; margin-top: 0.5rem; }
+    .approach-card { border-radius: 1rem; padding: 1.5rem; flex: 1; }
+    .mobile-first { background: linear-gradient(135deg, #dcfce7, #d1fae5); border: 2px solid #86efac; }
+    .mobile-first h3 { color: #166534; }
+    .desktop-first { background: linear-gradient(135deg, #fee2e2, #fecaca); border: 2px solid #f87171; }
+    .desktop-first h3 { color: #b91c1c; }
+    .device-visual { display: flex; justify-content: center; align-items: flex-end; gap: 1rem; margin-top: 1rem; padding: 1rem; background: rgba(255,255,255,0.5); border-radius: 0.5rem; }
+    .device { background: #374151; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.75rem; }
+    .device-mobile { width: 40px; height: 70px; }
+    .device-tablet { width: 70px; height: 90px; }
+    .device-desktop { width: 120px; height: 80px; }
+    .arrow-right { color: #16a34a; font-size: 1.5rem; }
+    .code-block { background: #1f2937; color: #86efac; padding: 1rem 1.25rem; border-radius: 0.5rem; font-family: 'SF Mono', Monaco, 'Courier New', monospace; font-size: 0.95rem; line-height: 1.5; }
+    .code-comment { color: #9ca3af; }
+    .breakpoint-box { background: #fef3c7; border: 2px solid #fcd34d; border-radius: 1rem; padding: 2rem; text-align: center; }
+    .breakpoint-value { font-size: 4rem; font-weight: bold; color: #b45309; }
+    .breakpoint-label { color: #92400e; font-size: 1.25rem; margin-top: 0.5rem; }
+    .clamp-visual { display: flex; align-items: center; justify-content: center; gap: 0.5rem; font-family: monospace; font-size: 1.25rem; padding: 1.5rem; background: #f0fdf4; border-radius: 0.5rem; margin-top: 1rem; }
+    .clamp-part { padding: 0.75rem 1rem; border-radius: 0.5rem; }
+    .clamp-min { background: #fee2e2; color: #dc2626; }
+    .clamp-preferred { background: #dbeafe; color: #2563eb; }
+    .clamp-max { background: #dcfce7; color: #16a34a; }
+    .highlight-box { background: #fef3c7; border: 2px solid #fcd34d; border-radius: 0.75rem; padding: 1rem; margin-top: 1rem; }
+    .highlight-box p { color: #92400e; font-weight: 500; }
+    .prompt-box { background: #1f2937; color: #a5f3fc; padding: 1.5rem; border-radius: 0.75rem; font-family: monospace; font-size: 0.95rem; line-height: 1.6; }
+    .prompt-label { color: #9ca3af; font-size: 0.85rem; margin-bottom: 0.5rem; display: block; }
+    .list-card { border-radius: 0.75rem; padding: 1.5rem; background: #f0fdf4; border: 1px solid #bbf7d0; }
+    .list-card ul { list-style: none; }
+    .list-card li { padding: 0.5rem 0; display: flex; align-items: flex-start; gap: 0.5rem; color: #374151; font-size: 1.1rem; }
+    .check { color: #16a34a; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <main class="slideshow">
+    <div class="slide-container">
+      <!-- Slide 1: Title -->
+      <section class="slide active title-slide">
+        <div class="icon icon-green">&#128241;</div>
+        <h1>Part 5: Responsive Design & Mobile-First</h1>
+        <p class="subtitle">Building Layouts That Adapt</p>
+        <span class="badge">20 Minutes</span>
+      </section>
+
+      <!-- Slide 2: Intrinsic Web Design -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-green">&#127793;</div>
+          <div><h2>Intrinsic Web Design</h2><p class="subtitle">Jen Simmons' Modern Philosophy</p></div>
+        </header>
+        <div class="concept-box">
+          <h3>&#127800; Pages That Flow Without Breaking</h3>
+          <p>
+            Intrinsic Web Design means creating layouts that <strong>naturally adapt</strong> to their content and container — using the inherent capabilities of CSS Grid, Flexbox, and modern units.
+          </p>
+        </div>
+        <div class="quote-box">
+          <p>"The web is not print. We don't need to fight the medium — we can embrace it."</p>
+          <cite>— Jen Simmons</cite>
+        </div>
+      </section>
+
+      <!-- Slide 3: Mobile-First Approach -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-green">&#128242;</div>
+          <div><h2>Mobile-First Approach</h2><p class="subtitle">Start Small, Scale Up</p></div>
+        </header>
+        <div class="grid-2">
+          <div class="approach-card mobile-first">
+            <h3 style="font-size: 1.5rem; margin-bottom: 1rem;">&#10003; Mobile-First (Recommended)</h3>
+            <p style="color: #166534; margin-bottom: 1rem;">Write base styles for mobile, then add complexity for larger screens</p>
+            <div class="device-visual">
+              <div class="device device-mobile">&#128241;</div>
+              <span class="arrow-right">&#8594;</span>
+              <div class="device device-tablet">&#128241;</div>
+              <span class="arrow-right">&#8594;</span>
+              <div class="device device-desktop">&#128187;</div>
+            </div>
+            <p style="color: #15803d; font-size: 0.9rem; margin-top: 1rem;">Uses <code>min-width</code> media queries</p>
+          </div>
+          <div class="approach-card desktop-first">
+            <h3 style="font-size: 1.5rem; margin-bottom: 1rem;">&#10007; Desktop-First (Legacy)</h3>
+            <p style="color: #991b1b; margin-bottom: 1rem;">Write complex desktop styles, then override for smaller screens</p>
+            <div class="device-visual" style="flex-direction: row-reverse;">
+              <div class="device device-mobile" style="background: #991b1b;">&#128241;</div>
+              <span style="color: #dc2626; font-size: 1.5rem;">&#8592;</span>
+              <div class="device device-tablet" style="background: #991b1b;">&#128241;</div>
+              <span style="color: #dc2626; font-size: 1.5rem;">&#8592;</span>
+              <div class="device device-desktop" style="background: #991b1b;">&#128187;</div>
+            </div>
+            <p style="color: #b91c1c; font-size: 0.9rem; margin-top: 1rem;">Uses <code>max-width</code> — more overrides needed</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 4: The 1000px Breakpoint -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-amber">&#128205;</div>
+          <div><h2>The 1000px Breakpoint</h2><p class="subtitle">Your Homework 2 Requirement</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="breakpoint-box">
+            <div class="breakpoint-value">1000px</div>
+            <div class="breakpoint-label">The magic number for this assignment</div>
+          </div>
+          <div class="code-block" style="margin-top: 1.5rem;">
+            <span class="code-comment">/* Mobile styles first (default) */</span><br>
+            .container {<br>
+            &nbsp;&nbsp;display: grid;<br>
+            &nbsp;&nbsp;grid-template-columns: 1fr; <span class="code-comment">/* Single column */</span><br>
+            }<br><br>
+            <span class="code-comment">/* Then add desktop styles */</span><br>
+            @media (min-width: 1000px) {<br>
+            &nbsp;&nbsp;.container {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;grid-template-columns: 1fr 1fr; <span class="code-comment">/* Two columns */</span><br>
+            &nbsp;&nbsp;}<br>
+            }
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 5: The clamp() Function -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-purple">&#128200;</div>
+          <div><h2>The clamp() Function</h2><p class="subtitle">Fluid Values with Guardrails</p></div>
+        </header>
+        <div class="content">
+          <div class="card">
+            <h3>Syntax</h3>
+            <div class="code-block">clamp(minimum, preferred, maximum)</div>
+          </div>
+          <div class="clamp-visual">
+            <span class="clamp-part clamp-min">min</span>
+            <span style="color: #6b7280;">&#8592;</span>
+            <span class="clamp-part clamp-preferred">preferred (fluid)</span>
+            <span style="color: #6b7280;">&#8594;</span>
+            <span class="clamp-part clamp-max">max</span>
+          </div>
+          <div class="card">
+            <h3>Example: Fluid Gap</h3>
+            <div class="code-block">
+              gap: clamp(1rem, 3vw, 2rem);<br>
+              <span class="code-comment">/* At least 1rem, at most 2rem, scales with viewport */</span>
+            </div>
+          </div>
+          <div class="highlight-box">
+            <p>&#128161; clamp() lets values "breathe" between a minimum and maximum!</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 6: Practical AI Constraint -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-blue">&#128172;</div>
+          <div><h2>Practical AI Constraint</h2><p class="subtitle">Refactoring to Mobile-First</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="prompt-box">
+            <span class="prompt-label">Example Prompt:</span>
+            "Refactor this layout to be <strong>Mobile-First</strong>. On mobile, follow a single-column flow. At <strong>1000px</strong>, switch to a 2x2 grid. Ensure that the gap remains fluid using the <strong>clamp()</strong> function."
+          </div>
+          <div class="grid-2" style="margin-top: 1.5rem; flex: none;">
+            <div class="card">
+              <h3>&#10003; What makes this prompt effective:</h3>
+              <ul style="list-style: none; color: #6b7280; font-size: 0.9rem;">
+                <li>&#8226; Specifies "Mobile-First" approach</li>
+                <li>&#8226; Gives exact breakpoint (1000px)</li>
+                <li>&#8226; Mentions specific CSS function (clamp)</li>
+                <li>&#8226; Describes both states clearly</li>
+              </ul>
+            </div>
+            <div class="card">
+              <h3>&#128161; Tip:</h3>
+              <p style="color: #6b7280; font-size: 0.9rem;">
+                Include your current CSS in the prompt so the AI knows what to refactor!
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 7: Summary -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-green">&#10004;</div>
+          <div><h2>Part 5 Complete!</h2><p class="subtitle">Responsive Design Essentials</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="list-card">
+            <ul style="font-size: 1.2rem;">
+              <li><span class="check">&#10003;</span> <strong>Intrinsic Web Design</strong> — let layouts flow naturally</li>
+              <li><span class="check">&#10003;</span> <strong>Mobile-First</strong> — start small, use <code>min-width</code></li>
+              <li><span class="check">&#10003;</span> <strong>1000px breakpoint</strong> — the target for Homework 2</li>
+              <li><span class="check">&#10003;</span> <strong>clamp()</strong> — fluid values with min/max guardrails</li>
+            </ul>
+          </div>
+          <p style="text-align: center; color: #16a34a; font-size: 1.25rem; margin-top: 1.5rem; font-weight: 500;">Next up: Part 6 — Homework 2 Brief &#8594;</p>
+        </div>
+      </section>
+    </div>
+
+    <nav class="controls">
+      <button class="btn btn-prev" onclick="prevSlide()">&#8592; Previous</button>
+      <div class="dots" id="dots"></div>
+      <div style="display:flex;align-items:center;gap:1rem">
+        <span class="counter" id="counter">1 / 7</span>
+        <button class="btn btn-next" onclick="nextSlide()">Next &#8594;</button>
+      </div>
+    </nav>
+  </main>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const dotsContainer = document.getElementById('dots');
+    const counter = document.getElementById('counter');
+    let current = 0;
+    slides.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.className = 'dot' + (i === 0 ? ' active' : '');
+      dot.onclick = () => goToSlide(i);
+      dotsContainer.appendChild(dot);
+    });
+    function updateSlide() {
+      slides.forEach((s, i) => s.classList.toggle('active', i === current));
+      document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
+      counter.textContent = `${current + 1} / ${slides.length}`;
+      document.querySelector('.btn-prev').disabled = current === 0;
+      document.querySelector('.btn-next').disabled = current === slides.length - 1;
+    }
+    function nextSlide() { if (current < slides.length - 1) { current++; updateSlide(); } }
+    function prevSlide() { if (current > 0) { current--; updateSlide(); } }
+    function goToSlide(i) { current = i; updateSlide(); }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+      if (e.key === 'ArrowLeft') prevSlide();
+    });
+  </script>
+</body>
+</html>

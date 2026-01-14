@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Part 4: Flexbox vs CSS Grid</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; }
+    .slideshow { height: 100vh; display: flex; flex-direction: column; }
+    .slide-container { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+    .slide { background: white; border-radius: 1rem; box-shadow: 0 10px 40px rgba(0,0,0,0.1); width: 100%; max-width: 1000px; height: 600px; padding: 3rem; display: none; flex-direction: column; }
+    .slide.active { display: flex; }
+    .controls { background: white; border-top: 1px solid #e5e7eb; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+    .btn { padding: 0.5rem 1.5rem; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; }
+    .btn-prev, .btn-next { background: #3b82f6; color: white; }
+    .btn:disabled { background: #d1d5db; cursor: not-allowed; }
+    .dots { display: flex; gap: 0.5rem; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #d1d5db; border: none; cursor: pointer; }
+    .dot.active { background: #3b82f6; width: 20px; border-radius: 5px; }
+    .slide-title { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+    .icon { width: 50px; height: 50px; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+    .icon-blue { background: #dbeafe; }
+    .icon-cyan { background: #cffafe; }
+    .icon-purple { background: #f3e8ff; }
+    .icon-green { background: #dcfce7; }
+    .icon-amber { background: #fef3c7; }
+    h1 { font-size: 2.5rem; color: #1f2937; }
+    h2 { font-size: 1.75rem; color: #1f2937; }
+    h3 { font-size: 1.25rem; color: #374151; margin-bottom: 0.5rem; }
+    .subtitle { color: #6b7280; font-size: 1.1rem; }
+    .content { flex: 1; display: flex; flex-direction: column; gap: 1rem; }
+    .card { background: #f9fafb; border-radius: 0.75rem; padding: 1.25rem; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; flex: 1; }
+    .title-slide { align-items: center; justify-content: center; text-align: center; }
+    .title-slide .icon { width: 80px; height: 80px; font-size: 2.5rem; margin-bottom: 1.5rem; border-radius: 50%; }
+    .title-slide h1 { margin-bottom: 1rem; }
+    .title-slide .subtitle { margin-bottom: 1.5rem; font-size: 1.25rem; }
+    .badge { background: #dbeafe; color: #2563eb; padding: 0.5rem 1rem; border-radius: 2rem; font-size: 0.9rem; }
+    .counter { color: #6b7280; font-size: 0.9rem; }
+    .question-box { background: linear-gradient(135deg, #dbeafe, #eff6ff); border: 2px solid #93c5fd; border-radius: 1rem; padding: 2.5rem; text-align: center; flex: 1; display: flex; flex-direction: column; justify-content: center; }
+    .question-box h3 { color: #1e40af; font-size: 2rem; margin-bottom: 1rem; }
+    .question-box p { color: #3b82f6; font-size: 1.25rem; }
+    .comparison-card { border-radius: 1rem; padding: 1.5rem; flex: 1; }
+    .flexbox-card { background: linear-gradient(135deg, #cffafe, #ecfeff); border: 2px solid #22d3ee; }
+    .flexbox-card h3 { color: #0e7490; }
+    .grid-card { background: linear-gradient(135deg, #f3e8ff, #faf5ff); border: 2px solid #a855f7; }
+    .grid-card h3 { color: #7c3aed; }
+    .dimension-badge { display: inline-block; padding: 0.5rem 1rem; border-radius: 2rem; font-weight: bold; font-size: 1.1rem; margin-bottom: 1rem; }
+    .badge-1d { background: #22d3ee; color: white; }
+    .badge-2d { background: #a855f7; color: white; }
+    .visual-demo { display: flex; gap: 0.5rem; padding: 1rem; background: rgba(255,255,255,0.5); border-radius: 0.5rem; margin-top: 1rem; }
+    .visual-item { background: #0891b2; color: white; padding: 0.75rem 1rem; border-radius: 0.25rem; font-size: 0.85rem; }
+    .grid-visual { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; padding: 1rem; background: rgba(255,255,255,0.5); border-radius: 0.5rem; margin-top: 1rem; }
+    .grid-item { background: #7c3aed; color: white; padding: 0.75rem; border-radius: 0.25rem; font-size: 0.85rem; text-align: center; }
+    .use-case-list { list-style: none; }
+    .use-case-list li { padding: 0.5rem 0; display: flex; align-items: flex-start; gap: 0.5rem; font-size: 1.05rem; }
+    .code-block { background: #1f2937; color: #86efac; padding: 1rem 1.25rem; border-radius: 0.5rem; font-family: 'SF Mono', Monaco, 'Courier New', monospace; font-size: 0.95rem; line-height: 1.5; }
+    .code-comment { color: #9ca3af; }
+    .highlight-box { background: #fef3c7; border: 2px solid #fcd34d; border-radius: 0.75rem; padding: 1rem; margin-top: 1rem; }
+    .highlight-box p { color: #92400e; font-weight: 500; }
+    .demo-box { background: linear-gradient(135deg, #dbeafe, #ede9fe); border: 2px dashed #3b82f6; border-radius: 1rem; padding: 2rem; text-align: center; flex: 1; display: flex; flex-direction: column; justify-content: center; }
+    .prompt-box { background: #1f2937; color: #a5f3fc; padding: 1.5rem; border-radius: 0.75rem; font-family: monospace; font-size: 0.95rem; line-height: 1.6; }
+    .prompt-label { color: #9ca3af; font-size: 0.85rem; margin-bottom: 0.5rem; display: block; }
+    .flowchart { display: flex; flex-direction: column; gap: 1rem; align-items: center; }
+    .flow-question { background: #dbeafe; border: 2px solid #3b82f6; border-radius: 1rem; padding: 1rem 2rem; font-weight: bold; color: #1e40af; }
+    .flow-arrows { display: flex; gap: 4rem; }
+    .flow-arrow { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; }
+    .flow-arrow span { color: #6b7280; font-size: 0.9rem; }
+    .flow-result { padding: 1rem 2rem; border-radius: 0.5rem; font-weight: bold; }
+    .result-flex { background: #cffafe; color: #0e7490; border: 2px solid #22d3ee; }
+    .result-grid { background: #f3e8ff; color: #7c3aed; border: 2px solid #a855f7; }
+    .list-card { border-radius: 0.75rem; padding: 1.5rem; background: #eff6ff; border: 1px solid #bfdbfe; }
+    .list-card ul { list-style: none; }
+    .list-card li { padding: 0.5rem 0; display: flex; align-items: flex-start; gap: 0.5rem; color: #374151; font-size: 1.1rem; }
+    .check { color: #3b82f6; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <main class="slideshow">
+    <div class="slide-container">
+      <!-- Slide 1: Title -->
+      <section class="slide active title-slide">
+        <div class="icon icon-blue">&#9638;</div>
+        <h1>Part 4: Flexbox vs CSS Grid</h1>
+        <p class="subtitle">Choosing the Right Layout Tool</p>
+        <span class="badge">30 Minutes</span>
+      </section>
+
+      <!-- Slide 2: The Core Question -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-blue">&#10067;</div>
+          <div><h2>The Core Question</h2><p class="subtitle">The Most Common CSS Dilemma</p></div>
+        </header>
+        <div class="question-box">
+          <h3>&#129300; "When do I use Flexbox?"</h3>
+          <h3>"When do I use Grid?"</h3>
+          <p style="margin-top: 1.5rem;">Both are powerful — but they solve different problems</p>
+        </div>
+      </section>
+
+      <!-- Slide 3: Flexbox: 1-Dimensional -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-cyan">&#8596;</div>
+          <div><h2>Flexbox: 1-Dimensional</h2><p class="subtitle">Row OR Column</p></div>
+        </header>
+        <div class="content">
+          <div class="flexbox-card" style="flex: none; padding: 2rem;">
+            <span class="dimension-badge badge-1d">1D Layout</span>
+            <h3 style="font-size: 1.5rem;">Best for laying out items in a single direction</h3>
+            <p style="color: #155e75; margin-top: 0.5rem; font-size: 1.1rem;">
+              Items flow in a row <strong>or</strong> a column — but not both at once
+            </p>
+            <div class="visual-demo">
+              <div class="visual-item">Item 1</div>
+              <div class="visual-item">Item 2</div>
+              <div class="visual-item">Item 3</div>
+              <div class="visual-item">Item 4</div>
+            </div>
+          </div>
+          <div class="card">
+            <h3>Key Characteristic</h3>
+            <p style="color: #6b7280; font-size: 1.1rem;"><strong>Content-driven sizing:</strong> Items can grow and shrink based on their content</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 4: CSS Grid: 2-Dimensional -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-purple">&#9638;</div>
+          <div><h2>CSS Grid: 2-Dimensional</h2><p class="subtitle">Rows AND Columns</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-card" style="flex: none; padding: 2rem;">
+            <span class="dimension-badge badge-2d">2D Layout</span>
+            <h3 style="font-size: 1.5rem;">Best for laying out items in rows AND columns together</h3>
+            <p style="color: #5b21b6; margin-top: 0.5rem; font-size: 1.1rem;">
+              Define a complete grid structure, then place items within it
+            </p>
+            <div class="grid-visual">
+              <div class="grid-item">1</div>
+              <div class="grid-item">2</div>
+              <div class="grid-item">3</div>
+              <div class="grid-item">4</div>
+              <div class="grid-item">5</div>
+              <div class="grid-item">6</div>
+            </div>
+          </div>
+          <div class="card">
+            <h3>Key Characteristic</h3>
+            <p style="color: #6b7280; font-size: 1.1rem;"><strong>Layout-driven positioning:</strong> You define the grid, content fills the cells</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 5: Visual Comparison -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-blue">&#128065;</div>
+          <div><h2>Visual Comparison</h2><p class="subtitle">Same Elements, Different Approaches</p></div>
+        </header>
+        <div class="grid-2">
+          <div class="flexbox-card">
+            <h3 style="font-size: 1.25rem; margin-bottom: 1rem;">&#8596; Flexbox: Navigation Bar</h3>
+            <div style="background: white; padding: 1rem; border-radius: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
+              <div style="font-weight: bold; color: #0e7490;">Logo</div>
+              <div style="display: flex; gap: 1rem;">
+                <span style="color: #0891b2;">Home</span>
+                <span style="color: #0891b2;">About</span>
+                <span style="color: #0891b2;">Contact</span>
+              </div>
+            </div>
+            <p style="color: #155e75; margin-top: 1rem; font-size: 0.95rem;">Items distribute along one axis</p>
+          </div>
+          <div class="grid-card">
+            <h3 style="font-size: 1.25rem; margin-bottom: 1rem;">&#9638; Grid: Page Layout</h3>
+            <div style="background: white; padding: 0.5rem; border-radius: 0.5rem; display: grid; grid-template-columns: 1fr 2fr; grid-template-rows: auto 1fr auto; gap: 0.25rem; height: 150px;">
+              <div style="background: #e9d5ff; grid-column: 1 / -1; padding: 0.25rem; font-size: 0.75rem; color: #7c3aed;">Header</div>
+              <div style="background: #f3e8ff; padding: 0.25rem; font-size: 0.75rem; color: #7c3aed;">Sidebar</div>
+              <div style="background: #faf5ff; padding: 0.25rem; font-size: 0.75rem; color: #7c3aed;">Main</div>
+              <div style="background: #e9d5ff; grid-column: 1 / -1; padding: 0.25rem; font-size: 0.75rem; color: #7c3aed;">Footer</div>
+            </div>
+            <p style="color: #5b21b6; margin-top: 1rem; font-size: 0.95rem;">Items placed in 2D grid structure</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 6: Use Flexbox When... -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-cyan">&#10003;</div>
+          <div><h2>Use Flexbox When...</h2><p class="subtitle">Perfect for These Scenarios</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="flexbox-card" style="padding: 2rem;">
+            <ul class="use-case-list" style="font-size: 1.15rem;">
+              <li>&#10003; <strong>Navigation bars</strong> — items in a row with spacing</li>
+              <li>&#10003; <strong>Button groups</strong> — horizontal or vertical stacks</li>
+              <li>&#10003; <strong>Centering content</strong> — both vertically and horizontally</li>
+              <li>&#10003; <strong>Unknown number of items</strong> — dynamic content that wraps</li>
+              <li>&#10003; <strong>Content should dictate size</strong> — items grow/shrink naturally</li>
+              <li>&#10003; <strong>Simple card layouts</strong> — content within a single card</li>
+            </ul>
+          </div>
+          <div class="highlight-box">
+            <p>&#128161; Think: "I need to arrange items in a LINE (row or column)"</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 7: Use Grid When... -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-purple">&#10003;</div>
+          <div><h2>Use Grid When...</h2><p class="subtitle">Perfect for These Scenarios</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="grid-card" style="padding: 2rem;">
+            <ul class="use-case-list" style="font-size: 1.15rem;">
+              <li>&#10003; <strong>Page layouts</strong> — header, sidebar, main, footer</li>
+              <li>&#10003; <strong>Card grids</strong> — gallery of equal-sized items</li>
+              <li>&#10003; <strong>Overlapping elements</strong> — items that share grid cells</li>
+              <li>&#10003; <strong>Precise placement</strong> — exact row/column positioning</li>
+              <li>&#10003; <strong>Layout dictates size</strong> — consistent grid structure</li>
+              <li>&#10003; <strong>Complex magazine layouts</strong> — art-direction style designs</li>
+            </ul>
+          </div>
+          <div class="highlight-box">
+            <p>&#128161; Think: "I need a 2D GRID structure with rows AND columns"</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 8: The Magic Grid Line -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-amber">&#10024;</div>
+          <div><h2>The "Magic" Grid Line</h2><p class="subtitle">Responsive Without Media Queries</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="code-block" style="font-size: 1.1rem; padding: 1.5rem;">
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          </div>
+          <div class="grid-2" style="margin-top: 1.5rem; flex: none;">
+            <div class="card">
+              <h3>What it does:</h3>
+              <ul style="list-style: none; color: #6b7280; font-size: 0.95rem; margin-top: 0.5rem;">
+                <li>&#8226; <strong>auto-fit</strong> — creates as many columns as will fit</li>
+                <li>&#8226; <strong>minmax(200px, 1fr)</strong> — each column is at least 200px, but can grow</li>
+                <li>&#8226; <strong>Result</strong> — items wrap automatically!</li>
+              </ul>
+            </div>
+            <div class="card">
+              <h3>Why it's "magic":</h3>
+              <ul style="list-style: none; color: #6b7280; font-size: 0.95rem; margin-top: 0.5rem;">
+                <li>&#8226; No media queries needed</li>
+                <li>&#8226; Adapts to any screen size</li>
+                <li>&#8226; Items maintain minimum width</li>
+              </ul>
+            </div>
+          </div>
+          <div class="highlight-box">
+            <p>&#128161; This single line creates a fully responsive grid layout!</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 9: Quick Grid Demo -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-blue">&#127916;</div>
+          <div><h2>Quick Grid Demo</h2><p class="subtitle">Building a Simple 2x2 Grid</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="demo-box">
+            <h3 style="color: #1e40af; font-size: 1.5rem; margin-bottom: 1rem;">&#128187; Live Coding Demo</h3>
+            <p style="color: #3b82f6; font-size: 1.1rem; margin-bottom: 1.5rem;">Watch as we build a simple grid with debug colors</p>
+            <div class="code-block" style="text-align: left; max-width: 500px; margin: 0 auto;">
+              .container {<br>
+              &nbsp;&nbsp;display: grid;<br>
+              &nbsp;&nbsp;grid-template-columns: 1fr 1fr;<br>
+              &nbsp;&nbsp;gap: 1rem;<br>
+              }<br><br>
+              <span class="code-comment">/* Debug colors to see the grid */</span><br>
+              .item:nth-child(1) { background: #fee2e2; }<br>
+              .item:nth-child(2) { background: #dbeafe; }<br>
+              .item:nth-child(3) { background: #dcfce7; }<br>
+              .item:nth-child(4) { background: #fef3c7; }
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 10: Practical AI Constraint -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-purple">&#128172;</div>
+          <div><h2>Practical AI Constraint</h2><p class="subtitle">Let AI Help You Decide</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="prompt-box">
+            <span class="prompt-label">Example Prompt:</span>
+            "Should I use Flexbox or CSS Grid for [describe your layout scenario]? Explain why one is better than the other for this specific use case."
+          </div>
+          <div class="grid-2" style="margin-top: 1.5rem; flex: none;">
+            <div class="card">
+              <h3>Example scenarios to ask about:</h3>
+              <ul style="list-style: none; color: #6b7280; font-size: 0.9rem;">
+                <li>&#8226; "A product card with image, title, and button"</li>
+                <li>&#8226; "A dashboard with sidebar and main content"</li>
+                <li>&#8226; "A gallery of photos that should wrap"</li>
+              </ul>
+            </div>
+            <div class="card">
+              <h3>What to look for in the answer:</h3>
+              <ul style="list-style: none; color: #6b7280; font-size: 0.9rem;">
+                <li>&#8226; Does it mention 1D vs 2D?</li>
+                <li>&#8226; Does it consider content vs layout?</li>
+                <li>&#8226; Does it suggest alternatives?</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 11: Summary - Decision Flowchart -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-blue">&#10004;</div>
+          <div><h2>Part 4 Complete!</h2><p class="subtitle">Quick Decision Guide</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="flowchart">
+            <div class="flow-question">Do you need rows AND columns?</div>
+            <div class="flow-arrows">
+              <div class="flow-arrow">
+                <span>&#8595; YES</span>
+                <div class="flow-result result-grid">Use CSS Grid</div>
+              </div>
+              <div class="flow-arrow">
+                <span>&#8595; NO</span>
+                <div class="flow-result result-flex">Use Flexbox</div>
+              </div>
+            </div>
+          </div>
+          <div class="list-card" style="margin-top: 1.5rem;">
+            <ul>
+              <li><span class="check">&#10003;</span> <strong>Flexbox</strong> = 1D (row OR column), content-driven</li>
+              <li><span class="check">&#10003;</span> <strong>Grid</strong> = 2D (rows AND columns), layout-driven</li>
+              <li><span class="check">&#10003;</span> You can use both together in the same project!</li>
+            </ul>
+          </div>
+          <p style="text-align: center; color: #2563eb; font-size: 1.25rem; margin-top: 1rem; font-weight: 500;">Next up: Part 5 — Responsive Design & Mobile-First &#8594;</p>
+        </div>
+      </section>
+    </div>
+
+    <nav class="controls">
+      <button class="btn btn-prev" onclick="prevSlide()">&#8592; Previous</button>
+      <div class="dots" id="dots"></div>
+      <div style="display:flex;align-items:center;gap:1rem">
+        <span class="counter" id="counter">1 / 11</span>
+        <button class="btn btn-next" onclick="nextSlide()">Next &#8594;</button>
+      </div>
+    </nav>
+  </main>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const dotsContainer = document.getElementById('dots');
+    const counter = document.getElementById('counter');
+    let current = 0;
+    slides.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.className = 'dot' + (i === 0 ? ' active' : '');
+      dot.onclick = () => goToSlide(i);
+      dotsContainer.appendChild(dot);
+    });
+    function updateSlide() {
+      slides.forEach((s, i) => s.classList.toggle('active', i === current));
+      document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
+      counter.textContent = `${current + 1} / ${slides.length}`;
+      document.querySelector('.btn-prev').disabled = current === 0;
+      document.querySelector('.btn-next').disabled = current === slides.length - 1;
+    }
+    function nextSlide() { if (current < slides.length - 1) { current++; updateSlide(); } }
+    function prevSlide() { if (current > 0) { current--; updateSlide(); } }
+    function goToSlide(i) { current = i; updateSlide(); }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+      if (e.key === 'ArrowLeft') prevSlide();
+    });
+  </script>
+</body>
+</html>

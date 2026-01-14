@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Part 6: Homework 2 Brief</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; }
+    .slideshow { height: 100vh; display: flex; flex-direction: column; }
+    .slide-container { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+    .slide { background: white; border-radius: 1rem; box-shadow: 0 10px 40px rgba(0,0,0,0.1); width: 100%; max-width: 1000px; height: 600px; padding: 3rem; display: none; flex-direction: column; }
+    .slide.active { display: flex; }
+    .controls { background: white; border-top: 1px solid #e5e7eb; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+    .btn { padding: 0.5rem 1.5rem; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; }
+    .btn-prev, .btn-next { background: #d97706; color: white; }
+    .btn:disabled { background: #d1d5db; cursor: not-allowed; }
+    .dots { display: flex; gap: 0.5rem; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #d1d5db; border: none; cursor: pointer; }
+    .dot.active { background: #d97706; width: 20px; border-radius: 5px; }
+    .slide-title { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+    .icon { width: 50px; height: 50px; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+    .icon-amber { background: #fef3c7; }
+    .icon-blue { background: #dbeafe; }
+    h1 { font-size: 2.5rem; color: #1f2937; }
+    h2 { font-size: 1.75rem; color: #1f2937; }
+    h3 { font-size: 1.25rem; color: #374151; margin-bottom: 0.5rem; }
+    .subtitle { color: #6b7280; font-size: 1.1rem; }
+    .content { flex: 1; display: flex; flex-direction: column; gap: 1rem; }
+    .card { background: #f9fafb; border-radius: 0.75rem; padding: 1.25rem; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; flex: 1; }
+    .title-slide { align-items: center; justify-content: center; text-align: center; }
+    .title-slide .icon { width: 80px; height: 80px; font-size: 2.5rem; margin-bottom: 1.5rem; border-radius: 50%; }
+    .title-slide h1 { margin-bottom: 1rem; }
+    .title-slide .subtitle { margin-bottom: 1.5rem; font-size: 1.25rem; }
+    .badge { background: #fef3c7; color: #b45309; padding: 0.5rem 1rem; border-radius: 2rem; font-size: 0.9rem; }
+    .counter { color: #6b7280; font-size: 0.9rem; }
+    .assignment-card { background: linear-gradient(135deg, #fef3c7, #fef9c3); border: 2px solid #fcd34d; border-radius: 1rem; padding: 1.5rem; }
+    .assignment-card h3 { color: #b45309; font-size: 1.5rem; margin-bottom: 1rem; }
+    .assignment-card p { color: #92400e; font-size: 1.05rem; line-height: 1.6; }
+    .part-badge { display: inline-block; background: #d97706; color: white; padding: 0.25rem 0.75rem; border-radius: 0.25rem; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.75rem; }
+    .code-inline { background: #fef3c7; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-family: monospace; color: #b45309; }
+    .standard-box { background: #fff7ed; border: 2px solid #fed7aa; border-radius: 1rem; padding: 1.5rem; text-align: center; margin-top: 1rem; }
+    .standard-box h3 { color: #c2410c; font-size: 1.25rem; margin-bottom: 0.75rem; }
+    .standard-box p { color: #9a3412; font-size: 1.1rem; }
+    .resource-list { list-style: none; }
+    .resource-list li { padding: 0.75rem 1rem; background: #f9fafb; border-radius: 0.5rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.75rem; }
+    .resource-list li a { color: #2563eb; text-decoration: none; font-weight: 500; }
+    .resource-list li a:hover { text-decoration: underline; }
+    .resource-icon { font-size: 1.25rem; }
+  </style>
+</head>
+<body>
+  <main class="slideshow">
+    <div class="slide-container">
+      <!-- Slide 1: Title -->
+      <section class="slide active title-slide">
+        <div class="icon icon-amber">&#128203;</div>
+        <h1>Part 6: Homework 2 Brief</h1>
+        <p class="subtitle">Your Assignment for This Week</p>
+        <span class="badge">5 Minutes</span>
+      </section>
+
+      <!-- Slide 2: The Assignment -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-amber">&#128221;</div>
+          <div><h2>The Assignment</h2><p class="subtitle">Two Parts, One Goal</p></div>
+        </header>
+        <div class="grid-2">
+          <div class="assignment-card">
+            <span class="part-badge">Part 1: The Component</span>
+            <h3>QR Code Card</h3>
+            <p>
+              Build a QR Code card component using the style guide provided. Focus on <strong>perfect centering</strong> using <span class="code-inline">place-items: center</span>.
+            </p>
+          </div>
+          <div class="assignment-card">
+            <span class="part-badge">Part 2: The Grid</span>
+            <h3>Responsive Layout</h3>
+            <p>
+              Use an <span class="code-inline">&lt;ul&gt;</span> to repeat the card design <strong>4 times</strong>. Implement the <strong>1000px</strong> media query for responsive behavior.
+            </p>
+          </div>
+        </div>
+        <div class="standard-box">
+          <h3>&#127919; The Standard</h3>
+          <p>"Get it as close as you can." Explain your approach in a paragraph.</p>
+        </div>
+      </section>
+
+      <!-- Slide 3: Reference Resources -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-blue">&#128218;</div>
+          <div><h2>Reference Resources</h2><p class="subtitle">Your Learning Toolkit</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <ul class="resource-list" style="max-width: 700px; margin: 0 auto;">
+            <li>
+              <span class="resource-icon">&#127912;</span>
+              <a href="https://labs.jensimmons.com" target="_blank">Jen Simmons' Labs</a>
+              <span style="color: #6b7280; font-size: 0.9rem;">— Layout inspiration</span>
+            </li>
+            <li>
+              <span class="resource-icon">&#127919;</span>
+              <a href="https://info340.github.io/css-selectors.html" target="_blank">CSS Selectors Reference</a>
+              <span style="color: #6b7280; font-size: 0.9rem;">— Selector syntax</span>
+            </li>
+            <li>
+              <span class="resource-icon">&#127912;</span>
+              <a href="https://info340.github.io/css-properties.html" target="_blank">CSS Properties Reference</a>
+              <span style="color: #6b7280; font-size: 0.9rem;">— Property reference</span>
+            </li>
+            <li>
+              <span class="resource-icon">&#128241;</span>
+              <a href="https://info340.github.io/responsive-css.html" target="_blank">Responsive CSS Guide</a>
+              <span style="color: #6b7280; font-size: 0.9rem;">— Media queries</span>
+            </li>
+            <li>
+              <span class="resource-icon">&#128230;</span>
+              <a href="https://info340.github.io/css-frameworks.html" target="_blank">CSS Frameworks Overview</a>
+              <span style="color: #6b7280; font-size: 0.9rem;">— Framework options</span>
+            </li>
+          </ul>
+          <p style="text-align: center; color: #d97706; font-size: 1.25rem; margin-top: 2rem; font-weight: 500;">Good luck! &#128170; Next up: Kahoot Quiz! &#8594;</p>
+        </div>
+      </section>
+    </div>
+
+    <nav class="controls">
+      <button class="btn btn-prev" onclick="prevSlide()">&#8592; Previous</button>
+      <div class="dots" id="dots"></div>
+      <div style="display:flex;align-items:center;gap:1rem">
+        <span class="counter" id="counter">1 / 3</span>
+        <button class="btn btn-next" onclick="nextSlide()">Next &#8594;</button>
+      </div>
+    </nav>
+  </main>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const dotsContainer = document.getElementById('dots');
+    const counter = document.getElementById('counter');
+    let current = 0;
+    slides.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.className = 'dot' + (i === 0 ? ' active' : '');
+      dot.onclick = () => goToSlide(i);
+      dotsContainer.appendChild(dot);
+    });
+    function updateSlide() {
+      slides.forEach((s, i) => s.classList.toggle('active', i === current));
+      document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
+      counter.textContent = `${current + 1} / ${slides.length}`;
+      document.querySelector('.btn-prev').disabled = current === 0;
+      document.querySelector('.btn-next').disabled = current === slides.length - 1;
+    }
+    function nextSlide() { if (current < slides.length - 1) { current++; updateSlide(); } }
+    function prevSlide() { if (current > 0) { current--; updateSlide(); } }
+    function goToSlide(i) { current = i; updateSlide(); }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+      if (e.key === 'ArrowLeft') prevSlide();
+    });
+  </script>
+</body>
+</html>
