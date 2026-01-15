@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Part 4: Semantic HTML & CSS Review</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; }
+    .slideshow { height: 100vh; display: flex; flex-direction: column; }
+    .slide-container { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+    .slide { background: white; border-radius: 1rem; box-shadow: 0 10px 40px rgba(0,0,0,0.1); width: 100%; max-width: 1000px; height: 600px; padding: 3rem; display: none; flex-direction: column; }
+    .slide.active { display: flex; }
+    .controls { background: white; border-top: 1px solid #e5e7eb; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+    .btn { padding: 0.5rem 1.5rem; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; }
+    .btn-prev, .btn-next { background: #3b82f6; color: white; }
+    .btn:disabled { background: #d1d5db; cursor: not-allowed; }
+    .dots { display: flex; gap: 0.5rem; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #d1d5db; border: none; cursor: pointer; }
+    .dot.active { background: #3b82f6; width: 20px; border-radius: 5px; }
+    .slide-title { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+    .icon { width: 50px; height: 50px; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+    .icon-blue { background: #dbeafe; }
+    .icon-green { background: #dcfce7; }
+    .icon-amber { background: #fef3c7; }
+    .icon-purple { background: #f3e8ff; }
+    h1 { font-size: 2.5rem; color: #1f2937; }
+    h2 { font-size: 1.75rem; color: #1f2937; }
+    h3 { font-size: 1.25rem; color: #374151; margin-bottom: 0.5rem; }
+    .subtitle { color: #6b7280; font-size: 1.1rem; }
+    .content { flex: 1; display: flex; flex-direction: column; gap: 1rem; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; flex: 1; }
+    .title-slide { align-items: center; justify-content: center; text-align: center; }
+    .title-slide .icon { width: 80px; height: 80px; font-size: 2.5rem; margin-bottom: 1.5rem; border-radius: 50%; }
+    .badge { background: #dbeafe; color: #2563eb; padding: 0.5rem 1rem; border-radius: 2rem; font-size: 0.9rem; }
+    .counter { color: #6b7280; font-size: 0.9rem; }
+    .code-block { background: #1f2937; color: #e5e7eb; padding: 1rem; border-radius: 0.5rem; font-family: monospace; font-size: 0.8rem; overflow-x: auto; line-height: 1.5; }
+    .tag { color: #f472b6; }
+    .attr { color: #a5b4fc; }
+    .str { color: #86efac; }
+    .comparison-label { padding: 0.5rem 1rem; border-radius: 0.5rem 0.5rem 0 0; font-weight: bold; font-size: 0.9rem; display: inline-block; }
+    .label-bad { background: #fecaca; color: #dc2626; }
+    .label-good { background: #bbf7d0; color: #16a34a; }
+    .semantic-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+    .semantic-tag { background: #eff6ff; border: 2px solid #bfdbfe; border-radius: 0.75rem; padding: 1rem; text-align: center; }
+    .semantic-tag code { font-size: 1.1rem; color: #2563eb; font-weight: bold; }
+    .semantic-tag p { color: #6b7280; font-size: 0.85rem; margin-top: 0.5rem; }
+    .why-card { display: flex; gap: 1rem; align-items: flex-start; padding: 1rem; background: #f9fafb; border-radius: 0.75rem; }
+    .why-icon { font-size: 1.5rem; }
+    .box-model { display: flex; justify-content: center; align-items: center; flex: 1; }
+    .box-diagram { text-align: center; }
+    .box-outer { background: #fed7aa; padding: 1rem; border-radius: 0.5rem; }
+    .box-border { background: #fcd34d; padding: 1rem; border-radius: 0.5rem; }
+    .box-padding { background: #bbf7d0; padding: 1rem; border-radius: 0.5rem; }
+    .box-content { background: #93c5fd; padding: 1.5rem 2rem; border-radius: 0.5rem; color: #1e40af; font-weight: bold; }
+    .box-label { font-size: 0.75rem; color: #6b7280; margin-bottom: 0.25rem; }
+    .flex-demo { display: flex; gap: 0.5rem; padding: 1rem; background: #f3f4f6; border-radius: 0.5rem; margin-top: 0.5rem; }
+    .flex-item { background: #3b82f6; color: white; padding: 0.75rem 1rem; border-radius: 0.25rem; font-size: 0.85rem; }
+    .check { color: #3b82f6; font-weight: bold; }
+    .list-card { border-radius: 0.75rem; padding: 1.5rem; background: #eff6ff; border: 1px solid #bfdbfe; }
+    .list-card ul { list-style: none; }
+    .list-card li { padding: 0.5rem 0; display: flex; align-items: flex-start; gap: 0.5rem; color: #374151; font-size: 1.1rem; }
+    .demo-box { background: linear-gradient(135deg, #dbeafe, #ede9fe); border: 2px dashed #3b82f6; border-radius: 1rem; padding: 2rem; text-align: center; flex: 1; display: flex; flex-direction: column; justify-content: center; }
+  </style>
+</head>
+<body>
+  <main class="slideshow">
+    <div class="slide-container">
+      <!-- Slide 1: Title -->
+      <section class="slide active title-slide">
+        <div class="icon icon-blue">🏗️</div>
+        <h1>Part 4: Semantic HTML & CSS Review</h1>
+        <p class="subtitle">Building with Meaning and Style</p>
+        <span class="badge">25 Minutes</span>
+      </section>
+
+      <!-- Slide 2: Structure > Style -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-blue">📐</div>
+          <div><h2>Structure > Style</h2><p class="subtitle">Why Semantic HTML Matters</p></div>
+        </header>
+        <div class="content">
+          <div class="semantic-grid">
+            <article class="semantic-tag">
+              <code>&lt;header&gt;</code>
+              <p>Page or section header</p>
+            </article>
+            <article class="semantic-tag">
+              <code>&lt;nav&gt;</code>
+              <p>Navigation links</p>
+            </article>
+            <article class="semantic-tag">
+              <code>&lt;main&gt;</code>
+              <p>Main content area</p>
+            </article>
+            <article class="semantic-tag">
+              <code>&lt;article&gt;</code>
+              <p>Self-contained content</p>
+            </article>
+            <article class="semantic-tag">
+              <code>&lt;section&gt;</code>
+              <p>Thematic grouping</p>
+            </article>
+            <article class="semantic-tag">
+              <code>&lt;footer&gt;</code>
+              <p>Page or section footer</p>
+            </article>
+          </div>
+          <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+            <div class="why-card" style="flex:1;">
+              <div class="why-icon">🔍</div>
+              <div><strong>SEO</strong><p style="color:#6b7280;font-size:0.9rem;">Search engines understand your content better</p></div>
+            </div>
+            <div class="why-card" style="flex:1;">
+              <div class="why-icon">♿</div>
+              <div><strong>Accessibility</strong><p style="color:#6b7280;font-size:0.9rem;">Screen readers can navigate properly</p></div>
+            </div>
+            <div class="why-card" style="flex:1;">
+              <div class="why-icon">🧹</div>
+              <div><strong>Maintainability</strong><p style="color:#6b7280;font-size:0.9rem;">Easier for you and others to read</p></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 3: Refactoring Example -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-amber">🔧</div>
+          <div><h2>The Refactoring Mindset</h2><p class="subtitle">From "Messy" to "Semantic"</p></div>
+        </header>
+        <div class="grid-2">
+          <div>
+            <div class="comparison-label label-bad">❌ Div Soup</div>
+            <div class="code-block" style="border-radius: 0 0.5rem 0.5rem 0.5rem; border-top: 3px solid #fecaca;">
+<span class="tag">&lt;div</span> <span class="attr">class=</span><span class="str">"header"</span><span class="tag">&gt;</span>
+  <span class="tag">&lt;div</span> <span class="attr">class=</span><span class="str">"nav"</span><span class="tag">&gt;</span>
+    <span class="tag">&lt;div</span> <span class="attr">class=</span><span class="str">"nav-item"</span><span class="tag">&gt;</span>Home<span class="tag">&lt;/div&gt;</span>
+    <span class="tag">&lt;div</span> <span class="attr">class=</span><span class="str">"nav-item"</span><span class="tag">&gt;</span>About<span class="tag">&lt;/div&gt;</span>
+  <span class="tag">&lt;/div&gt;</span>
+<span class="tag">&lt;/div&gt;</span>
+<span class="tag">&lt;div</span> <span class="attr">class=</span><span class="str">"content"</span><span class="tag">&gt;</span>
+  <span class="tag">&lt;div</span> <span class="attr">class=</span><span class="str">"title"</span><span class="tag">&gt;</span>Welcome<span class="tag">&lt;/div&gt;</span>
+  <span class="tag">&lt;div</span> <span class="attr">class=</span><span class="str">"text"</span><span class="tag">&gt;</span>Hello...<span class="tag">&lt;/div&gt;</span>
+<span class="tag">&lt;/div&gt;</span>
+            </div>
+          </div>
+          <div>
+            <div class="comparison-label label-good">✓ Semantic HTML</div>
+            <div class="code-block" style="border-radius: 0 0.5rem 0.5rem 0.5rem; border-top: 3px solid #bbf7d0;">
+<span class="tag">&lt;header&gt;</span>
+  <span class="tag">&lt;nav&gt;</span>
+    <span class="tag">&lt;a</span> <span class="attr">href=</span><span class="str">"/"</span><span class="tag">&gt;</span>Home<span class="tag">&lt;/a&gt;</span>
+    <span class="tag">&lt;a</span> <span class="attr">href=</span><span class="str">"/about"</span><span class="tag">&gt;</span>About<span class="tag">&lt;/a&gt;</span>
+  <span class="tag">&lt;/nav&gt;</span>
+<span class="tag">&lt;/header&gt;</span>
+<span class="tag">&lt;main&gt;</span>
+  <span class="tag">&lt;h1&gt;</span>Welcome<span class="tag">&lt;/h1&gt;</span>
+  <span class="tag">&lt;p&gt;</span>Hello...<span class="tag">&lt;/p&gt;</span>
+<span class="tag">&lt;/main&gt;</span>
+            </div>
+          </div>
+        </div>
+        <aside style="background: #fef3c7; border: 1px solid #fcd34d; border-radius: 0.5rem; padding: 1rem; margin-top: 1rem;">
+          <p><strong>💡 Key Insight:</strong> Look for the "bones" of a template — what IS each section, not just how it looks.</p>
+        </aside>
+      </section>
+
+      <!-- Slide 4: Box Model -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-purple">📦</div>
+          <div><h2>CSS: The Box Model</h2><p class="subtitle">Every Element is a Box</p></div>
+        </header>
+        <div style="display: flex; gap: 2rem; flex: 1;">
+          <div class="box-model">
+            <div class="box-diagram">
+              <div class="box-outer">
+                <div class="box-label">margin</div>
+                <div class="box-border">
+                  <div class="box-label">border</div>
+                  <div class="box-padding">
+                    <div class="box-label">padding</div>
+                    <div class="box-content">content</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="flex: 1; display: flex; flex-direction: column; gap: 1rem;">
+            <div class="why-card">
+              <div class="why-icon">📄</div>
+              <div><strong>Content</strong><p style="color:#6b7280;font-size:0.9rem;">The actual text or image</p></div>
+            </div>
+            <div class="why-card">
+              <div class="why-icon">🟢</div>
+              <div><strong>Padding</strong><p style="color:#6b7280;font-size:0.9rem;">Space inside the border</p></div>
+            </div>
+            <div class="why-card">
+              <div class="why-icon">🟡</div>
+              <div><strong>Border</strong><p style="color:#6b7280;font-size:0.9rem;">The edge of the element</p></div>
+            </div>
+            <div class="why-card">
+              <div class="why-icon">🟠</div>
+              <div><strong>Margin</strong><p style="color:#6b7280;font-size:0.9rem;">Space outside the border</p></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 5: Flexbox -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-blue">📏</div>
+          <div><h2>Flexbox Basics</h2><p class="subtitle">The Modern Way to Layout</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2" style="flex: none;">
+            <div>
+              <h3>The Container (Parent)</h3>
+              <div class="code-block">
+.container {
+  <span class="attr">display</span>: <span class="str">flex</span>;
+  <span class="attr">justify-content</span>: <span class="str">space-between</span>;
+  <span class="attr">align-items</span>: <span class="str">center</span>;
+  <span class="attr">gap</span>: <span class="str">1rem</span>;
+}
+              </div>
+            </div>
+            <div>
+              <h3>The Items (Children)</h3>
+              <div class="code-block">
+.item {
+  <span class="attr">flex</span>: <span class="str">1</span>;  <span style="color:#9ca3af;">/* grow equally */</span>
+}
+.item-fixed {
+  <span class="attr">flex</span>: <span class="str">0 0 200px</span>;  <span style="color:#9ca3af;">/* fixed width */</span>
+}
+              </div>
+            </div>
+          </div>
+          <div style="margin-top: 1rem;">
+            <h3>Visual Examples:</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.5rem;">
+              <div>
+                <p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 0.25rem;">justify-content: space-between</p>
+                <div class="flex-demo" style="justify-content: space-between;">
+                  <div class="flex-item">1</div><div class="flex-item">2</div><div class="flex-item">3</div>
+                </div>
+              </div>
+              <div>
+                <p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 0.25rem;">justify-content: center</p>
+                <div class="flex-demo" style="justify-content: center;">
+                  <div class="flex-item">1</div><div class="flex-item">2</div><div class="flex-item">3</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 6: Live Demo -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-blue">🎬</div>
+          <div><h2>Quick Demo</h2><p class="subtitle">Refactoring in Action</p></div>
+        </header>
+        <div class="demo-box">
+          <h3 style="color: #1e40af; font-size: 1.5rem; margin-bottom: 1rem;">🖥️ Live Refactoring Demo</h3>
+          <p style="color: #3b82f6; font-size: 1.1rem; margin-bottom: 1.5rem;">Watch as we transform "div soup" into semantic HTML</p>
+          <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+            <div style="background: white; padding: 1rem 1.5rem; border-radius: 0.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+              <strong>1.</strong> Identify the structure
+            </div>
+            <div style="background: white; padding: 1rem 1.5rem; border-radius: 0.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+              <strong>2.</strong> Choose semantic tags
+            </div>
+            <div style="background: white; padding: 1rem 1.5rem; border-radius: 0.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+              <strong>3.</strong> Apply Flexbox layout
+            </div>
+            <div style="background: white; padding: 1rem 1.5rem; border-radius: 0.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+              <strong>4.</strong> Test accessibility
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 7: Summary -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-blue">✅</div>
+          <div><h2>Part 4 Complete!</h2><p class="subtitle">Key Takeaways</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="list-card">
+            <ul>
+              <li><span class="check">✓</span> Use <strong>semantic tags</strong> (&lt;header&gt;, &lt;nav&gt;, &lt;main&gt;) instead of generic divs</li>
+              <li><span class="check">✓</span> Semantic HTML improves <strong>SEO</strong> and <strong>accessibility</strong></li>
+              <li><span class="check">✓</span> The <strong>Box Model</strong>: content → padding → border → margin</li>
+              <li><span class="check">✓</span> <strong>Flexbox</strong> is your go-to for modern layouts</li>
+            </ul>
+          </div>
+          <p style="text-align: center; color: #2563eb; font-size: 1.25rem; margin-top: 1.5rem; font-weight: 500;">Next up: Part 5 — LLMs & AI-Augmented Development →</p>
+        </div>
+      </section>
+    </div>
+
+    <nav class="controls">
+      <button class="btn btn-prev" onclick="prevSlide()">← Previous</button>
+      <div class="dots" id="dots"></div>
+      <div style="display:flex;align-items:center;gap:1rem">
+        <span class="counter" id="counter">1 / 7</span>
+        <button class="btn btn-next" onclick="nextSlide()">Next →</button>
+      </div>
+    </nav>
+  </main>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const dotsContainer = document.getElementById('dots');
+    const counter = document.getElementById('counter');
+    let current = 0;
+    slides.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.className = 'dot' + (i === 0 ? ' active' : '');
+      dot.onclick = () => goToSlide(i);
+      dotsContainer.appendChild(dot);
+    });
+    function updateSlide() {
+      slides.forEach((s, i) => s.classList.toggle('active', i === current));
+      document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
+      counter.textContent = `${current + 1} / ${slides.length}`;
+      document.querySelector('.btn-prev').disabled = current === 0;
+      document.querySelector('.btn-next').disabled = current === slides.length - 1;
+    }
+    function nextSlide() { if (current < slides.length - 1) { current++; updateSlide(); } }
+    function prevSlide() { if (current > 0) { current--; updateSlide(); } }
+    function goToSlide(i) { current = i; updateSlide(); }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+      if (e.key === 'ArrowLeft') prevSlide();
+    });
+  </script>
+</body>
+</html>

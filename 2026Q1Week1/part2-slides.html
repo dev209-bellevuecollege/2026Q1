@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Part 2: The Client-Side Context</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; }
+    .slideshow { height: 100vh; display: flex; flex-direction: column; }
+    .slide-container { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+    .slide { background: white; border-radius: 1rem; box-shadow: 0 10px 40px rgba(0,0,0,0.1); width: 100%; max-width: 1000px; height: 600px; padding: 3rem; display: none; flex-direction: column; }
+    .slide.active { display: flex; }
+    .controls { background: white; border-top: 1px solid #e5e7eb; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+    .btn { padding: 0.5rem 1.5rem; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; }
+    .btn-prev, .btn-next { background: #f97316; color: white; }
+    .btn:disabled { background: #d1d5db; cursor: not-allowed; }
+    .dots { display: flex; gap: 0.5rem; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #d1d5db; border: none; cursor: pointer; }
+    .dot.active { background: #f97316; width: 20px; border-radius: 5px; }
+    .slide-title { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+    .icon { width: 50px; height: 50px; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+    .icon-orange { background: #ffedd5; }
+    .icon-blue { background: #dbeafe; }
+    .icon-green { background: #dcfce7; }
+    .icon-purple { background: #f3e8ff; }
+    h1 { font-size: 2.5rem; color: #1f2937; }
+    h2 { font-size: 1.75rem; color: #1f2937; }
+    h3 { font-size: 1.25rem; color: #374151; margin-bottom: 0.5rem; }
+    .subtitle { color: #6b7280; font-size: 1.1rem; }
+    .content { flex: 1; display: flex; flex-direction: column; gap: 1rem; }
+    .card { background: #f9fafb; border-radius: 0.75rem; padding: 1.25rem; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; flex: 1; }
+    .title-slide { align-items: center; justify-content: center; text-align: center; }
+    .title-slide .icon { width: 80px; height: 80px; font-size: 2.5rem; margin-bottom: 1.5rem; border-radius: 50%; }
+    .title-slide h1 { margin-bottom: 1rem; }
+    .title-slide .subtitle { margin-bottom: 1.5rem; font-size: 1.25rem; }
+    .badge { background: #ffedd5; color: #ea580c; padding: 0.5rem 1rem; border-radius: 2rem; font-size: 0.9rem; }
+    .counter { color: #6b7280; font-size: 0.9rem; }
+    .diagram { display: flex; align-items: center; justify-content: center; gap: 2rem; flex: 1; }
+    .diagram-box { padding: 2rem; border-radius: 1rem; text-align: center; min-width: 200px; }
+    .diagram-client { background: #dbeafe; border: 3px solid #3b82f6; }
+    .diagram-server { background: #dcfce7; border: 3px solid #22c55e; }
+    .diagram-arrow { font-size: 2rem; color: #9ca3af; }
+    .pillar { background: linear-gradient(180deg, #fff 0%, #f9fafb 100%); border-radius: 1rem; padding: 1.5rem; text-align: center; border: 2px solid #e5e7eb; flex: 1; }
+    .pillar-icon { font-size: 3rem; margin-bottom: 0.75rem; }
+    .pillar h3 { color: #1f2937; margin-bottom: 0.5rem; }
+    .pillar p { color: #6b7280; font-size: 0.95rem; }
+    .pillar-html { border-color: #f97316; }
+    .pillar-css { border-color: #3b82f6; }
+    .pillar-js { border-color: #eab308; }
+    .timeline { display: flex; flex-direction: column; gap: 1rem; }
+    .timeline-item { display: flex; align-items: center; gap: 1rem; padding: 1rem; background: #f9fafb; border-radius: 0.75rem; }
+    .timeline-year { background: #f97316; color: white; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: bold; min-width: 80px; text-align: center; }
+    .timeline-content { flex: 1; }
+    .timeline-content strong { color: #1f2937; }
+    .check { color: #f97316; font-weight: bold; }
+    .list-card { border-radius: 0.75rem; padding: 1.5rem; background: #fff7ed; border: 1px solid #fed7aa; }
+    .list-card ul { list-style: none; }
+    .list-card li { padding: 0.5rem 0; display: flex; align-items: flex-start; gap: 0.5rem; color: #374151; font-size: 1.1rem; }
+  </style>
+</head>
+<body>
+  <main class="slideshow">
+    <div class="slide-container">
+      <!-- Slide 1: Title -->
+      <section class="slide active title-slide">
+        <div class="icon icon-orange">🌐</div>
+        <h1>Part 2: The Client-Side Context</h1>
+        <p class="subtitle">Understanding Where Your Code Runs</p>
+        <span class="badge">10 Minutes</span>
+      </section>
+
+      <!-- Slide 2: Browser as Platform -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-blue">💻</div>
+          <div><h2>The Browser as the Platform</h2><p class="subtitle">Client vs. Server</p></div>
+        </header>
+        <div class="diagram">
+          <div class="diagram-box diagram-client">
+            <div style="font-size: 3rem; margin-bottom: 0.5rem;">🖥️</div>
+            <h3 style="color: #1d4ed8;">Client (Browser)</h3>
+            <p style="color: #3b82f6; margin-top: 0.5rem;">User's device</p>
+            <ul style="text-align: left; margin-top: 1rem; color: #1e40af; font-size: 0.9rem; list-style: none;">
+              <li>✓ Renders HTML/CSS</li>
+              <li>✓ Runs JavaScript</li>
+              <li>✓ Handles user interaction</li>
+            </ul>
+          </div>
+          <div class="diagram-arrow">⟷</div>
+          <div class="diagram-box diagram-server">
+            <div style="font-size: 3rem; margin-bottom: 0.5rem;">🖧</div>
+            <h3 style="color: #15803d;">Server</h3>
+            <p style="color: #22c55e; margin-top: 0.5rem;">Remote computer</p>
+            <ul style="text-align: left; margin-top: 1rem; color: #166534; font-size: 0.9rem; list-style: none;">
+              <li>✓ Stores data</li>
+              <li>✓ Processes requests</li>
+              <li>✓ Sends responses</li>
+            </ul>
+          </div>
+        </div>
+        <p style="text-align: center; color: #6b7280; margin-top: 1rem;">In this course, we focus on <strong>client-side</strong> — what runs in the browser!</p>
+      </section>
+
+      <!-- Slide 3: Three Pillars -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-orange">🏛️</div>
+          <div><h2>The Three Pillars of the Web</h2><p class="subtitle">Every Web Page is Built on These</p></div>
+        </header>
+        <div style="display: flex; gap: 1.5rem; flex: 1; align-items: stretch;">
+          <article class="pillar pillar-html">
+            <div class="pillar-icon">📄</div>
+            <h3>HTML</h3>
+            <p><strong>Structure</strong></p>
+            <p style="margin-top: 0.75rem;">The semantic skeleton — what content exists and what it means</p>
+            <code style="display: block; margin-top: 1rem; background: #fff7ed; padding: 0.5rem; border-radius: 0.25rem; font-size: 0.8rem;">&lt;header&gt;, &lt;nav&gt;, &lt;main&gt;</code>
+          </article>
+          <article class="pillar pillar-css">
+            <div class="pillar-icon">🎨</div>
+            <h3>CSS</h3>
+            <p><strong>Style</strong></p>
+            <p style="margin-top: 0.75rem;">The responsive layout — how content looks and adapts</p>
+            <code style="display: block; margin-top: 1rem; background: #eff6ff; padding: 0.5rem; border-radius: 0.25rem; font-size: 0.8rem;">flexbox, grid, @media</code>
+          </article>
+          <article class="pillar pillar-js">
+            <div class="pillar-icon">⚡</div>
+            <h3>JavaScript</h3>
+            <p><strong>Behavior</strong></p>
+            <p style="margin-top: 0.75rem;">The logic — interaction, data fetching, dynamic updates</p>
+            <code style="display: block; margin-top: 1rem; background: #fefce8; padding: 0.5rem; border-radius: 0.25rem; font-size: 0.8rem;">events, fetch(), DOM</code>
+          </article>
+        </div>
+      </section>
+
+      <!-- Slide 4: Evolution -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-purple">📈</div>
+          <div><h2>Evolution of Frontend Development</h2><p class="subtitle">How AI and Git Changed Everything</p></div>
+        </header>
+        <div class="timeline">
+          <div class="timeline-item">
+            <div class="timeline-year">Past</div>
+            <div class="timeline-content">
+              <strong>Manual Everything</strong> — Write every line by hand, FTP files to servers, hope nothing breaks
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-year">2010s</div>
+            <div class="timeline-content">
+              <strong>Git Revolution</strong> — Version control becomes standard, collaboration improves, rollbacks are easy
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-year">2020s</div>
+            <div class="timeline-content">
+              <strong>AI-Augmented</strong> — AI assists with boilerplate, debugging, and learning; developers focus on architecture
+            </div>
+          </div>
+          <div class="timeline-item" style="background: #fff7ed; border: 2px solid #f97316;">
+            <div class="timeline-year">Today</div>
+            <div class="timeline-content">
+              <strong>Human + AI + Git</strong> — The modern workflow we'll master in this course
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 5: Summary -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-orange">✅</div>
+          <div><h2>Part 2 Complete!</h2><p class="subtitle">Key Takeaways</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="list-card">
+            <ul>
+              <li><span class="check">✓</span> The <strong>browser</strong> is our platform — that's where client-side code runs</li>
+              <li><span class="check">✓</span> <strong>HTML</strong> = Structure, <strong>CSS</strong> = Style, <strong>JavaScript</strong> = Behavior</li>
+              <li><span class="check">✓</span> Modern development = <strong>Human + AI + Git</strong> working together</li>
+            </ul>
+          </div>
+          <p style="text-align: center; color: #ea580c; font-size: 1.25rem; margin-top: 1.5rem; font-weight: 500;">Next up: Part 3 — Git Foundations →</p>
+        </div>
+      </section>
+    </div>
+
+    <nav class="controls">
+      <button class="btn btn-prev" onclick="prevSlide()">← Previous</button>
+      <div class="dots" id="dots"></div>
+      <div style="display:flex;align-items:center;gap:1rem">
+        <span class="counter" id="counter">1 / 5</span>
+        <button class="btn btn-next" onclick="nextSlide()">Next →</button>
+      </div>
+    </nav>
+  </main>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const dotsContainer = document.getElementById('dots');
+    const counter = document.getElementById('counter');
+    let current = 0;
+    slides.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.className = 'dot' + (i === 0 ? ' active' : '');
+      dot.onclick = () => goToSlide(i);
+      dotsContainer.appendChild(dot);
+    });
+    function updateSlide() {
+      slides.forEach((s, i) => s.classList.toggle('active', i === current));
+      document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
+      counter.textContent = `${current + 1} / ${slides.length}`;
+      document.querySelector('.btn-prev').disabled = current === 0;
+      document.querySelector('.btn-next').disabled = current === slides.length - 1;
+    }
+    function nextSlide() { if (current < slides.length - 1) { current++; updateSlide(); } }
+    function prevSlide() { if (current > 0) { current--; updateSlide(); } }
+    function goToSlide(i) { current = i; updateSlide(); }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+      if (e.key === 'ArrowLeft') prevSlide();
+    });
+  </script>
+</body>
+</html>

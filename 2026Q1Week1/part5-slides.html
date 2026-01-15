@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Part 5: LLMs & AI-Augmented Development</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; }
+    .slideshow { height: 100vh; display: flex; flex-direction: column; }
+    .slide-container { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+    .slide { background: white; border-radius: 1rem; box-shadow: 0 10px 40px rgba(0,0,0,0.1); width: 100%; max-width: 1000px; height: 600px; padding: 3rem; display: none; flex-direction: column; }
+    .slide.active { display: flex; }
+    .controls { background: white; border-top: 1px solid #e5e7eb; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+    .btn { padding: 0.5rem 1.5rem; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; }
+    .btn-prev, .btn-next { background: #7c3aed; color: white; }
+    .btn:disabled { background: #d1d5db; cursor: not-allowed; }
+    .dots { display: flex; gap: 0.5rem; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #d1d5db; border: none; cursor: pointer; }
+    .dot.active { background: #7c3aed; width: 20px; border-radius: 5px; }
+    .slide-title { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+    .icon { width: 50px; height: 50px; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+    .icon-purple { background: #f3e8ff; }
+    .icon-blue { background: #dbeafe; }
+    .icon-yellow { background: #fef3c7; }
+    .icon-indigo { background: #e0e7ff; }
+    .icon-orange { background: #ffedd5; }
+    .icon-red { background: #fee2e2; }
+    .icon-green { background: #dcfce7; }
+    h1 { font-size: 2.5rem; color: #1f2937; }
+    h2 { font-size: 1.75rem; color: #1f2937; }
+    h3 { font-size: 1.25rem; color: #374151; margin-bottom: 0.5rem; }
+    .subtitle { color: #6b7280; font-size: 1.1rem; }
+    .content { flex: 1; display: flex; flex-direction: column; gap: 1rem; }
+    .card { background: #f9fafb; border-radius: 0.75rem; padding: 1.25rem; }
+    .card-highlight { background: #fffbeb; border: 2px solid #fcd34d; }
+    .card-highlight h3 { color: #b45309; }
+    .card-highlight p { color: #92400e; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; flex: 1; }
+    .list-card { border-radius: 0.75rem; padding: 1.5rem; }
+    .list-card-green { background: #f0fdf4; border: 1px solid #bbf7d0; }
+    .list-card-blue { background: #eff6ff; border: 1px solid #bfdbfe; }
+    .list-card-red { background: #fef2f2; border: 1px solid #fecaca; }
+    .list-card h3 { margin-bottom: 1rem; }
+    .list-card-green h3 { color: #15803d; }
+    .list-card-blue h3 { color: #1d4ed8; }
+    .list-card-red h3 { color: #b91c1c; }
+    .list-card ul { list-style: none; }
+    .list-card li { padding: 0.5rem 0; display: flex; align-items: flex-start; gap: 0.5rem; color: #374151; }
+    .check { color: #22c55e; }
+    .code-block { background: #1f2937; color: #4ade80; padding: 0.75rem 1rem; border-radius: 0.5rem; font-family: monospace; font-size: 0.9rem; margin-top: 0.5rem; }
+    .code-block-light { color: #9ca3af; }
+    .principle-num { background: #4f46e5; color: white; font-size: 0.75rem; font-weight: bold; padding: 0.25rem 0.5rem; border-radius: 0.25rem; }
+    .highlight-box { background: #fef3c7; border: 2px solid #fcd34d; border-radius: 0.75rem; padding: 1.5rem; text-align: center; margin-bottom: 1.5rem; }
+    .highlight-box p { font-size: 1.25rem; font-weight: bold; color: #92400e; }
+    .checklist { background: #f9fafb; border-radius: 0.75rem; padding: 1.5rem; flex: 1; }
+    .checklist li { padding: 0.75rem 0; display: flex; align-items: center; gap: 1rem; color: #374151; }
+    .checkbox { width: 24px; height: 24px; border: 2px solid #d1d5db; border-radius: 0.25rem; display: flex; align-items: center; justify-content: center; color: #9ca3af; font-size: 0.75rem; }
+    .workflow { display: flex; align-items: center; justify-content: center; gap: 0.5rem; flex: 1; }
+    .workflow-step { background: white; border: 2px solid #e9d5ff; border-radius: 0.75rem; padding: 1rem; width: 140px; text-align: center; }
+    .workflow-num { background: #7c3aed; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.5rem; font-weight: bold; }
+    .workflow-step h4 { font-size: 0.9rem; color: #1f2937; margin-bottom: 0.25rem; }
+    .workflow-step p { font-size: 0.75rem; color: #6b7280; }
+    .arrow { color: #c4b5fd; font-size: 1.5rem; }
+    .takeaway { display: flex; align-items: center; gap: 1rem; background: linear-gradient(to right, #f3e8ff, transparent); padding: 1rem; border-radius: 0.5rem; }
+    .takeaway-num { background: #7c3aed; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0; }
+    .title-slide { align-items: center; justify-content: center; text-align: center; }
+    .title-slide .icon { width: 80px; height: 80px; font-size: 2.5rem; margin-bottom: 1.5rem; border-radius: 50%; }
+    .title-slide h1 { margin-bottom: 1rem; }
+    .title-slide .subtitle { margin-bottom: 1.5rem; font-size: 1.25rem; }
+    .badge { background: #f3e8ff; color: #7c3aed; padding: 0.5rem 1rem; border-radius: 2rem; font-size: 0.9rem; }
+    .counter { color: #6b7280; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <main class="slideshow">
+    <div class="slide-container">
+      <!-- Slide 1: Title -->
+      <section class="slide active title-slide">
+        <div class="icon icon-purple">🤖</div>
+        <h1>Part 5: LLMs & AI-Augmented Development</h1>
+        <p class="subtitle">Understanding Your New Coding Partner</p>
+        <span class="badge">25 Minutes</span>
+      </section>
+
+      <!-- Slide 2: Demystifying -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-blue">🧠</div>
+          <div><h2>Demystifying the LLM</h2><p class="subtitle">What's Actually Happening Under the Hood?</p></div>
+        </header>
+        <div class="content">
+          <div class="card"><h3>What is an LLM?</h3><p>Large Language Model — a neural network trained on massive amounts of text data to predict the next most likely token</p></div>
+          <div class="card"><h3>The "Stochastic Parrot" Concept</h3><p>LLMs generate statistically probable responses based on patterns, not true understanding or reasoning</p></div>
+          <div class="card card-highlight"><h3>Key Insight</h3><p>It's incredibly good at pattern matching, but it doesn't "know" anything — it predicts</p></div>
+        </div>
+      </section>
+
+      <!-- Slide 3: Tokens -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-blue">💻</div>
+          <div><h2>Tokens & Context Windows</h2><p class="subtitle">The Currency and Memory of AI</p></div>
+        </header>
+        <div class="content">
+          <div class="card"><h3>Tokens</h3><p>The basic units LLMs process — roughly 4 characters or ¾ of a word. "JavaScript" ≈ 2-3 tokens</p></div>
+          <div class="card"><h3>Context Window</h3><p>The "working memory" — how much text the AI can consider at once (e.g., 8K, 32K, 128K+ tokens)</p></div>
+          <div class="card card-highlight"><h3>Why It Matters</h3><p>Longer context = more code the AI can "see" and reference. But there are still limits!</p></div>
+        </div>
+      </section>
+
+      <!-- Slide 4: Motivation -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-yellow">💡</div>
+          <div><h2>The Motivation</h2><p class="subtitle">AI as a Junior Partner, Not a Replacement</p></div>
+        </header>
+        <div class="grid-2">
+          <div class="list-card list-card-green">
+            <h3>✓ AI Excels At</h3>
+            <ul>
+              <li><span class="check">✓</span> Generating boilerplate code</li>
+              <li><span class="check">✓</span> Debugging & error explanations</li>
+              <li><span class="check">✓</span> Explaining unfamiliar concepts</li>
+              <li><span class="check">✓</span> Refactoring suggestions</li>
+              <li><span class="check">✓</span> Writing documentation</li>
+            </ul>
+          </div>
+          <div class="list-card list-card-blue">
+            <h3>→ You Must Provide</h3>
+            <ul>
+              <li><span class="check">✓</span> Architectural decisions</li>
+              <li><span class="check">✓</span> Business logic understanding</li>
+              <li><span class="check">✓</span> Code review & validation</li>
+              <li><span class="check">✓</span> Creative problem solving</li>
+              <li><span class="check">✓</span> The final "ship it" judgment</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 5: Prompt Engineering -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-indigo">💬</div>
+          <div><h2>Prompt Engineering for Devs</h2><p class="subtitle">Getting Better Results with Better Inputs</p></div>
+        </header>
+        <div class="content">
+          <div class="card">
+            <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem"><span class="principle-num">1</span><strong>Context</strong><span style="color:#6b7280">— Tell the AI what you're working with</span></div>
+            <div class="code-block">"I am building a mobile-first responsive portfolio using vanilla HTML/CSS..."</div>
+          </div>
+          <div class="card">
+            <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem"><span class="principle-num">2</span><strong>Constraints</strong><span style="color:#6b7280">— Set clear boundaries</span></div>
+            <div class="code-block">"...do not use Bootstrap or any CSS frameworks, use vanilla CSS Flexbox only."</div>
+          </div>
+          <div class="card">
+            <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem"><span class="principle-num">3</span><strong>Specificity</strong><span style="color:#6b7280">— Be precise about what you need</span></div>
+            <div class="code-block">"Create a navigation component with 4 links that collapses to a hamburger menu below 768px."</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 6: Good vs Bad -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-orange">💻</div>
+          <div><h2>Good Prompt vs. Bad Prompt</h2><p class="subtitle">A Side-by-Side Comparison</p></div>
+        </header>
+        <div class="grid-2">
+          <div class="list-card list-card-red">
+            <h3>❌ Bad Prompt</h3>
+            <div class="code-block code-block-light">"Make me a navbar"</div>
+            <ul style="margin-top:1rem">
+              <li>• No context about the project</li>
+              <li>• No styling preferences</li>
+              <li>• No accessibility requirements</li>
+              <li>• Vague outcome</li>
+            </ul>
+          </div>
+          <div class="list-card list-card-green">
+            <h3>✓ Good Prompt</h3>
+            <div class="code-block" style="font-size:0.7rem;line-height:1.4">"I'm building a portfolio site using semantic HTML5 and vanilla CSS with Flexbox. Create a responsive navigation bar with links to Home, Projects, About, and Contact. It should be mobile-first, collapse to a hamburger icon below 768px, and be keyboard accessible."</div>
+            <ul style="margin-top:1rem">
+              <li><span class="check">✓</span> Clear tech stack</li>
+              <li><span class="check">✓</span> Specific requirements</li>
+              <li><span class="check">✓</span> Accessibility mentioned</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 7: Ethics -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-red">⚠️</div>
+          <div><h2>The Ethics of "Audit"</h2><p class="subtitle">The Human-in-the-Loop Rule</p></div>
+        </header>
+        <div class="highlight-box">
+          <p>"If you can't explain what the AI wrote, you haven't finished the task."</p>
+        </div>
+        <div class="checklist">
+          <h3 style="margin-bottom:1rem">Before You Commit AI-Generated Code, Ask Yourself:</h3>
+          <ul style="list-style:none">
+            <li><div class="checkbox">?</div> Can you explain every line of the generated code?</li>
+            <li><div class="checkbox">?</div> Have you tested it in multiple scenarios?</li>
+            <li><div class="checkbox">?</div> Do you understand why this solution works?</li>
+            <li><div class="checkbox">?</div> Could you modify it if requirements changed?</li>
+            <li><div class="checkbox">?</div> Would you be comfortable defending it in a code review?</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Slide 8: Workflow -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-green">✓</div>
+          <div><h2>The AI Workflow in This Course</h2><p class="subtitle">Embrace It, But Audit It</p></div>
+        </header>
+        <div class="workflow">
+          <div class="workflow-step"><div class="workflow-num">1</div><h4>Attempt First</h4><p>Try to solve it yourself</p></div>
+          <span class="arrow">→</span>
+          <div class="workflow-step"><div class="workflow-num">2</div><h4>Prompt Thoughtfully</h4><p>Use context + constraints</p></div>
+          <span class="arrow">→</span>
+          <div class="workflow-step"><div class="workflow-num">3</div><h4>Review Critically</h4><p>Never copy-paste blindly</p></div>
+          <span class="arrow">→</span>
+          <div class="workflow-step"><div class="workflow-num">4</div><h4>Learn & Document</h4><p>Understand what was generated</p></div>
+          <span class="arrow">→</span>
+          <div class="workflow-step"><div class="workflow-num">5</div><h4>Commit with Confidence</h4><p>You own the code</p></div>
+        </div>
+      </section>
+
+      <!-- Slide 9: Takeaways -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-purple">🧠</div>
+          <div><h2>Key Takeaways</h2><p class="subtitle">What to Remember</p></div>
+        </header>
+        <div class="content" style="justify-content:center">
+          <div class="takeaway"><div class="takeaway-num">1</div><p>LLMs predict tokens — they don't truly "understand"</p></div>
+          <div class="takeaway"><div class="takeaway-num">2</div><p>Context windows limit what AI can "see"</p></div>
+          <div class="takeaway"><div class="takeaway-num">3</div><p>Better prompts = Better results</p></div>
+          <div class="takeaway"><div class="takeaway-num">4</div><p>AI is your junior partner, not your replacement</p></div>
+          <div class="takeaway"><div class="takeaway-num">5</div><p>The audit rule: If you can't explain it, you're not done</p></div>
+        </div>
+      </section>
+    </div>
+
+    <nav class="controls">
+      <button class="btn btn-prev" onclick="prevSlide()">← Previous</button>
+      <div class="dots" id="dots"></div>
+      <div style="display:flex;align-items:center;gap:1rem">
+        <span class="counter" id="counter">1 / 9</span>
+        <button class="btn btn-next" onclick="nextSlide()">Next →</button>
+      </div>
+    </nav>
+  </main>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const dotsContainer = document.getElementById('dots');
+    const counter = document.getElementById('counter');
+    let current = 0;
+
+    // Create dots
+    slides.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.className = 'dot' + (i === 0 ? ' active' : '');
+      dot.onclick = () => goToSlide(i);
+      dotsContainer.appendChild(dot);
+    });
+
+    function updateSlide() {
+      slides.forEach((s, i) => s.classList.toggle('active', i === current));
+      document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
+      counter.textContent = `${current + 1} / ${slides.length}`;
+      document.querySelector('.btn-prev').disabled = current === 0;
+      document.querySelector('.btn-next').disabled = current === slides.length - 1;
+    }
+
+    function nextSlide() { if (current < slides.length - 1) { current++; updateSlide(); } }
+    function prevSlide() { if (current > 0) { current--; updateSlide(); } }
+    function goToSlide(i) { current = i; updateSlide(); }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+      if (e.key === 'ArrowLeft') prevSlide();
+    });
+  </script>
+</body>
+</html>

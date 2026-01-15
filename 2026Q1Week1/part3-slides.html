@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Part 3: Git Foundations</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; }
+    .slideshow { height: 100vh; display: flex; flex-direction: column; }
+    .slide-container { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+    .slide { background: white; border-radius: 1rem; box-shadow: 0 10px 40px rgba(0,0,0,0.1); width: 100%; max-width: 1000px; height: 600px; padding: 3rem; display: none; flex-direction: column; }
+    .slide.active { display: flex; }
+    .controls { background: white; border-top: 1px solid #e5e7eb; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+    .btn { padding: 0.5rem 1.5rem; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; }
+    .btn-prev, .btn-next { background: #16a34a; color: white; }
+    .btn:disabled { background: #d1d5db; cursor: not-allowed; }
+    .dots { display: flex; gap: 0.5rem; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #d1d5db; border: none; cursor: pointer; }
+    .dot.active { background: #16a34a; width: 20px; border-radius: 5px; }
+    .slide-title { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+    .icon { width: 50px; height: 50px; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+    .icon-green { background: #dcfce7; }
+    .icon-red { background: #fee2e2; }
+    .icon-blue { background: #dbeafe; }
+    .icon-purple { background: #f3e8ff; }
+    h1 { font-size: 2.5rem; color: #1f2937; }
+    h2 { font-size: 1.75rem; color: #1f2937; }
+    h3 { font-size: 1.25rem; color: #374151; margin-bottom: 0.5rem; }
+    .subtitle { color: #6b7280; font-size: 1.1rem; }
+    .content { flex: 1; display: flex; flex-direction: column; gap: 1rem; }
+    .card { background: #f9fafb; border-radius: 0.75rem; padding: 1.25rem; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; flex: 1; }
+    .title-slide { align-items: center; justify-content: center; text-align: center; }
+    .title-slide .icon { width: 80px; height: 80px; font-size: 2.5rem; margin-bottom: 1.5rem; border-radius: 50%; }
+    .title-slide h1 { margin-bottom: 1rem; }
+    .title-slide .subtitle { margin-bottom: 1.5rem; font-size: 1.25rem; }
+    .badge { background: #dcfce7; color: #16a34a; padding: 0.5rem 1rem; border-radius: 2rem; font-size: 0.9rem; }
+    .counter { color: #6b7280; font-size: 0.9rem; }
+    .comparison { display: flex; gap: 2rem; flex: 1; align-items: center; }
+    .comparison-bad { background: #fef2f2; border: 2px solid #fecaca; border-radius: 1rem; padding: 1.5rem; flex: 1; }
+    .comparison-good { background: #f0fdf4; border: 2px solid #bbf7d0; border-radius: 1rem; padding: 1.5rem; flex: 1; }
+    .comparison h3 { margin-bottom: 1rem; }
+    .comparison-bad h3 { color: #dc2626; }
+    .comparison-good h3 { color: #16a34a; }
+    .file-list { list-style: none; font-family: monospace; font-size: 0.9rem; }
+    .file-list li { padding: 0.25rem 0; color: #6b7280; }
+    .code-block { background: #1f2937; color: #4ade80; padding: 1rem 1.25rem; border-radius: 0.5rem; font-family: monospace; font-size: 1rem; margin: 0.5rem 0; }
+    .code-comment { color: #9ca3af; }
+    .workflow-step { display: flex; align-items: flex-start; gap: 1rem; padding: 1rem; background: #f0fdf4; border-radius: 0.75rem; border-left: 4px solid #16a34a; }
+    .step-num { background: #16a34a; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0; }
+    .github-benefits { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+    .benefit { background: #f9fafb; border-radius: 0.75rem; padding: 1.25rem; display: flex; align-items: flex-start; gap: 1rem; }
+    .benefit-icon { font-size: 1.5rem; }
+    .check { color: #16a34a; font-weight: bold; }
+    .list-card { border-radius: 0.75rem; padding: 1.5rem; background: #f0fdf4; border: 1px solid #bbf7d0; }
+    .list-card ul { list-style: none; }
+    .list-card li { padding: 0.5rem 0; display: flex; align-items: flex-start; gap: 0.5rem; color: #374151; font-size: 1.1rem; }
+    .demo-box { background: linear-gradient(135deg, #dcfce7, #d1fae5); border: 2px dashed #16a34a; border-radius: 1rem; padding: 2rem; text-align: center; flex: 1; display: flex; flex-direction: column; justify-content: center; }
+    .demo-box h3 { color: #166534; font-size: 1.5rem; margin-bottom: 1rem; }
+  </style>
+</head>
+<body>
+  <main class="slideshow">
+    <div class="slide-container">
+      <!-- Slide 1: Title -->
+      <section class="slide active title-slide">
+        <div class="icon icon-green">📦</div>
+        <h1>Part 3: Git Foundations</h1>
+        <p class="subtitle">Your Professional "Undo" Button</p>
+        <span class="badge">30 Minutes</span>
+      </section>
+
+      <!-- Slide 2: The Problem -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-red">😱</div>
+          <div><h2>The Problem</h2><p class="subtitle">We've All Been Here...</p></div>
+        </header>
+        <div class="comparison">
+          <div class="comparison-bad">
+            <h3>❌ Without Version Control</h3>
+            <ul class="file-list">
+              <li>📁 project.zip</li>
+              <li>📁 project_v2.zip</li>
+              <li>📁 project_final.zip</li>
+              <li>📁 project_final_v2.zip</li>
+              <li>📁 project_REALLY_final.zip</li>
+              <li>📁 project_final_USE_THIS_ONE.zip</li>
+              <li>📁 project_final_v2_fixed_REAL.zip</li>
+            </ul>
+            <p style="margin-top: 1rem; color: #dc2626; font-size: 0.9rem;">Which one is the latest? What changed? 🤯</p>
+          </div>
+          <div class="comparison-good">
+            <h3>✓ With Git</h3>
+            <ul class="file-list">
+              <li>📁 project/</li>
+              <li style="color: #16a34a;">&nbsp;&nbsp;└── .git/ <span style="color: #9ca3af;">(tracks everything)</span></li>
+            </ul>
+            <p style="margin-top: 1rem; color: #16a34a; font-size: 0.9rem;">One folder. Complete history. Easy rollbacks. ✨</p>
+            <div style="margin-top: 1rem; padding: 0.75rem; background: #dcfce7; border-radius: 0.5rem; font-size: 0.85rem;">
+              <strong>Every change is tracked:</strong><br>
+              Who made it, when, and why
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 3: git init -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-green">🧠</div>
+          <div><h2>Step 1: git init</h2><p class="subtitle">Creating the "Brain" of Your Project</p></div>
+        </header>
+        <div class="content">
+          <div class="workflow-step">
+            <div class="step-num">1</div>
+            <div>
+              <h3>Initialize a Git Repository</h3>
+              <p style="color: #6b7280; margin-bottom: 1rem;">This creates a hidden .git folder that tracks all changes</p>
+              <div class="code-block">
+                <span class="code-comment"># Navigate to your project folder</span><br>
+                cd my-project<br><br>
+                <span class="code-comment"># Initialize Git</span><br>
+                git init
+              </div>
+            </article>
+          </div>
+          <div class="card" style="background: #fef3c7; border: 1px solid #fcd34d;">
+            <p><strong>💡 What just happened?</strong></p>
+            <p style="color: #92400e; margin-top: 0.5rem;">Git created a hidden <code>.git</code> folder. This is the "brain" — it will remember every change you make from now on.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 4: add & commit -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-green">💾</div>
+          <div><h2>Step 2: git add & git commit</h2><p class="subtitle">Creating a "Save Point"</p></div>
+        </header>
+        <div class="content">
+          <div class="workflow-step">
+            <div class="step-num">2</div>
+            <div style="width: 100%;">
+              <h3>Stage and Commit Your Changes</h3>
+              <div class="code-block">
+                <span class="code-comment"># Stage all changed files</span><br>
+                git add .<br><br>
+                <span class="code-comment"># Create a save point with a message</span><br>
+                git commit -m "Add navigation bar"
+              </div>
+            </article>
+          </div>
+          <div class="grid-2" style="flex: none;">
+            <div class="card">
+              <h3>📥 git add</h3>
+              <p style="color: #6b7280;">"Stage" files — tell Git which changes to include in the next save point</p>
+            </div>
+            <div class="card">
+              <h3>💾 git commit</h3>
+              <p style="color: #6b7280;">"Commit" — create a permanent save point with a descriptive message</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 5: GitHub -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-purple">☁️</div>
+          <div><h2>The Cloud: GitHub</h2><p class="subtitle">More Than Just a Backup</p></div>
+        </header>
+        <div class="content">
+          <div class="github-benefits">
+            <article class="benefit">
+              <div class="benefit-icon">☁️</div>
+              <div>
+                <h3>Cloud Backup</h3>
+                <p style="color: #6b7280; font-size: 0.9rem;">Your code is safe even if your laptop dies</p>
+              </div>
+            </article>
+            <article class="benefit">
+              <div class="benefit-icon">👥</div>
+              <div>
+                <h3>Collaboration</h3>
+                <p style="color: #6b7280; font-size: 0.9rem;">Work with others without emailing zip files</p>
+              </div>
+            </article>
+            <article class="benefit">
+              <div class="benefit-icon">📂</div>
+              <div>
+                <h3>Portfolio</h3>
+                <p style="color: #6b7280; font-size: 0.9rem;">Employers look at your GitHub — it's your coding resume</p>
+              </div>
+            </article>
+            <article class="benefit">
+              <div class="benefit-icon">🚀</div>
+              <div>
+                <h3>Deployment</h3>
+                <p style="color: #6b7280; font-size: 0.9rem;">Deploy directly to the web with GitHub Pages</p>
+              </div>
+            </article>
+          </div>
+          <div class="workflow-step" style="background: #f3e8ff; border-color: #a855f7;">
+            <div class="step-num" style="background: #a855f7;">3</div>
+            <div style="width: 100%;">
+              <h3>Push to GitHub</h3>
+              <div class="code-block">
+                git remote add origin https://github.com/you/repo.git<br>
+                git push -u origin main
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 6: Live Demo -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-green">🎬</div>
+          <div><h2>Live Demo Time!</h2><p class="subtitle">Let's Do This Together</p></div>
+        </header>
+        <div class="demo-box">
+          <h3>🖥️ Live Demonstration</h3>
+          <p style="color: #166534; font-size: 1.1rem; margin-bottom: 1.5rem;">Watch as we initialize a project and create our first "Save Point"</p>
+          <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+            <div style="background: white; padding: 1rem 1.5rem; border-radius: 0.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+              <strong>1.</strong> Create a project folder
+            </div>
+            <div style="background: white; padding: 1rem 1.5rem; border-radius: 0.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+              <strong>2.</strong> git init
+            </div>
+            <div style="background: white; padding: 1rem 1.5rem; border-radius: 0.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+              <strong>3.</strong> Add some files
+            </div>
+            <div style="background: white; padding: 1rem 1.5rem; border-radius: 0.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+              <strong>4.</strong> git add & commit
+            </div>
+            <div style="background: white; padding: 1rem 1.5rem; border-radius: 0.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+              <strong>5.</strong> Push to GitHub
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 7: Summary -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-green">✅</div>
+          <div><h2>Part 3 Complete!</h2><p class="subtitle">Git Commands to Remember</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="list-card">
+            <ul>
+              <li><span class="check">✓</span> <code style="background:#e5e7eb;padding:0.25rem 0.5rem;border-radius:0.25rem;">git init</code> — Create the "brain" (initialize repo)</li>
+              <li><span class="check">✓</span> <code style="background:#e5e7eb;padding:0.25rem 0.5rem;border-radius:0.25rem;">git add .</code> — Stage all changes</li>
+              <li><span class="check">✓</span> <code style="background:#e5e7eb;padding:0.25rem 0.5rem;border-radius:0.25rem;">git commit -m "message"</code> — Create a save point</li>
+              <li><span class="check">✓</span> <code style="background:#e5e7eb;padding:0.25rem 0.5rem;border-radius:0.25rem;">git push</code> — Upload to GitHub</li>
+            </ul>
+          </div>
+          <p style="text-align: center; color: #16a34a; font-size: 1.25rem; margin-top: 1.5rem; font-weight: 500;">Next up: Part 4 — Semantic HTML & CSS Review →</p>
+        </div>
+      </section>
+    </div>
+
+    <nav class="controls">
+      <button class="btn btn-prev" onclick="prevSlide()">← Previous</button>
+      <div class="dots" id="dots"></div>
+      <div style="display:flex;align-items:center;gap:1rem">
+        <span class="counter" id="counter">1 / 7</span>
+        <button class="btn btn-next" onclick="nextSlide()">Next →</button>
+      </div>
+    </nav>
+  </main>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const dotsContainer = document.getElementById('dots');
+    const counter = document.getElementById('counter');
+    let current = 0;
+    slides.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.className = 'dot' + (i === 0 ? ' active' : '');
+      dot.onclick = () => goToSlide(i);
+      dotsContainer.appendChild(dot);
+    });
+    function updateSlide() {
+      slides.forEach((s, i) => s.classList.toggle('active', i === current));
+      document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
+      counter.textContent = `${current + 1} / ${slides.length}`;
+      document.querySelector('.btn-prev').disabled = current === 0;
+      document.querySelector('.btn-next').disabled = current === slides.length - 1;
+    }
+    function nextSlide() { if (current < slides.length - 1) { current++; updateSlide(); } }
+    function prevSlide() { if (current > 0) { current--; updateSlide(); } }
+    function goToSlide(i) { current = i; updateSlide(); }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+      if (e.key === 'ArrowLeft') prevSlide();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Part 1: Orientation & Introductions</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; }
+    .slideshow { height: 100vh; display: flex; flex-direction: column; }
+    .slide-container { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+    .slide { background: white; border-radius: 1rem; box-shadow: 0 10px 40px rgba(0,0,0,0.1); width: 100%; max-width: 1000px; height: 600px; padding: 3rem; display: none; flex-direction: column; }
+    .slide.active { display: flex; }
+    .controls { background: white; border-top: 1px solid #e5e7eb; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+    .btn { padding: 0.5rem 1.5rem; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; }
+    .btn-prev, .btn-next { background: #0891b2; color: white; }
+    .btn:disabled { background: #d1d5db; cursor: not-allowed; }
+    .dots { display: flex; gap: 0.5rem; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #d1d5db; border: none; cursor: pointer; }
+    .dot.active { background: #0891b2; width: 20px; border-radius: 5px; }
+    .slide-title { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+    .icon { width: 50px; height: 50px; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+    .icon-cyan { background: #cffafe; }
+    .icon-blue { background: #dbeafe; }
+    .icon-green { background: #dcfce7; }
+    .icon-amber { background: #fef3c7; }
+    .icon-purple { background: #f3e8ff; }
+    h1 { font-size: 2.5rem; color: #1f2937; }
+    h2 { font-size: 1.75rem; color: #1f2937; }
+    h3 { font-size: 1.25rem; color: #374151; margin-bottom: 0.5rem; }
+    .subtitle { color: #6b7280; font-size: 1.1rem; }
+    .content { flex: 1; display: flex; flex-direction: column; gap: 1rem; }
+    .card { background: #f9fafb; border-radius: 0.75rem; padding: 1.25rem; }
+    .card-highlight { background: #ecfeff; border: 2px solid #22d3ee; }
+    .card-highlight h3 { color: #0e7490; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; flex: 1; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; flex: 1; }
+    .list-card { border-radius: 0.75rem; padding: 1.5rem; }
+    .list-card-cyan { background: #ecfeff; border: 1px solid #a5f3fc; }
+    .list-card-blue { background: #eff6ff; border: 1px solid #bfdbfe; }
+    .list-card ul { list-style: none; }
+    .list-card li { padding: 0.5rem 0; display: flex; align-items: flex-start; gap: 0.5rem; color: #374151; }
+    .check { color: #0891b2; font-weight: bold; }
+    .title-slide { align-items: center; justify-content: center; text-align: center; }
+    .title-slide .icon { width: 80px; height: 80px; font-size: 2.5rem; margin-bottom: 1.5rem; border-radius: 50%; }
+    .title-slide h1 { margin-bottom: 1rem; }
+    .title-slide .subtitle { margin-bottom: 1.5rem; font-size: 1.25rem; }
+    .badge { background: #ecfeff; color: #0891b2; padding: 0.5rem 1rem; border-radius: 2rem; font-size: 0.9rem; }
+    .counter { color: #6b7280; font-size: 0.9rem; }
+    .big-text { font-size: 1.5rem; color: #374151; line-height: 1.6; }
+    .tool-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-top: 1rem; }
+    .tool-item { background: #f9fafb; border-radius: 0.75rem; padding: 1.5rem; text-align: center; border: 2px solid #e5e7eb; }
+    .tool-item:hover { border-color: #22d3ee; }
+    .tool-icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
+    .tool-name { font-weight: bold; color: #1f2937; }
+    .icebreaker { background: linear-gradient(135deg, #ecfeff, #f0fdf4); border-radius: 1rem; padding: 2rem; text-align: center; }
+    .icebreaker h3 { font-size: 1.5rem; color: #0e7490; margin-bottom: 1.5rem; }
+    .icebreaker-items { display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap; }
+    .icebreaker-item { background: white; border-radius: 0.75rem; padding: 1.25rem 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .icebreaker-num { background: #0891b2; color: white; width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.9rem; margin-right: 0.5rem; }
+    .highlight-box { background: #fef3c7; border: 2px solid #fcd34d; border-radius: 0.75rem; padding: 1.5rem; margin-top: 1rem; }
+    .highlight-box p { color: #92400e; font-weight: 500; font-size: 1.1rem; }
+  </style>
+</head>
+<body>
+  <main class="slideshow">
+    <div class="slide-container">
+      <!-- Slide 1: Title -->
+      <section class="slide active title-slide">
+        <div class="icon icon-cyan">🎓</div>
+        <h1>Part 1: Orientation & Introductions</h1>
+        <p class="subtitle">Welcome to Client-Side Web Programming</p>
+        <span class="badge">20 Minutes</span>
+      </section>
+
+      <!-- Slide 2: The Why -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-cyan">🎯</div>
+          <div><h2>The "Why" of This Course</h2><p class="subtitle">A New Approach to Learning Development</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <article class="card" style="padding: 2rem;">
+            <h3 style="font-size: 1.5rem; margin-bottom: 1rem; color: #0e7490;">We're Not Just "Learning to Code"</h3>
+            <p class="big-text">We're <strong>learning to build products</strong> using modern tools:</p>
+            <div style="display: flex; gap: 2rem; margin-top: 1.5rem; justify-content: center;">
+              <div style="text-align: center; padding: 1rem 2rem; background: #ecfeff; border-radius: 0.5rem;">
+                <div style="font-size: 2rem;">⚛️</div>
+                <div style="font-weight: bold; color: #0e7490;">React</div>
+              </div>
+              <div style="text-align: center; padding: 1rem 2rem; background: #fef3c7; border-radius: 0.5rem;">
+                <div style="font-size: 2rem;">📦</div>
+                <div style="font-weight: bold; color: #b45309;">Git</div>
+              </div>
+              <div style="text-align: center; padding: 1rem 2rem; background: #f3e8ff; border-radius: 0.5rem;">
+                <div style="font-size: 2rem;">🤖</div>
+                <div style="font-weight: bold; color: #7c3aed;">AI</div>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- Slide 3: Syllabus -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-blue">📋</div>
+          <div><h2>Syllabus Highlights</h2><p class="subtitle">What You Need to Know</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-3">
+            <article class="card" style="text-align: center;">
+              <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📅</div>
+              <h3>Key Dates</h3>
+              <p style="color: #6b7280;">Check the syllabus for all assignment deadlines and exam dates</p>
+            </article>
+            <article class="card" style="text-align: center;">
+              <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🚀</div>
+              <h3>Final Project</h3>
+              <p style="color: #6b7280;">A complete web application showcasing everything you've learned</p>
+            </article>
+            <article class="card" style="text-align: center;">
+              <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🤖</div>
+              <h3>AI Policy</h3>
+              <p style="color: #6b7280;">Embrace it, but audit it — you must understand what AI writes</p>
+            </article>
+          </div>
+          <aside class="highlight-box">
+            <p>💡 <strong>The AI Rule:</strong> If you can't explain what the AI wrote, you haven't finished the task.</p>
+          </aside>
+        </div>
+      </section>
+
+      <!-- Slide 4: Icebreaker -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-green">👋</div>
+          <div><h2>Student Introductions</h2><p class="subtitle">Let's Get to Know Each Other</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="icebreaker">
+            <h3>The Icebreaker Prompt</h3>
+            <div class="icebreaker-items">
+              <div class="icebreaker-item">
+                <span class="icebreaker-num">1</span>
+                <span>Your <strong>Name</strong></span>
+              </div>
+              <div class="icebreaker-item">
+                <span class="icebreaker-num">2</span>
+                <span>One of your <strong>"hobbies"</strong> or a <strong>"passion"</strong> project</span>
+              </div>
+            </div>
+          </div>
+          <p style="text-align: center; color: #6b7280; margin-top: 1.5rem; font-size: 1.1rem;">💡 Your passion project idea could become your Homework 1 project!</p>
+        </div>
+      </section>
+
+      <!-- Slide 5: Toolbox -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-purple">🧰</div>
+          <div><h2>The Toolbox</h2><p class="subtitle">Make Sure You Have These Ready</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="tool-grid">
+            <article class="tool-item">
+              <div class="tool-icon">💻</div>
+              <div class="tool-name">VS Code</div>
+              <p style="font-size: 0.85rem; color: #6b7280; margin-top: 0.5rem;">Code Editor</p>
+            </article>
+            <article class="tool-item">
+              <div class="tool-icon">🌐</div>
+              <div class="tool-name">Chrome</div>
+              <p style="font-size: 0.85rem; color: #6b7280; margin-top: 0.5rem;">Browser + DevTools</p>
+            </article>
+            <article class="tool-item">
+              <div class="tool-icon">📦</div>
+              <div class="tool-name">Git</div>
+              <p style="font-size: 0.85rem; color: #6b7280; margin-top: 0.5rem;">Version Control</p>
+            </article>
+            <article class="tool-item">
+              <div class="tool-icon">🐙</div>
+              <div class="tool-name">GitHub</div>
+              <p style="font-size: 0.85rem; color: #6b7280; margin-top: 0.5rem;">Code Hosting</p>
+            </article>
+          </div>
+          <aside class="card card-highlight" style="margin-top: 1.5rem; text-align: center;">
+            <p style="font-size: 1.1rem;"><strong>Quick Check:</strong> Does everyone have access to these tools? Raise your hand if you need help!</p>
+          </aside>
+        </div>
+      </section>
+
+      <!-- Slide 6: Summary -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-cyan">✅</div>
+          <div><h2>Part 1 Complete!</h2><p class="subtitle">What We Covered</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="list-card list-card-cyan">
+            <ul style="font-size: 1.2rem;">
+              <li><span class="check">✓</span> Course philosophy: Building products, not just coding</li>
+              <li><span class="check">✓</span> Key syllabus points and AI policy</li>
+              <li><span class="check">✓</span> Student introductions and passion project ideas</li>
+              <li><span class="check">✓</span> Development environment check</li>
+            </ul>
+          </div>
+          <p style="text-align: center; color: #0891b2; font-size: 1.25rem; margin-top: 1.5rem; font-weight: 500;">Next up: Part 2 — The Client-Side Context →</p>
+        </div>
+      </section>
+    </div>
+
+    <nav class="controls">
+      <button class="btn btn-prev" onclick="prevSlide()">← Previous</button>
+      <div class="dots" id="dots"></div>
+      <div style="display:flex;align-items:center;gap:1rem">
+        <span class="counter" id="counter">1 / 6</span>
+        <button class="btn btn-next" onclick="nextSlide()">Next →</button>
+      </div>
+    </nav>
+  </main>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const dotsContainer = document.getElementById('dots');
+    const counter = document.getElementById('counter');
+    let current = 0;
+    slides.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.className = 'dot' + (i === 0 ? ' active' : '');
+      dot.onclick = () => goToSlide(i);
+      dotsContainer.appendChild(dot);
+    });
+    function updateSlide() {
+      slides.forEach((s, i) => s.classList.toggle('active', i === current));
+      document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
+      counter.textContent = `${current + 1} / ${slides.length}`;
+      document.querySelector('.btn-prev').disabled = current === 0;
+      document.querySelector('.btn-next').disabled = current === slides.length - 1;
+    }
+    function nextSlide() { if (current < slides.length - 1) { current++; updateSlide(); } }
+    function prevSlide() { if (current > 0) { current--; updateSlide(); } }
+    function goToSlide(i) { current = i; updateSlide(); }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+      if (e.key === 'ArrowLeft') prevSlide();
+    });
+  </script>
+</body>
+</html>
