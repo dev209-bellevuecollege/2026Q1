@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Part 5: Modern JavaScript & Assignment 3</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; }
+    .slideshow { height: 100vh; display: flex; flex-direction: column; }
+    .slide-container { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+    .slide { background: white; border-radius: 1rem; box-shadow: 0 10px 40px rgba(0,0,0,0.1); width: 100%; max-width: 1000px; height: 600px; padding: 3rem; display: none; flex-direction: column; }
+    .slide.active { display: flex; }
+    .controls { background: white; border-top: 1px solid #e5e7eb; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+    .btn { padding: 0.5rem 1.5rem; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; }
+    .btn-prev, .btn-next { background: #f97316; color: white; }
+    .btn:disabled { background: #d1d5db; cursor: not-allowed; }
+    .dots { display: flex; gap: 0.5rem; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #d1d5db; border: none; cursor: pointer; }
+    .dot.active { background: #f97316; width: 20px; border-radius: 5px; }
+    .slide-title { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+    .icon { width: 50px; height: 50px; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; font-weight: bold; }
+    .icon-orange { background: #ffedd5; color: #c2410c; }
+    .icon-blue { background: #dbeafe; color: #1d4ed8; }
+    .icon-purple { background: #f3e8ff; color: #7c3aed; }
+    .icon-green { background: #dcfce7; color: #15803d; }
+    .icon-cyan { background: #cffafe; color: #0891b2; }
+    .icon-yellow { background: #fef3c7; color: #b45309; }
+    .icon-pink { background: #fce7f3; color: #db2777; }
+    h1 { font-size: 2.5rem; color: #1f2937; }
+    h2 { font-size: 1.75rem; color: #1f2937; }
+    h3 { font-size: 1.25rem; color: #374151; margin-bottom: 0.5rem; }
+    .subtitle { color: #6b7280; font-size: 1.1rem; }
+    .content { flex: 1; display: flex; flex-direction: column; gap: 1rem; }
+    .card { background: #f9fafb; border-radius: 0.75rem; padding: 1.25rem; }
+    .card-highlight { background: #fff7ed; border: 2px solid #fdba74; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; flex: 1; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; flex: 1; }
+    .title-slide { align-items: center; justify-content: center; text-align: center; }
+    .title-slide .icon { width: 80px; height: 80px; font-size: 1.5rem; margin-bottom: 1.5rem; border-radius: 50%; }
+    .title-slide h1 { margin-bottom: 1rem; }
+    .title-slide .subtitle { margin-bottom: 1.5rem; font-size: 1.25rem; }
+    .badge { background: #ffedd5; color: #c2410c; padding: 0.5rem 1rem; border-radius: 2rem; font-size: 0.9rem; }
+    .counter { color: #6b7280; font-size: 0.9rem; }
+    pre { background: #1f2937; color: #f9fafb; padding: 1.25rem; border-radius: 0.5rem; font-size: 0.95rem; overflow-x: auto; font-family: 'Monaco', 'Menlo', monospace; }
+    code { font-family: 'Monaco', 'Menlo', monospace; }
+    .code-inline { background: #f3f4f6; padding: 0.2rem 0.5rem; border-radius: 0.25rem; font-size: 0.9rem; color: #c2410c; }
+    .list-card { border-radius: 0.75rem; padding: 1.5rem; }
+    .list-card-orange { background: #fff7ed; border: 1px solid #fdba74; }
+    .list-card ul { list-style: none; }
+    .list-card li { padding: 0.5rem 0; display: flex; align-items: flex-start; gap: 0.5rem; color: #374151; }
+    .check { color: #f97316; font-weight: bold; }
+    .highlight-box { background: #fff7ed; border: 2px solid #fdba74; border-radius: 0.75rem; padding: 1.5rem; margin-top: 1rem; }
+    .highlight-box p { color: #c2410c; font-weight: 500; font-size: 1.1rem; }
+    .comparison { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem; }
+    .comparison .old { background: #fef2f2; padding: 0.5rem; border-radius: 0.25rem; flex: 1; text-decoration: line-through; color: #991b1b; font-family: monospace; font-size: 0.85rem; }
+    .comparison .new { background: #dcfce7; padding: 0.5rem; border-radius: 0.25rem; flex: 1; color: #15803d; font-family: monospace; font-size: 0.85rem; }
+    .comparison .arrow { color: #6b7280; }
+  </style>
+</head>
+<body>
+  <main class="slideshow">
+    <div class="slide-container">
+      <!-- Slide 1: Title -->
+      <section class="slide active title-slide">
+        <div class="icon icon-orange">ES6</div>
+        <h1>Part 5: Modern JavaScript</h1>
+        <p class="subtitle">ES6+ Syntax & Assignment 3 Brief</p>
+        <span class="badge">25 Minutes</span>
+      </section>
+
+      <!-- Slide 2: Arrow Functions -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-orange">=&gt;</div>
+          <div><h2>Arrow Functions</h2><p class="subtitle">Cleaner Function Syntax</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>Traditional vs Arrow</h3>
+              <div class="comparison">
+                <div class="old">function(x) { return x * 2; }</div>
+                <div class="arrow">&#8594;</div>
+                <div class="new">(x) =&gt; x * 2</div>
+              </div>
+              <pre style="margin-top: 1rem;"><span style="color:#6b7280">// Full syntax</span>
+<span style="color:#f472b6">const</span> add = (a, b) => {
+  <span style="color:#f472b6">return</span> a + b;
+};
+
+<span style="color:#6b7280">// Concise (single expression)</span>
+<span style="color:#f472b6">const</span> add = (a, b) => a + b;
+
+<span style="color:#6b7280">// Single param: parens optional</span>
+<span style="color:#f472b6">const</span> double = x => x * <span style="color:#fcd34d">2</span>;</pre>
+            </div>
+            <div>
+              <h3>With Array Methods</h3>
+              <pre style="font-size: 0.85rem;"><span style="color:#6b7280">// Before (verbose)</span>
+numbers.map(<span style="color:#f472b6">function</span>(n) {
+  <span style="color:#f472b6">return</span> n * <span style="color:#fcd34d">2</span>;
+});
+
+<span style="color:#6b7280">// After (clean!)</span>
+numbers.map(n => n * <span style="color:#fcd34d">2</span>);
+
+<span style="color:#6b7280">// Chaining becomes elegant</span>
+users
+  .filter(u => u.active)
+  .map(u => u.name);</pre>
+              <div class="highlight-box" style="margin-top: 1rem;">
+                <p style="font-size: 0.95rem;">Arrow functions also fix <code class="code-inline">this</code> binding issues!</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 3: Template Literals -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-purple">`$`</div>
+          <div><h2>Template Literals</h2><p class="subtitle">Better String Building</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>String Interpolation</h3>
+              <div class="comparison">
+                <div class="old">"Hello, " + name + "!"</div>
+                <div class="arrow">&#8594;</div>
+                <div class="new">`Hello, ${name}!`</div>
+              </div>
+              <pre style="margin-top: 1rem;"><span style="color:#f472b6">const</span> name = <span style="color:#a5f3fc">"Alice"</span>;
+<span style="color:#f472b6">const</span> age = <span style="color:#fcd34d">25</span>;
+
+<span style="color:#6b7280">// Use backticks ` not quotes '</span>
+<span style="color:#f472b6">const</span> msg = <span style="color:#a5f3fc">`</span><span style="color:#a5f3fc">${name}</span><span style="color:#a5f3fc"> is </span><span style="color:#a5f3fc">${age}</span><span style="color:#a5f3fc"> years old`</span>;
+
+<span style="color:#6b7280">// Expressions work too!</span>
+<span style="color:#f472b6">const</span> msg2 = <span style="color:#a5f3fc">`Next year: </span><span style="color:#a5f3fc">${age + 1}</span><span style="color:#a5f3fc">`</span>;</pre>
+            </div>
+            <div>
+              <h3>Multi-line Strings</h3>
+              <pre style="font-size: 0.85rem;"><span style="color:#6b7280">// Great for HTML templates!</span>
+<span style="color:#f472b6">const</span> card = <span style="color:#a5f3fc">`
+  &lt;div class="card"&gt;
+    &lt;h3&gt;${user.name}&lt;/h3&gt;
+    &lt;p&gt;${user.email}&lt;/p&gt;
+  &lt;/div&gt;
+`</span>;</pre>
+              <div class="card" style="margin-top: 1rem; background: #f3e8ff; border: 1px solid #c4b5fd;">
+                <p style="color: #7c3aed; font-size: 0.9rem;"><strong>Key:</strong> Use backticks <code class="code-inline" style="color: #7c3aed;">`</code> (below Esc key), not single quotes!</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 4: Destructuring -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-blue">{a,b}</div>
+          <div><h2>Destructuring</h2><p class="subtitle">Unpack Values Elegantly</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>Object Destructuring</h3>
+              <pre style="font-size: 0.85rem;"><span style="color:#f472b6">const</span> user = {
+  name: <span style="color:#a5f3fc">"Alice"</span>,
+  age: <span style="color:#fcd34d">25</span>,
+  email: <span style="color:#a5f3fc">"alice@example.com"</span>
+};
+
+<span style="color:#6b7280">// Old way</span>
+<span style="color:#f472b6">const</span> name = user.name;
+<span style="color:#f472b6">const</span> age = user.age;
+
+<span style="color:#6b7280">// Destructuring</span>
+<span style="color:#f472b6">const</span> { name, age } = user;
+
+<span style="color:#6b7280">// In function parameters!</span>
+<span style="color:#f472b6">function</span> <span style="color:#a5f3fc">greet</span>({ name, age }) {
+  <span style="color:#f472b6">return</span> <span style="color:#a5f3fc">`</span><span style="color:#a5f3fc">${name}</span><span style="color:#a5f3fc"> is </span><span style="color:#a5f3fc">${age}</span><span style="color:#a5f3fc">`</span>;
+}</pre>
+            </div>
+            <div>
+              <h3>Array Destructuring</h3>
+              <pre style="font-size: 0.85rem;"><span style="color:#f472b6">const</span> colors = [<span style="color:#a5f3fc">"red"</span>, <span style="color:#a5f3fc">"green"</span>, <span style="color:#a5f3fc">"blue"</span>];
+
+<span style="color:#6b7280">// Get first two elements</span>
+<span style="color:#f472b6">const</span> [first, second] = colors;
+<span style="color:#6b7280">// first = "red", second = "green"</span>
+
+<span style="color:#6b7280">// Skip elements</span>
+<span style="color:#f472b6">const</span> [, , third] = colors;
+<span style="color:#6b7280">// third = "blue"</span></pre>
+              <div class="highlight-box" style="margin-top: 1rem; background: #dbeafe; border-color: #93c5fd;">
+                <p style="color: #1d4ed8; font-size: 0.95rem;">Very common in React: <code class="code-inline" style="color: #1d4ed8;">const [count, setCount] = useState(0)</code></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 5: Spread Operator -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-green">...</div>
+          <div><h2>Spread Operator</h2><p class="subtitle">Expand and Combine</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>Arrays</h3>
+              <pre style="font-size: 0.85rem;"><span style="color:#f472b6">const</span> arr1 = [<span style="color:#fcd34d">1</span>, <span style="color:#fcd34d">2</span>, <span style="color:#fcd34d">3</span>];
+<span style="color:#f472b6">const</span> arr2 = [<span style="color:#fcd34d">4</span>, <span style="color:#fcd34d">5</span>, <span style="color:#fcd34d">6</span>];
+
+<span style="color:#6b7280">// Combine arrays</span>
+<span style="color:#f472b6">const</span> combined = [...arr1, ...arr2];
+<span style="color:#6b7280">// [1, 2, 3, 4, 5, 6]</span>
+
+<span style="color:#6b7280">// Copy array (not reference!)</span>
+<span style="color:#f472b6">const</span> copy = [...arr1];
+
+<span style="color:#6b7280">// Add to array immutably</span>
+<span style="color:#f472b6">const</span> withNew = [...arr1, <span style="color:#fcd34d">4</span>];</pre>
+            </div>
+            <div>
+              <h3>Objects</h3>
+              <pre style="font-size: 0.85rem;"><span style="color:#f472b6">const</span> user = { name: <span style="color:#a5f3fc">"Alice"</span>, age: <span style="color:#fcd34d">25</span> };
+
+<span style="color:#6b7280">// Copy and modify</span>
+<span style="color:#f472b6">const</span> updated = {
+  ...user,
+  age: <span style="color:#fcd34d">26</span>  <span style="color:#6b7280">// override age</span>
+};
+<span style="color:#6b7280">// { name: "Alice", age: 26 }</span>
+
+<span style="color:#6b7280">// Add new property</span>
+<span style="color:#f472b6">const</span> withEmail = {
+  ...user,
+  email: <span style="color:#a5f3fc">"alice@test.com"</span>
+};</pre>
+            </div>
+          </div>
+          <div class="highlight-box" style="text-align: center;">
+            <p>Spread creates <strong>copies</strong> - essential for immutable state updates in React!</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 6: AI Modernizer -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-cyan">AI</div>
+          <div><h2>AI as a Code Modernizer</h2><p class="subtitle">Convert ES5 to ES6+</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>Before (ES5)</h3>
+              <pre style="font-size: 0.8rem;"><span style="color:#f472b6">var</span> users = [
+  { name: <span style="color:#a5f3fc">"Alice"</span>, age: <span style="color:#fcd34d">25</span> },
+  { name: <span style="color:#a5f3fc">"Bob"</span>, age: <span style="color:#fcd34d">30</span> }
+];
+
+<span style="color:#f472b6">var</span> names = users.map(<span style="color:#f472b6">function</span>(user) {
+  <span style="color:#f472b6">return</span> user.name;
+});
+
+<span style="color:#f472b6">var</span> greeting = <span style="color:#a5f3fc">"Hello, "</span> + names[<span style="color:#fcd34d">0</span>] + <span style="color:#a5f3fc">"!"</span>;</pre>
+            </div>
+            <div>
+              <h3>After (ES6+)</h3>
+              <pre style="font-size: 0.8rem;"><span style="color:#f472b6">const</span> users = [
+  { name: <span style="color:#a5f3fc">"Alice"</span>, age: <span style="color:#fcd34d">25</span> },
+  { name: <span style="color:#a5f3fc">"Bob"</span>, age: <span style="color:#fcd34d">30</span> }
+];
+
+<span style="color:#f472b6">const</span> names = users.map(
+  ({ name }) => name
+);
+
+<span style="color:#f472b6">const</span> greeting = <span style="color:#a5f3fc">`Hello, </span><span style="color:#a5f3fc">${names[0]}</span><span style="color:#a5f3fc">!`</span>;</pre>
+            </div>
+          </div>
+          <div class="card card-highlight" style="text-align: center;">
+            <p style="color: #c2410c; font-size: 1.1rem;"><strong>Prompt:</strong> "Convert this ES5 code to modern ES6+ syntax using arrow functions, const/let, destructuring, and template literals"</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 7: Assignment 3 Brief -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-pink">HW</div>
+          <div><h2>Assignment 3</h2><p class="subtitle">Interactive JavaScript Application</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>Requirements</h3>
+              <div class="card" style="margin-bottom: 1rem;">
+                <ul style="font-size: 0.95rem; color: #374151; list-style: none;">
+                  <li style="margin-bottom: 0.5rem;"><strong>DOM Manipulation</strong> - Create/modify elements dynamically</li>
+                  <li style="margin-bottom: 0.5rem;"><strong>Event Handling</strong> - Respond to user interactions</li>
+                  <li style="margin-bottom: 0.5rem;"><strong>Functional Methods</strong> - Use map/filter/reduce</li>
+                  <li><strong>ES6+ Syntax</strong> - Arrow functions, template literals, etc.</li>
+                </ul>
+              </div>
+              <div class="card" style="background: #fce7f3; border: 1px solid #f9a8d4;">
+                <h3 style="color: #db2777; font-size: 1rem;">AI Policy</h3>
+                <p style="font-size: 0.9rem; color: #374151;">You may use AI assistance, but must be able to explain every line of code you submit.</p>
+              </div>
+            </div>
+            <div>
+              <h3>Deliverables</h3>
+              <div class="card" style="margin-bottom: 1rem;">
+                <ul style="font-size: 0.95rem; color: #374151; list-style: none;">
+                  <li style="margin-bottom: 0.5rem;">&#10003; HTML file with semantic structure</li>
+                  <li style="margin-bottom: 0.5rem;">&#10003; CSS file with responsive styles</li>
+                  <li style="margin-bottom: 0.5rem;">&#10003; JavaScript file (separate, not inline)</li>
+                  <li>&#10003; README with AI usage disclosure</li>
+                </ul>
+              </div>
+              <div class="highlight-box" style="margin-top: 0; background: #fce7f3; border-color: #f9a8d4;">
+                <p style="color: #db2777; font-size: 1rem;"><strong>Due:</strong> Check Canvas for deadline<br><strong>Submission:</strong> GitHub repository link</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 8: Assignment Tips -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-yellow">tips</div>
+          <div><h2>Assignment Tips</h2><p class="subtitle">Setting Yourself Up for Success</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-3">
+            <div class="card">
+              <h3 style="color: #b45309;">Start Small</h3>
+              <ul style="font-size: 0.85rem; color: #374151; list-style: none;">
+                <li>1. Get HTML structure first</li>
+                <li>2. Add one event listener</li>
+                <li>3. Make one thing work</li>
+                <li>4. Then expand</li>
+              </ul>
+            </div>
+            <div class="card">
+              <h3 style="color: #b45309;">Debug Effectively</h3>
+              <ul style="font-size: 0.85rem; color: #374151; list-style: none;">
+                <li>&#8226; Use <code class="code-inline">console.log()</code> liberally</li>
+                <li>&#8226; Check browser DevTools</li>
+                <li>&#8226; Read error messages</li>
+                <li>&#8226; Ask AI to explain errors</li>
+              </ul>
+            </div>
+            <div class="card">
+              <h3 style="color: #b45309;">Use AI Wisely</h3>
+              <ul style="font-size: 0.85rem; color: #374151; list-style: none;">
+                <li>&#8226; Ask for explanations</li>
+                <li>&#8226; Don't copy blindly</li>
+                <li>&#8226; Test everything</li>
+                <li>&#8226; Understand before submit</li>
+              </ul>
+            </div>
+          </div>
+          <div class="highlight-box" style="text-align: center;">
+            <p><strong>Office Hours:</strong> Come with specific questions! "My click handler doesn't fire" > "It doesn't work"</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 9: Summary -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-orange">ES6</div>
+          <div><h2>Part 5 Complete!</h2><p class="subtitle">Modern JS & Assignment Ready</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="list-card list-card-orange">
+            <ul style="font-size: 1.1rem;">
+              <li><span class="check">&#10003;</span> Arrow functions: <code class="code-inline">(x) =&gt; x * 2</code></li>
+              <li><span class="check">&#10003;</span> Template literals: <code class="code-inline">`Hello ${name}`</code></li>
+              <li><span class="check">&#10003;</span> Destructuring: <code class="code-inline">const { name } = user</code></li>
+              <li><span class="check">&#10003;</span> Spread operator: <code class="code-inline">[...arr1, ...arr2]</code></li>
+              <li><span class="check">&#10003;</span> Assignment 3 requirements understood</li>
+            </ul>
+          </div>
+          <p style="text-align: center; color: #f97316; font-size: 1.25rem; margin-top: 1.5rem; font-weight: 500;">Final Part: Kahoot Quiz Time! &#8594;</p>
+        </div>
+      </section>
+    </div>
+
+    <nav class="controls">
+      <button class="btn btn-prev" onclick="prevSlide()">&#8592; Previous</button>
+      <div class="dots" id="dots"></div>
+      <div style="display:flex;align-items:center;gap:1rem">
+        <span class="counter" id="counter">1 / 9</span>
+        <button class="btn btn-next" onclick="nextSlide()">Next &#8594;</button>
+      </div>
+    </nav>
+  </main>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const dotsContainer = document.getElementById('dots');
+    const counter = document.getElementById('counter');
+    let current = 0;
+    slides.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.className = 'dot' + (i === 0 ? ' active' : '');
+      dot.onclick = () => goToSlide(i);
+      dotsContainer.appendChild(dot);
+    });
+    function updateSlide() {
+      slides.forEach((s, i) => s.classList.toggle('active', i === current));
+      document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
+      counter.textContent = `${current + 1} / ${slides.length}`;
+      document.querySelector('.btn-prev').disabled = current === 0;
+      document.querySelector('.btn-next').disabled = current === slides.length - 1;
+    }
+    function nextSlide() { if (current < slides.length - 1) { current++; updateSlide(); } }
+    function prevSlide() { if (current > 0) { current--; updateSlide(); } }
+    function goToSlide(i) { current = i; updateSlide(); }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+      if (e.key === 'ArrowLeft') prevSlide();
+    });
+  </script>
+</body>
+</html>

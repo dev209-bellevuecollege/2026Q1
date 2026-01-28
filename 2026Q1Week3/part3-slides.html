@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Part 3: The DOM & Manipulation</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; }
+    .slideshow { height: 100vh; display: flex; flex-direction: column; }
+    .slide-container { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+    .slide { background: white; border-radius: 1rem; box-shadow: 0 10px 40px rgba(0,0,0,0.1); width: 100%; max-width: 1000px; height: 600px; padding: 3rem; display: none; flex-direction: column; }
+    .slide.active { display: flex; }
+    .controls { background: white; border-top: 1px solid #e5e7eb; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+    .btn { padding: 0.5rem 1.5rem; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; }
+    .btn-prev, .btn-next { background: #3b82f6; color: white; }
+    .btn:disabled { background: #d1d5db; cursor: not-allowed; }
+    .dots { display: flex; gap: 0.5rem; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #d1d5db; border: none; cursor: pointer; }
+    .dot.active { background: #3b82f6; width: 20px; border-radius: 5px; }
+    .slide-title { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+    .icon { width: 50px; height: 50px; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; font-weight: bold; }
+    .icon-blue { background: #dbeafe; color: #1d4ed8; }
+    .icon-green { background: #dcfce7; color: #15803d; }
+    .icon-purple { background: #f3e8ff; color: #7c3aed; }
+    .icon-orange { background: #ffedd5; color: #c2410c; }
+    .icon-cyan { background: #cffafe; color: #0891b2; }
+    .icon-yellow { background: #fef3c7; color: #b45309; }
+    h1 { font-size: 2.5rem; color: #1f2937; }
+    h2 { font-size: 1.75rem; color: #1f2937; }
+    h3 { font-size: 1.25rem; color: #374151; margin-bottom: 0.5rem; }
+    .subtitle { color: #6b7280; font-size: 1.1rem; }
+    .content { flex: 1; display: flex; flex-direction: column; gap: 1rem; }
+    .card { background: #f9fafb; border-radius: 0.75rem; padding: 1.25rem; }
+    .card-highlight { background: #eff6ff; border: 2px solid #93c5fd; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; flex: 1; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; flex: 1; }
+    .title-slide { align-items: center; justify-content: center; text-align: center; }
+    .title-slide .icon { width: 80px; height: 80px; font-size: 1.5rem; margin-bottom: 1.5rem; border-radius: 50%; }
+    .title-slide h1 { margin-bottom: 1rem; }
+    .title-slide .subtitle { margin-bottom: 1.5rem; font-size: 1.25rem; }
+    .badge { background: #dbeafe; color: #1d4ed8; padding: 0.5rem 1rem; border-radius: 2rem; font-size: 0.9rem; }
+    .counter { color: #6b7280; font-size: 0.9rem; }
+    pre { background: #1f2937; color: #f9fafb; padding: 1.25rem; border-radius: 0.5rem; font-size: 0.95rem; overflow-x: auto; font-family: 'Monaco', 'Menlo', monospace; }
+    code { font-family: 'Monaco', 'Menlo', monospace; }
+    .code-inline { background: #f3f4f6; padding: 0.2rem 0.5rem; border-radius: 0.25rem; font-size: 0.9rem; color: #1d4ed8; }
+    .list-card { border-radius: 0.75rem; padding: 1.5rem; }
+    .list-card-blue { background: #eff6ff; border: 1px solid #93c5fd; }
+    .list-card ul { list-style: none; }
+    .list-card li { padding: 0.5rem 0; display: flex; align-items: flex-start; gap: 0.5rem; color: #374151; }
+    .check { color: #3b82f6; font-weight: bold; }
+    .highlight-box { background: #eff6ff; border: 2px solid #93c5fd; border-radius: 0.75rem; padding: 1.5rem; margin-top: 1rem; }
+    .highlight-box p { color: #1d4ed8; font-weight: 500; font-size: 1.1rem; }
+    .tree-diagram { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; }
+    .tree-node { background: #dbeafe; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: bold; color: #1d4ed8; font-family: monospace; }
+    .tree-children { display: flex; gap: 2rem; margin-top: 0.5rem; }
+    .tree-line { width: 2px; height: 20px; background: #93c5fd; }
+  </style>
+</head>
+<body>
+  <main class="slideshow">
+    <div class="slide-container">
+      <!-- Slide 1: Title -->
+      <section class="slide active title-slide">
+        <div class="icon icon-blue">DOM</div>
+        <h1>Part 3: The DOM & Manipulation</h1>
+        <p class="subtitle">JavaScript Meets the Web Page</p>
+        <span class="badge">20 Minutes</span>
+      </section>
+
+      <!-- Slide 2: What is the DOM? -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-blue">tree</div>
+          <div><h2>What is the DOM?</h2><p class="subtitle">Document Object Model</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>The DOM is a Tree</h3>
+              <div class="tree-diagram" style="margin-top: 1rem;">
+                <div class="tree-node">document</div>
+                <div class="tree-line"></div>
+                <div class="tree-node">&lt;html&gt;</div>
+                <div class="tree-line"></div>
+                <div class="tree-children">
+                  <div class="tree-diagram">
+                    <div class="tree-node">&lt;head&gt;</div>
+                    <div class="tree-line"></div>
+                    <div class="tree-node" style="font-size: 0.8rem;">&lt;title&gt;</div>
+                  </div>
+                  <div class="tree-diagram">
+                    <div class="tree-node">&lt;body&gt;</div>
+                    <div class="tree-line"></div>
+                    <div class="tree-children" style="gap: 0.5rem;">
+                      <div class="tree-node" style="font-size: 0.8rem;">&lt;h1&gt;</div>
+                      <div class="tree-node" style="font-size: 0.8rem;">&lt;p&gt;</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <h3>Key Concepts</h3>
+              <div class="card" style="margin-bottom: 1rem;">
+                <p style="color: #374151;"><strong>The DOM IS the HTML</strong> as rendered by the browser - a live, interactive representation.</p>
+              </div>
+              <div class="card" style="background: #dcfce7; border: 1px solid #86efac;">
+                <h3 style="color: #15803d; font-size: 1rem;">Global Objects</h3>
+                <p style="font-size: 0.9rem; color: #374151;"><code class="code-inline">window</code> - the browser window<br><code class="code-inline">document</code> - the HTML document</p>
+              </div>
+              <div class="highlight-box" style="margin-top: 1rem;">
+                <p style="font-size: 1rem;">JavaScript can read and modify any part of the DOM!</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 3: Selecting Elements -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-green">$</div>
+          <div><h2>Selecting Elements</h2><p class="subtitle">Finding What You Need</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>The Modern Way: querySelector</h3>
+              <pre><span style="color:#6b7280">// Select ONE element (first match)</span>
+<span style="color:#f472b6">const</span> header = document
+  .querySelector(<span style="color:#a5f3fc">'h1'</span>);
+<span style="color:#f472b6">const</span> btn = document
+  .querySelector(<span style="color:#a5f3fc">'#submit-btn'</span>);
+<span style="color:#f472b6">const</span> card = document
+  .querySelector(<span style="color:#a5f3fc">'.card'</span>);
+
+<span style="color:#6b7280">// Select ALL matching elements</span>
+<span style="color:#f472b6">const</span> items = document
+  .querySelectorAll(<span style="color:#a5f3fc">'li'</span>);</pre>
+            </div>
+            <div>
+              <h3>CSS Selectors Work!</h3>
+              <div class="card" style="font-family: monospace; font-size: 0.9rem; margin-bottom: 1rem;">
+                <p><code class="code-inline">'div'</code> - by tag</p>
+                <p><code class="code-inline">'#myId'</code> - by ID</p>
+                <p><code class="code-inline">'.myClass'</code> - by class</p>
+                <p><code class="code-inline">'nav a'</code> - descendants</p>
+                <p><code class="code-inline">'input[type="text"]'</code> - attributes</p>
+              </div>
+              <div class="card" style="background: #fef3c7; border: 1px solid #fcd34d;">
+                <h3 style="color: #b45309; font-size: 1rem;">Old Methods (Still Work)</h3>
+                <p style="font-size: 0.85rem; color: #374151;"><code class="code-inline">getElementById()</code><br><code class="code-inline">getElementsByClassName()</code></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 4: Modifying Content -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-purple">edit</div>
+          <div><h2>Modifying Content</h2><p class="subtitle">Changing What Users See</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>Text Content (Safe)</h3>
+              <pre><span style="color:#f472b6">const</span> para = document.querySelector(<span style="color:#a5f3fc">'p'</span>);
+
+<span style="color:#6b7280">// Read content</span>
+console.log(para.textContent);
+
+<span style="color:#6b7280">// Change content</span>
+para.textContent = <span style="color:#a5f3fc">"New text!"</span>;
+
+<span style="color:#6b7280">// HTML is escaped (safe!)</span>
+para.textContent = <span style="color:#a5f3fc">"&lt;b&gt;bold&lt;/b&gt;"</span>;
+<span style="color:#6b7280">// Shows: "&lt;b&gt;bold&lt;/b&gt;"</span></pre>
+            </div>
+            <div>
+              <h3>innerHTML (Use Carefully!)</h3>
+              <pre><span style="color:#6b7280">// Parses and renders HTML</span>
+para.innerHTML = <span style="color:#a5f3fc">"&lt;b&gt;bold&lt;/b&gt;"</span>;
+<span style="color:#6b7280">// Shows: <b>bold</b></span>
+
+<span style="color:#6b7280">// Can be a security risk!</span>
+<span style="color:#6b7280">// Never use with user input</span></pre>
+              <div class="card" style="background: #fef2f2; border: 1px solid #fca5a5; margin-top: 1rem;">
+                <p style="color: #dc2626; font-size: 0.9rem;"><strong>XSS Warning:</strong> Never do <code class="code-inline" style="color: #dc2626;">innerHTML = userInput</code></p>
+              </div>
+            </div>
+          </div>
+          <div class="highlight-box" style="text-align: center;">
+            <p><strong>Rule of thumb:</strong> Use <code class="code-inline">textContent</code> unless you specifically need HTML</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 5: Modifying Styles -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-orange">css</div>
+          <div><h2>Modifying Styles</h2><p class="subtitle">Two Approaches</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>classList (Preferred)</h3>
+              <pre><span style="color:#f472b6">const</span> box = document.querySelector(<span style="color:#a5f3fc">'.box'</span>);
+
+<span style="color:#6b7280">// Add a class</span>
+box.classList.add(<span style="color:#a5f3fc">'highlight'</span>);
+
+<span style="color:#6b7280">// Remove a class</span>
+box.classList.remove(<span style="color:#a5f3fc">'hidden'</span>);
+
+<span style="color:#6b7280">// Toggle (add/remove)</span>
+box.classList.toggle(<span style="color:#a5f3fc">'active'</span>);
+
+<span style="color:#6b7280">// Check if has class</span>
+box.classList.contains(<span style="color:#a5f3fc">'active'</span>);</pre>
+            </div>
+            <div>
+              <h3>Direct Style (Inline)</h3>
+              <pre><span style="color:#6b7280">// camelCase for CSS properties!</span>
+box.style.backgroundColor = <span style="color:#a5f3fc">'red'</span>;
+box.style.fontSize = <span style="color:#a5f3fc">'20px'</span>;
+box.style.display = <span style="color:#a5f3fc">'none'</span>;
+
+<span style="color:#6b7280">// CSS: background-color</span>
+<span style="color:#6b7280">// JS:  backgroundColor</span></pre>
+              <div class="card" style="margin-top: 1rem; background: #dcfce7; border: 1px solid #86efac;">
+                <p style="color: #15803d; font-size: 0.9rem;"><strong>Best Practice:</strong> Define styles in CSS, toggle classes in JS</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 6: Creating Elements -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-cyan">+</div>
+          <div><h2>Creating & Removing Elements</h2><p class="subtitle">Dynamic Page Modification</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>Creating Elements</h3>
+              <pre style="font-size: 0.85rem;"><span style="color:#6b7280">// 1. Create the element</span>
+<span style="color:#f472b6">const</span> newPara = document
+  .createElement(<span style="color:#a5f3fc">'p'</span>);
+
+<span style="color:#6b7280">// 2. Set its content/attributes</span>
+newPara.textContent = <span style="color:#a5f3fc">'Hello!'</span>;
+newPara.classList.add(<span style="color:#a5f3fc">'greeting'</span>);
+
+<span style="color:#6b7280">// 3. Add to the DOM</span>
+<span style="color:#f472b6">const</span> container = document
+  .querySelector(<span style="color:#a5f3fc">'#container'</span>);
+container.appendChild(newPara);</pre>
+            </div>
+            <div>
+              <h3>Other Methods</h3>
+              <pre style="font-size: 0.85rem;"><span style="color:#6b7280">// Insert before another element</span>
+parent.insertBefore(newEl, refEl);
+
+<span style="color:#6b7280">// Remove an element</span>
+element.remove();
+
+<span style="color:#6b7280">// Or remove from parent</span>
+parent.removeChild(element);
+
+<span style="color:#6b7280">// Replace an element</span>
+parent.replaceChild(newEl, oldEl);</pre>
+              <div class="card" style="margin-top: 0.5rem;">
+                <p style="font-size: 0.9rem; color: #374151;">Elements must be added to the DOM to appear on the page!</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 7: AI Demo -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-yellow">AI</div>
+          <div><h2>AI-Assisted DOM Code</h2><p class="subtitle">Generate from Description</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>Prompt</h3>
+              <div class="card" style="background: #ecfeff; border: 1px solid #a5f3fc;">
+                <p style="font-style: italic; color: #0e7490; font-size: 0.9rem;">"Write a JavaScript function that takes an array of user objects with name and email properties, and creates a list of cards in the #users-container div. Each card should show the name as a heading and email below it."</p>
+              </div>
+            </div>
+            <div>
+              <h3>AI Output</h3>
+              <pre style="font-size: 0.75rem;"><span style="color:#f472b6">function</span> <span style="color:#a5f3fc">renderUsers</span>(users) {
+  <span style="color:#f472b6">const</span> container = document
+    .querySelector(<span style="color:#a5f3fc">'#users-container'</span>);
+  container.innerHTML = <span style="color:#a5f3fc">''</span>; <span style="color:#6b7280">// clear</span>
+
+  users.forEach(<span style="color:#f472b6">function</span>(user) {
+    <span style="color:#f472b6">const</span> card = document.createElement(<span style="color:#a5f3fc">'div'</span>);
+    card.classList.add(<span style="color:#a5f3fc">'card'</span>);
+    card.innerHTML = <span style="color:#a5f3fc">`
+      &lt;h3&gt;${user.name}&lt;/h3&gt;
+      &lt;p&gt;${user.email}&lt;/p&gt;
+    `</span>;
+    container.appendChild(card);
+  });
+}</pre>
+            </div>
+          </div>
+          <div class="highlight-box" style="text-align: center;">
+            <p style="font-size: 1rem;"><strong>Review Question:</strong> Is this innerHTML usage safe? Why or why not?</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 8: Summary -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-blue">DOM</div>
+          <div><h2>Part 3 Complete!</h2><p class="subtitle">DOM Manipulation Mastered</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="list-card list-card-blue">
+            <ul style="font-size: 1.2rem;">
+              <li><span class="check">&#10003;</span> DOM is a tree of HTML elements</li>
+              <li><span class="check">&#10003;</span> <code class="code-inline">querySelector()</code> finds elements by CSS selector</li>
+              <li><span class="check">&#10003;</span> <code class="code-inline">textContent</code> for safe text, <code class="code-inline">innerHTML</code> for HTML</li>
+              <li><span class="check">&#10003;</span> <code class="code-inline">classList</code> to add/remove/toggle CSS classes</li>
+              <li><span class="check">&#10003;</span> <code class="code-inline">createElement()</code> + <code class="code-inline">appendChild()</code> to add elements</li>
+            </ul>
+          </div>
+          <p style="text-align: center; color: #3b82f6; font-size: 1.25rem; margin-top: 1.5rem; font-weight: 500;">Next up: Part 4 — Event Handling & Interactivity &#8594;</p>
+        </div>
+      </section>
+    </div>
+
+    <nav class="controls">
+      <button class="btn btn-prev" onclick="prevSlide()">&#8592; Previous</button>
+      <div class="dots" id="dots"></div>
+      <div style="display:flex;align-items:center;gap:1rem">
+        <span class="counter" id="counter">1 / 8</span>
+        <button class="btn btn-next" onclick="nextSlide()">Next &#8594;</button>
+      </div>
+    </nav>
+  </main>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const dotsContainer = document.getElementById('dots');
+    const counter = document.getElementById('counter');
+    let current = 0;
+    slides.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.className = 'dot' + (i === 0 ? ' active' : '');
+      dot.onclick = () => goToSlide(i);
+      dotsContainer.appendChild(dot);
+    });
+    function updateSlide() {
+      slides.forEach((s, i) => s.classList.toggle('active', i === current));
+      document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
+      counter.textContent = `${current + 1} / ${slides.length}`;
+      document.querySelector('.btn-prev').disabled = current === 0;
+      document.querySelector('.btn-next').disabled = current === slides.length - 1;
+    }
+    function nextSlide() { if (current < slides.length - 1) { current++; updateSlide(); } }
+    function prevSlide() { if (current > 0) { current--; updateSlide(); } }
+    function goToSlide(i) { current = i; updateSlide(); }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+      if (e.key === 'ArrowLeft') prevSlide();
+    });
+  </script>
+</body>
+</html>

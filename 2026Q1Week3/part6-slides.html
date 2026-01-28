@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Part 6: Kahoot Quiz</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; }
+    .slideshow { height: 100vh; display: flex; flex-direction: column; }
+    .slide-container { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+    .slide { background: white; border-radius: 1rem; box-shadow: 0 10px 40px rgba(0,0,0,0.1); width: 100%; max-width: 1000px; height: 600px; padding: 3rem; display: none; flex-direction: column; }
+    .slide.active { display: flex; }
+    .controls { background: white; border-top: 1px solid #e5e7eb; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+    .btn { padding: 0.5rem 1.5rem; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; }
+    .btn-prev, .btn-next { background: #ec4899; color: white; }
+    .btn:disabled { background: #d1d5db; cursor: not-allowed; }
+    .dots { display: flex; gap: 0.5rem; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #d1d5db; border: none; cursor: pointer; }
+    .dot.active { background: #ec4899; width: 20px; border-radius: 5px; }
+    .slide-title { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+    .icon { width: 50px; height: 50px; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold; }
+    .icon-pink { background: #fce7f3; color: #db2777; }
+    .icon-blue { background: #dbeafe; color: #1d4ed8; }
+    .icon-green { background: #dcfce7; color: #15803d; }
+    .icon-purple { background: #f3e8ff; color: #7c3aed; }
+    .icon-orange { background: #ffedd5; color: #c2410c; }
+    .icon-cyan { background: #cffafe; color: #0891b2; }
+    h1 { font-size: 2.5rem; color: #1f2937; }
+    h2 { font-size: 1.75rem; color: #1f2937; }
+    h3 { font-size: 1.25rem; color: #374151; margin-bottom: 0.5rem; }
+    .subtitle { color: #6b7280; font-size: 1.1rem; }
+    .content { flex: 1; display: flex; flex-direction: column; gap: 1rem; }
+    .card { background: #f9fafb; border-radius: 0.75rem; padding: 1.25rem; }
+    .title-slide { align-items: center; justify-content: center; text-align: center; }
+    .title-slide .icon { width: 80px; height: 80px; font-size: 2rem; margin-bottom: 1.5rem; border-radius: 50%; }
+    .title-slide h1 { margin-bottom: 1rem; }
+    .title-slide .subtitle { margin-bottom: 1.5rem; font-size: 1.25rem; }
+    .badge { background: #fce7f3; color: #db2777; padding: 0.5rem 1rem; border-radius: 2rem; font-size: 0.9rem; }
+    .counter { color: #6b7280; font-size: 0.9rem; }
+    pre { background: #1f2937; color: #f9fafb; padding: 1.25rem; border-radius: 0.5rem; font-size: 1rem; overflow-x: auto; font-family: 'Monaco', 'Menlo', monospace; }
+    .code-inline { background: #f3f4f6; padding: 0.2rem 0.5rem; border-radius: 0.25rem; font-size: 0.9rem; color: #db2777; font-family: 'Monaco', 'Menlo', monospace; }
+    .quiz-question { font-size: 1.5rem; color: #1f2937; margin-bottom: 1.5rem; text-align: center; }
+    .quiz-options { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .quiz-option { padding: 1.25rem; border-radius: 0.75rem; font-size: 1.1rem; text-align: center; font-weight: 500; }
+    .option-a { background: #fee2e2; color: #991b1b; }
+    .option-b { background: #dbeafe; color: #1d4ed8; }
+    .option-c { background: #fef3c7; color: #b45309; }
+    .option-d { background: #dcfce7; color: #15803d; }
+    .quiz-code { background: #1f2937; color: #f9fafb; padding: 1.5rem; border-radius: 0.75rem; font-family: 'Monaco', 'Menlo', monospace; font-size: 1.1rem; margin-bottom: 1.5rem; text-align: left; }
+    .topics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+    .topic-card { padding: 1.5rem; border-radius: 0.75rem; text-align: center; }
+    .topic-card h3 { margin-bottom: 0.5rem; }
+    .topic-card p { font-size: 0.9rem; color: #6b7280; }
+    .highlight-box { background: #fce7f3; border: 2px solid #f9a8d4; border-radius: 0.75rem; padding: 1.5rem; margin-top: 1rem; }
+    .highlight-box p { color: #db2777; font-weight: 500; font-size: 1.1rem; text-align: center; }
+    .list-card { border-radius: 0.75rem; padding: 1.5rem; }
+    .list-card-pink { background: #fce7f3; border: 1px solid #f9a8d4; }
+    .list-card ul { list-style: none; }
+    .list-card li { padding: 0.5rem 0; display: flex; align-items: flex-start; gap: 0.5rem; color: #374151; font-size: 1.1rem; }
+    .check { color: #ec4899; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <main class="slideshow">
+    <div class="slide-container">
+      <!-- Slide 1: Title -->
+      <section class="slide active title-slide">
+        <div class="icon icon-pink">?!</div>
+        <h1>Part 6: Kahoot Quiz</h1>
+        <p class="subtitle">Test Your JavaScript Knowledge!</p>
+        <span class="badge">15 Minutes</span>
+      </section>
+
+      <!-- Slide 2: Topics -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-pink">?</div>
+          <div><h2>Quiz Topics</h2><p class="subtitle">What We're Testing</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="topics-grid">
+            <div class="topic-card" style="background: #fef3c7;">
+              <h3 style="color: #b45309;">Functions</h3>
+              <p>Declarations, expressions, first-class values</p>
+            </div>
+            <div class="topic-card" style="background: #f3e8ff;">
+              <h3 style="color: #7c3aed;">Functional Programming</h3>
+              <p>map, filter, reduce, callbacks, closures</p>
+            </div>
+            <div class="topic-card" style="background: #dbeafe;">
+              <h3 style="color: #1d4ed8;">DOM Manipulation</h3>
+              <p>Selectors, content, createElement</p>
+            </div>
+            <div class="topic-card" style="background: #dcfce7;">
+              <h3 style="color: #15803d;">Event Handling</h3>
+              <p>addEventListener, event object</p>
+            </div>
+            <div class="topic-card" style="background: #ffedd5;">
+              <h3 style="color: #c2410c;">ES6+ Syntax</h3>
+              <p>Arrow functions, template literals, spread</p>
+            </div>
+            <div class="topic-card" style="background: #fce7f3;">
+              <h3 style="color: #db2777;">Code Output</h3>
+              <p>"What does this code return?"</p>
+            </div>
+          </div>
+          <div class="highlight-box">
+            <p>Get your phones ready! Go to <strong>kahoot.it</strong></p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 3: Sample Q1 -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-purple">Q1</div>
+          <div><h2>Sample Question 1</h2><p class="subtitle">Functions</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="quiz-code">
+<span style="color:#f472b6">const</span> greet = <span style="color:#f472b6">function</span>(name) {
+  <span style="color:#f472b6">return</span> <span style="color:#a5f3fc">"Hello, "</span> + name;
+};
+
+console.log(greet);
+          </div>
+          <p class="quiz-question">What is logged to the console?</p>
+          <div class="quiz-options">
+            <div class="quiz-option option-a">A: "Hello, undefined"</div>
+            <div class="quiz-option option-b">B: The function code itself</div>
+            <div class="quiz-option option-c">C: An error</div>
+            <div class="quiz-option option-d">D: undefined</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 4: Sample Q2 -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-blue">Q2</div>
+          <div><h2>Sample Question 2</h2><p class="subtitle">Array Methods</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="quiz-code">
+<span style="color:#f472b6">const</span> nums = [<span style="color:#fcd34d">1</span>, <span style="color:#fcd34d">2</span>, <span style="color:#fcd34d">3</span>, <span style="color:#fcd34d">4</span>];
+<span style="color:#f472b6">const</span> result = nums.filter(n => n > <span style="color:#fcd34d">2</span>).map(n => n * <span style="color:#fcd34d">2</span>);
+console.log(result);
+          </div>
+          <p class="quiz-question">What is logged to the console?</p>
+          <div class="quiz-options">
+            <div class="quiz-option option-a">A: [6, 8]</div>
+            <div class="quiz-option option-b">B: [2, 4, 6, 8]</div>
+            <div class="quiz-option option-c">C: [3, 4]</div>
+            <div class="quiz-option option-d">D: [4, 6, 8]</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 5: Sample Q3 -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-green">Q3</div>
+          <div><h2>Sample Question 3</h2><p class="subtitle">DOM Selection</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="quiz-code" style="font-size: 1rem;">
+<span style="color:#6b7280">// HTML: &lt;div class="card" id="main"&gt;Hello&lt;/div&gt;</span>
+
+<span style="color:#f472b6">const</span> el = document.querySelector(<span style="color:#a5f3fc">'.card'</span>);
+console.log(el.textContent);
+          </div>
+          <p class="quiz-question">What is logged to the console?</p>
+          <div class="quiz-options">
+            <div class="quiz-option option-a">A: ".card"</div>
+            <div class="quiz-option option-b">B: "Hello"</div>
+            <div class="quiz-option option-c">C: "&lt;div class="card"&gt;Hello&lt;/div&gt;"</div>
+            <div class="quiz-option option-d">D: undefined</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 6: Sample Q4 -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-orange">Q4</div>
+          <div><h2>Sample Question 4</h2><p class="subtitle">ES6 Syntax</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="quiz-code">
+<span style="color:#f472b6">const</span> user = { name: <span style="color:#a5f3fc">"Alice"</span>, age: <span style="color:#fcd34d">25</span> };
+<span style="color:#f472b6">const</span> { name } = user;
+console.log(name);
+          </div>
+          <p class="quiz-question">What is logged to the console?</p>
+          <div class="quiz-options">
+            <div class="quiz-option option-a">A: { name: "Alice" }</div>
+            <div class="quiz-option option-b">B: "Alice"</div>
+            <div class="quiz-option option-c">C: undefined</div>
+            <div class="quiz-option option-d">D: "name"</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 7: Sample Q5 -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-cyan">Q5</div>
+          <div><h2>Sample Question 5</h2><p class="subtitle">Closures</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="quiz-code" style="font-size: 0.95rem;">
+<span style="color:#f472b6">function</span> <span style="color:#a5f3fc">makeCounter</span>() {
+  <span style="color:#f472b6">let</span> count = <span style="color:#fcd34d">0</span>;
+  <span style="color:#f472b6">return function</span>() { count++; <span style="color:#f472b6">return</span> count; };
+}
+<span style="color:#f472b6">const</span> counter = makeCounter();
+console.log(counter()); console.log(counter());
+          </div>
+          <p class="quiz-question">What is logged (in order)?</p>
+          <div class="quiz-options">
+            <div class="quiz-option option-a">A: 0, 0</div>
+            <div class="quiz-option option-b">B: 1, 1</div>
+            <div class="quiz-option option-c">C: 1, 2</div>
+            <div class="quiz-option option-d">D: undefined, undefined</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 8: Launch -->
+      <section class="slide title-slide">
+        <div class="icon icon-pink" style="font-size: 3rem;">&#127942;</div>
+        <h1>Let's Play!</h1>
+        <p class="subtitle" style="font-size: 1.5rem; margin-bottom: 2rem;">Go to <strong>kahoot.it</strong> and enter the game PIN</p>
+        <div style="display: flex; gap: 2rem; justify-content: center; flex-wrap: wrap;">
+          <div class="card" style="padding: 1.5rem 2rem; text-align: center;">
+            <div style="font-size: 2rem; margin-bottom: 0.5rem;">&#128241;</div>
+            <p>Open Kahoot on your phone</p>
+          </div>
+          <div class="card" style="padding: 1.5rem 2rem; text-align: center;">
+            <div style="font-size: 2rem; margin-bottom: 0.5rem;">&#128273;</div>
+            <p>Enter the Game PIN</p>
+          </div>
+          <div class="card" style="padding: 1.5rem 2rem; text-align: center;">
+            <div style="font-size: 2rem; margin-bottom: 0.5rem;">&#127919;</div>
+            <p>Answer fast & accurate!</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 9: Week Summary -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-pink">&#10003;</div>
+          <div><h2>Week 3 Complete!</h2><p class="subtitle">What We Learned Today</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="list-card list-card-pink">
+            <ul>
+              <li><span class="check">&#10003;</span> JavaScript fundamentals refresher</li>
+              <li><span class="check">&#10003;</span> Functional programming: map, filter, reduce</li>
+              <li><span class="check">&#10003;</span> DOM manipulation & element creation</li>
+              <li><span class="check">&#10003;</span> Event handling & state management</li>
+              <li><span class="check">&#10003;</span> Modern ES6+ syntax</li>
+              <li><span class="check">&#10003;</span> AI-assisted development workflows</li>
+            </ul>
+          </div>
+          <div class="highlight-box">
+            <p><strong>Next Week:</strong> React Fundamentals - Components, Props & State!</p>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <nav class="controls">
+      <button class="btn btn-prev" onclick="prevSlide()">&#8592; Previous</button>
+      <div class="dots" id="dots"></div>
+      <div style="display:flex;align-items:center;gap:1rem">
+        <span class="counter" id="counter">1 / 9</span>
+        <button class="btn btn-next" onclick="nextSlide()">Next &#8594;</button>
+      </div>
+    </nav>
+  </main>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const dotsContainer = document.getElementById('dots');
+    const counter = document.getElementById('counter');
+    let current = 0;
+    slides.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.className = 'dot' + (i === 0 ? ' active' : '');
+      dot.onclick = () => goToSlide(i);
+      dotsContainer.appendChild(dot);
+    });
+    function updateSlide() {
+      slides.forEach((s, i) => s.classList.toggle('active', i === current));
+      document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
+      counter.textContent = `${current + 1} / ${slides.length}`;
+      document.querySelector('.btn-prev').disabled = current === 0;
+      document.querySelector('.btn-next').disabled = current === slides.length - 1;
+    }
+    function nextSlide() { if (current < slides.length - 1) { current++; updateSlide(); } }
+    function prevSlide() { if (current > 0) { current--; updateSlide(); } }
+    function goToSlide(i) { current = i; updateSlide(); }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+      if (e.key === 'ArrowLeft') prevSlide();
+    });
+  </script>
+</body>
+</html>

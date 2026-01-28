@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Part 2: Functional Programming Patterns</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; }
+    .slideshow { height: 100vh; display: flex; flex-direction: column; }
+    .slide-container { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+    .slide { background: white; border-radius: 1rem; box-shadow: 0 10px 40px rgba(0,0,0,0.1); width: 100%; max-width: 1000px; height: 600px; padding: 3rem; display: none; flex-direction: column; }
+    .slide.active { display: flex; }
+    .controls { background: white; border-top: 1px solid #e5e7eb; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+    .btn { padding: 0.5rem 1.5rem; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; }
+    .btn-prev, .btn-next { background: #8b5cf6; color: white; }
+    .btn:disabled { background: #d1d5db; cursor: not-allowed; }
+    .dots { display: flex; gap: 0.5rem; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #d1d5db; border: none; cursor: pointer; }
+    .dot.active { background: #8b5cf6; width: 20px; border-radius: 5px; }
+    .slide-title { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+    .icon { width: 50px; height: 50px; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold; }
+    .icon-purple { background: #f3e8ff; color: #7c3aed; }
+    .icon-blue { background: #dbeafe; color: #1d4ed8; }
+    .icon-green { background: #dcfce7; color: #15803d; }
+    .icon-orange { background: #ffedd5; color: #c2410c; }
+    .icon-cyan { background: #cffafe; color: #0891b2; }
+    .icon-pink { background: #fce7f3; color: #db2777; }
+    h1 { font-size: 2.5rem; color: #1f2937; }
+    h2 { font-size: 1.75rem; color: #1f2937; }
+    h3 { font-size: 1.25rem; color: #374151; margin-bottom: 0.5rem; }
+    .subtitle { color: #6b7280; font-size: 1.1rem; }
+    .content { flex: 1; display: flex; flex-direction: column; gap: 1rem; }
+    .card { background: #f9fafb; border-radius: 0.75rem; padding: 1.25rem; }
+    .card-highlight { background: #faf5ff; border: 2px solid #c4b5fd; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; flex: 1; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; flex: 1; }
+    .title-slide { align-items: center; justify-content: center; text-align: center; }
+    .title-slide .icon { width: 80px; height: 80px; font-size: 1.75rem; margin-bottom: 1.5rem; border-radius: 50%; }
+    .title-slide h1 { margin-bottom: 1rem; }
+    .title-slide .subtitle { margin-bottom: 1.5rem; font-size: 1.25rem; }
+    .badge { background: #f3e8ff; color: #7c3aed; padding: 0.5rem 1rem; border-radius: 2rem; font-size: 0.9rem; }
+    .counter { color: #6b7280; font-size: 0.9rem; }
+    pre { background: #1f2937; color: #f9fafb; padding: 1.25rem; border-radius: 0.5rem; font-size: 0.95rem; overflow-x: auto; font-family: 'Monaco', 'Menlo', monospace; }
+    code { font-family: 'Monaco', 'Menlo', monospace; }
+    .code-inline { background: #f3f4f6; padding: 0.2rem 0.5rem; border-radius: 0.25rem; font-size: 0.9rem; color: #7c3aed; }
+    .list-card { border-radius: 0.75rem; padding: 1.5rem; }
+    .list-card-purple { background: #faf5ff; border: 1px solid #c4b5fd; }
+    .list-card ul { list-style: none; }
+    .list-card li { padding: 0.5rem 0; display: flex; align-items: flex-start; gap: 0.5rem; color: #374151; }
+    .check { color: #8b5cf6; font-weight: bold; }
+    .highlight-box { background: #faf5ff; border: 2px solid #c4b5fd; border-radius: 0.75rem; padding: 1.5rem; margin-top: 1rem; }
+    .highlight-box p { color: #6b21a8; font-weight: 500; font-size: 1.1rem; }
+    .arrow-flow { display: flex; align-items: center; justify-content: center; gap: 1rem; margin: 1rem 0; }
+    .arrow-flow .box { background: #f3e8ff; padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: bold; color: #7c3aed; }
+    .arrow-flow .arrow { color: #a78bfa; font-size: 1.5rem; }
+  </style>
+</head>
+<body>
+  <main class="slideshow">
+    <div class="slide-container">
+      <!-- Slide 1: Title -->
+      <section class="slide active title-slide">
+        <div class="icon icon-purple">fn</div>
+        <h1>Part 2: Functional Programming</h1>
+        <p class="subtitle">Callbacks, Closures, and the Power of map/filter/reduce</p>
+        <span class="badge">20 Minutes</span>
+      </section>
+
+      <!-- Slide 2: Functions as Values -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-purple">f=</div>
+          <div><h2>Functions ARE Values</h2><p class="subtitle">The Key Insight of Functional Programming</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>Functions Can Be Assigned</h3>
+              <pre><span style="color:#f472b6">function</span> <span style="color:#a5f3fc">sayHello</span>() {
+  console.log(<span style="color:#a5f3fc">"Hello!"</span>);
+}
+
+<span style="color:#6b7280">// Assign function to variable</span>
+<span style="color:#f472b6">const</span> greet = sayHello;
+
+<span style="color:#6b7280">// Both call the same function</span>
+sayHello();  <span style="color:#6b7280">// "Hello!"</span>
+greet();     <span style="color:#6b7280">// "Hello!"</span></pre>
+            </div>
+            <div>
+              <h3>The Parentheses Matter!</h3>
+              <div class="card" style="background: #fef2f2; border: 1px solid #fca5a5; margin-bottom: 1rem;">
+                <p><code class="code-inline" style="color: #dc2626;">sayHello()</code> = <strong>execute</strong> the function</p>
+              </div>
+              <div class="card" style="background: #dcfce7; border: 1px solid #86efac;">
+                <p><code class="code-inline" style="color: #15803d;">sayHello</code> = <strong>reference</strong> the function value</p>
+              </div>
+              <div class="highlight-box" style="margin-top: 1rem;">
+                <p style="font-size: 1rem;">Think of it like the difference between "the recipe" vs "the cooked meal"</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 3: Callbacks -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-blue">cb</div>
+          <div><h2>Callback Functions</h2><p class="subtitle">Functions Passed as Arguments</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>What's a Callback?</h3>
+              <p style="color: #374151; margin-bottom: 1rem;">A function passed to another function, to be "called back" later.</p>
+              <pre><span style="color:#f472b6">function</span> <span style="color:#a5f3fc">doTwice</span>(action) {
+  action();  <span style="color:#6b7280">// call it once</span>
+  action();  <span style="color:#6b7280">// call it again</span>
+}
+
+<span style="color:#f472b6">function</span> <span style="color:#a5f3fc">sayHi</span>() {
+  console.log(<span style="color:#a5f3fc">"Hi!"</span>);
+}
+
+doTwice(sayHi);
+<span style="color:#6b7280">// "Hi!"</span>
+<span style="color:#6b7280">// "Hi!"</span></pre>
+            </div>
+            <div>
+              <h3>Anonymous Callbacks</h3>
+              <pre><span style="color:#6b7280">// Define the function inline</span>
+doTwice(<span style="color:#f472b6">function</span>() {
+  console.log(<span style="color:#a5f3fc">"Hello!"</span>);
+});
+
+<span style="color:#6b7280">// Very common pattern in JS!</span>
+<span style="color:#6b7280">// No need to name functions</span>
+<span style="color:#6b7280">// you only use once</span></pre>
+              <div class="card" style="margin-top: 1rem; background: #dbeafe; border: 1px solid #93c5fd;">
+                <p style="color: #1d4ed8; font-size: 0.95rem;"><strong>Real Example:</strong> <code class="code-inline" style="color: #1d4ed8;">setTimeout(callback, 1000)</code></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 4: Closures -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-green">[x]</div>
+          <div><h2>Closures</h2><p class="subtitle">Functions Remember Their Birth Environment</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>The Magic of Closures</h3>
+              <pre style="font-size: 0.9rem;"><span style="color:#f472b6">function</span> <span style="color:#a5f3fc">makeGreeter</span>(greeting) {
+  <span style="color:#6b7280">// Returns a NEW function</span>
+  <span style="color:#f472b6">return function</span>(name) {
+    console.log(greeting + <span style="color:#a5f3fc">" "</span> + name);
+  };
+}
+
+<span style="color:#f472b6">const</span> sayHello = makeGreeter(<span style="color:#a5f3fc">"Hello"</span>);
+<span style="color:#f472b6">const</span> sayHola = makeGreeter(<span style="color:#a5f3fc">"Hola"</span>);
+
+sayHello(<span style="color:#a5f3fc">"Alice"</span>);  <span style="color:#6b7280">// "Hello Alice"</span>
+sayHola(<span style="color:#a5f3fc">"Bob"</span>);    <span style="color:#6b7280">// "Hola Bob"</span></pre>
+            </div>
+            <div>
+              <h3>How It Works</h3>
+              <div class="card" style="background: #dcfce7; border: 1px solid #86efac;">
+                <p style="color: #15803d; font-size: 0.95rem;">The inner function "closes over" the <code class="code-inline" style="color: #15803d;">greeting</code> variable, remembering its value even after <code class="code-inline" style="color: #15803d;">makeGreeter</code> has finished executing.</p>
+              </div>
+              <div class="highlight-box" style="margin-top: 1rem; background: #dcfce7; border-color: #86efac;">
+                <p style="color: #15803d; font-size: 1rem;"><strong>Key Insight:</strong> Each call creates a NEW function with its own "memory"</p>
+              </div>
+              <div class="card" style="margin-top: 1rem;">
+                <p style="color: #6b7280; font-size: 0.9rem;">Closures enable: private variables, function factories, and event handlers with state</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 5: Map -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-orange">map</div>
+          <div><h2>Array.map()</h2><p class="subtitle">Transform Every Element</p></div>
+        </header>
+        <div class="content">
+          <div class="arrow-flow">
+            <div class="box">[1, 2, 3, 4]</div>
+            <div class="arrow">&#8594;</div>
+            <div class="box">map(n => n * 2)</div>
+            <div class="arrow">&#8594;</div>
+            <div class="box">[2, 4, 6, 8]</div>
+          </div>
+          <div class="grid-2">
+            <div>
+              <h3>The Pattern</h3>
+              <pre><span style="color:#f472b6">const</span> numbers = [<span style="color:#fcd34d">1</span>, <span style="color:#fcd34d">2</span>, <span style="color:#fcd34d">3</span>, <span style="color:#fcd34d">4</span>];
+
+<span style="color:#f472b6">const</span> doubled = numbers.map(
+  <span style="color:#f472b6">function</span>(n) {
+    <span style="color:#f472b6">return</span> n * <span style="color:#fcd34d">2</span>;
+  }
+);
+
+<span style="color:#6b7280">// doubled = [2, 4, 6, 8]</span></pre>
+            </div>
+            <div>
+              <h3>Real-World Example</h3>
+              <pre style="font-size: 0.85rem;"><span style="color:#f472b6">const</span> users = [
+  { name: <span style="color:#a5f3fc">"Alice"</span>, age: <span style="color:#fcd34d">25</span> },
+  { name: <span style="color:#a5f3fc">"Bob"</span>, age: <span style="color:#fcd34d">30</span> }
+];
+
+<span style="color:#f472b6">const</span> names = users.map(
+  <span style="color:#f472b6">function</span>(user) {
+    <span style="color:#f472b6">return</span> user.name;
+  }
+);
+<span style="color:#6b7280">// ["Alice", "Bob"]</span></pre>
+            </div>
+          </div>
+          <div class="card card-highlight" style="text-align: center;">
+            <p style="color: #7c3aed;"><strong>Key:</strong> map() always returns a NEW array of the SAME length</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 6: Filter -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-cyan">filter</div>
+          <div><h2>Array.filter()</h2><p class="subtitle">Keep Only What Passes the Test</p></div>
+        </header>
+        <div class="content">
+          <div class="arrow-flow">
+            <div class="box">[1, 2, 3, 4, 5, 6]</div>
+            <div class="arrow">&#8594;</div>
+            <div class="box">filter(n => n % 2 === 0)</div>
+            <div class="arrow">&#8594;</div>
+            <div class="box">[2, 4, 6]</div>
+          </div>
+          <div class="grid-2">
+            <div>
+              <h3>The Pattern</h3>
+              <pre><span style="color:#f472b6">const</span> numbers = [<span style="color:#fcd34d">1</span>, <span style="color:#fcd34d">2</span>, <span style="color:#fcd34d">3</span>, <span style="color:#fcd34d">4</span>, <span style="color:#fcd34d">5</span>, <span style="color:#fcd34d">6</span>];
+
+<span style="color:#f472b6">const</span> evens = numbers.filter(
+  <span style="color:#f472b6">function</span>(n) {
+    <span style="color:#f472b6">return</span> n % <span style="color:#fcd34d">2</span> === <span style="color:#fcd34d">0</span>;
+  }
+);
+
+<span style="color:#6b7280">// evens = [2, 4, 6]</span></pre>
+            </div>
+            <div>
+              <h3>Real-World Example</h3>
+              <pre style="font-size: 0.85rem;"><span style="color:#f472b6">const</span> users = [
+  { name: <span style="color:#a5f3fc">"Alice"</span>, age: <span style="color:#fcd34d">25</span> },
+  { name: <span style="color:#a5f3fc">"Bob"</span>, age: <span style="color:#fcd34d">17</span> },
+  { name: <span style="color:#a5f3fc">"Carol"</span>, age: <span style="color:#fcd34d">30</span> }
+];
+
+<span style="color:#f472b6">const</span> adults = users.filter(
+  <span style="color:#f472b6">function</span>(user) {
+    <span style="color:#f472b6">return</span> user.age >= <span style="color:#fcd34d">18</span>;
+  }
+);
+<span style="color:#6b7280">// [{name: "Alice"...}, {name: "Carol"...}]</span></pre>
+            </div>
+          </div>
+          <div class="card card-highlight" style="text-align: center;">
+            <p style="color: #7c3aed;"><strong>Key:</strong> Callback must return <code class="code-inline">true</code> or <code class="code-inline">false</code></p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 7: Reduce -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-pink">&#8721;</div>
+          <div><h2>Array.reduce()</h2><p class="subtitle">Combine All Elements Into One Value</p></div>
+        </header>
+        <div class="content">
+          <div class="arrow-flow">
+            <div class="box">[1, 2, 3, 4]</div>
+            <div class="arrow">&#8594;</div>
+            <div class="box">reduce((acc, n) => acc + n, 0)</div>
+            <div class="arrow">&#8594;</div>
+            <div class="box">10</div>
+          </div>
+          <div class="grid-2">
+            <div>
+              <h3>The Pattern</h3>
+              <pre><span style="color:#f472b6">const</span> numbers = [<span style="color:#fcd34d">1</span>, <span style="color:#fcd34d">2</span>, <span style="color:#fcd34d">3</span>, <span style="color:#fcd34d">4</span>];
+
+<span style="color:#f472b6">const</span> sum = numbers.reduce(
+  <span style="color:#f472b6">function</span>(accumulator, n) {
+    <span style="color:#f472b6">return</span> accumulator + n;
+  },
+  <span style="color:#fcd34d">0</span>  <span style="color:#6b7280">// initial value</span>
+);
+
+<span style="color:#6b7280">// sum = 10</span></pre>
+            </div>
+            <div>
+              <h3>Step by Step</h3>
+              <div class="card" style="font-family: monospace; font-size: 0.85rem;">
+                <p>Start: acc = <strong>0</strong></p>
+                <p>+ 1 &#8594; acc = <strong>1</strong></p>
+                <p>+ 2 &#8594; acc = <strong>3</strong></p>
+                <p>+ 3 &#8594; acc = <strong>6</strong></p>
+                <p>+ 4 &#8594; acc = <strong>10</strong></p>
+              </div>
+              <div class="card" style="margin-top: 0.5rem; background: #fce7f3; border: 1px solid #f9a8d4;">
+                <p style="color: #db2777; font-size: 0.9rem;"><strong>Uses:</strong> Sum, count, max/min, grouping, flattening...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 8: Chaining -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-purple">&#8594;&#8594;</div>
+          <div><h2>Method Chaining</h2><p class="subtitle">Combine Operations Elegantly</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>The Power of Chaining</h3>
+              <pre style="font-size: 0.85rem;"><span style="color:#f472b6">const</span> users = [
+  { name: <span style="color:#a5f3fc">"Alice"</span>, age: <span style="color:#fcd34d">25</span>, active: <span style="color:#fcd34d">true</span> },
+  { name: <span style="color:#a5f3fc">"Bob"</span>, age: <span style="color:#fcd34d">17</span>, active: <span style="color:#fcd34d">true</span> },
+  { name: <span style="color:#a5f3fc">"Carol"</span>, age: <span style="color:#fcd34d">30</span>, active: <span style="color:#fcd34d">false</span> }
+];
+
+<span style="color:#6b7280">// Get names of active adults</span>
+<span style="color:#f472b6">const</span> result = users
+  .filter(<span style="color:#f472b6">function</span>(u) { <span style="color:#f472b6">return</span> u.active; })
+  .filter(<span style="color:#f472b6">function</span>(u) { <span style="color:#f472b6">return</span> u.age >= <span style="color:#fcd34d">18</span>; })
+  .map(<span style="color:#f472b6">function</span>(u) { <span style="color:#f472b6">return</span> u.name; });
+
+<span style="color:#6b7280">// result = ["Alice"]</span></pre>
+            </div>
+            <div>
+              <h3>AI Prompt Example</h3>
+              <div class="card" style="background: #ecfeff; border: 1px solid #a5f3fc; margin-bottom: 1rem;">
+                <p style="font-style: italic; color: #0e7490; font-size: 0.9rem;">"Refactor this for loop to use map and filter: get the uppercase names of all users over 21"</p>
+              </div>
+              <div class="highlight-box" style="margin-top: 0; background: #faf5ff; border-color: #c4b5fd;">
+                <p style="color: #6b21a8; font-size: 0.95rem;"><strong>Think in pipelines:</strong><br>Data &#8594; Filter &#8594; Transform &#8594; Result</p>
+              </div>
+              <div class="card" style="margin-top: 1rem;">
+                <p style="font-size: 0.9rem; color: #374151;">Each method returns a new array, so we can chain the next operation.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 9: Summary -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-purple">fn</div>
+          <div><h2>Part 2 Complete!</h2><p class="subtitle">Functional Programming Unlocked</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="list-card list-card-purple">
+            <ul style="font-size: 1.2rem;">
+              <li><span class="check">&#10003;</span> Functions are first-class values</li>
+              <li><span class="check">&#10003;</span> Callbacks: functions passed to other functions</li>
+              <li><span class="check">&#10003;</span> Closures: functions "remember" their environment</li>
+              <li><span class="check">&#10003;</span> <code class="code-inline">map()</code> transforms every element</li>
+              <li><span class="check">&#10003;</span> <code class="code-inline">filter()</code> keeps elements that pass a test</li>
+              <li><span class="check">&#10003;</span> <code class="code-inline">reduce()</code> combines into a single value</li>
+            </ul>
+          </div>
+          <p style="text-align: center; color: #8b5cf6; font-size: 1.25rem; margin-top: 1.5rem; font-weight: 500;">Next up: Part 3 — The DOM & Manipulation &#8594;</p>
+        </div>
+      </section>
+    </div>
+
+    <nav class="controls">
+      <button class="btn btn-prev" onclick="prevSlide()">&#8592; Previous</button>
+      <div class="dots" id="dots"></div>
+      <div style="display:flex;align-items:center;gap:1rem">
+        <span class="counter" id="counter">1 / 9</span>
+        <button class="btn btn-next" onclick="nextSlide()">Next &#8594;</button>
+      </div>
+    </nav>
+  </main>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const dotsContainer = document.getElementById('dots');
+    const counter = document.getElementById('counter');
+    let current = 0;
+    slides.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.className = 'dot' + (i === 0 ? ' active' : '');
+      dot.onclick = () => goToSlide(i);
+      dotsContainer.appendChild(dot);
+    });
+    function updateSlide() {
+      slides.forEach((s, i) => s.classList.toggle('active', i === current));
+      document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
+      counter.textContent = `${current + 1} / ${slides.length}`;
+      document.querySelector('.btn-prev').disabled = current === 0;
+      document.querySelector('.btn-next').disabled = current === slides.length - 1;
+    }
+    function nextSlide() { if (current < slides.length - 1) { current++; updateSlide(); } }
+    function prevSlide() { if (current > 0) { current--; updateSlide(); } }
+    function goToSlide(i) { current = i; updateSlide(); }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+      if (e.key === 'ArrowLeft') prevSlide();
+    });
+  </script>
+</body>
+</html>

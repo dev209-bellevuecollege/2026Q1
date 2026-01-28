@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Client-Side Web Programming - Lesson 3</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f3f4f6;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+    .container {
+      background: white;
+      border-radius: 1rem;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+      max-width: 800px;
+      width: 100%;
+      padding: 3rem;
+    }
+    h1 {
+      font-size: 2.5rem;
+      color: #1f2937;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+    .subtitle {
+      color: #6b7280;
+      text-align: center;
+      margin-bottom: 3rem;
+      font-size: 1.1rem;
+    }
+    .parts-grid {
+      display: grid;
+      gap: 1.5rem;
+    }
+    .part-link {
+      display: block;
+      padding: 1.5rem;
+      background: #f9fafb;
+      border: 2px solid #e5e7eb;
+      border-radius: 0.75rem;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+    .part-link:hover {
+      border-color: #f59e0b;
+      background: #fffbeb;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .part-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 0.5rem;
+    }
+    .part-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+    .icon-yellow { background: #fef3c7; }
+    .icon-purple { background: #f3e8ff; }
+    .icon-blue { background: #dbeafe; }
+    .icon-green { background: #dcfce7; }
+    .icon-orange { background: #ffedd5; }
+    .icon-pink { background: #fce7f3; }
+    .part-title {
+      font-size: 1.25rem;
+      color: #1f2937;
+      font-weight: 600;
+    }
+    .part-description {
+      color: #6b7280;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+    .duration {
+      display: inline-block;
+      background: #e5e7eb;
+      color: #4b5563;
+      padding: 0.25rem 0.75rem;
+      border-radius: 1rem;
+      font-size: 0.85rem;
+      margin-top: 0.75rem;
+    }
+    footer {
+      margin-top: 3rem;
+      padding-top: 2rem;
+      border-top: 1px solid #e5e7eb;
+      text-align: center;
+      color: #6b7280;
+      font-size: 0.9rem;
+    }
+    @media (max-width: 640px) {
+      body { padding: 1rem; }
+      .container { padding: 2rem; }
+      h1 { font-size: 2rem; }
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <header>
+      <h1>Client-Side Web Programming</h1>
+      <p class="subtitle">Lesson 3: JavaScript Fundamentals & AI-Augmented Development</p>
+    </header>
+
+    <nav class="parts-grid">
+      <a href="part1-slides.html" class="part-link" aria-label="Part 1: JavaScript Review">
+        <article class="part-header">
+          <div class="part-icon icon-yellow" aria-hidden="true">JS</div>
+          <h2 class="part-title">Part 1: JavaScript Review</h2>
+        </article>
+        <p class="part-description">Quick review of variables, data types, objects, arrays, functions, and control flow. Refresher on fundamentals before diving deeper.</p>
+        <time class="duration">20 minutes</time>
+      </a>
+
+      <a href="part2-slides.html" class="part-link" aria-label="Part 2: Functional Programming Patterns">
+        <article class="part-header">
+          <div class="part-icon icon-purple" aria-hidden="true">fn</div>
+          <h2 class="part-title">Part 2: Functional Programming Patterns</h2>
+        </article>
+        <p class="part-description">Master callbacks, closures, and the powerful trio: map, filter, and reduce. Learn to think functionally with AI assistance.</p>
+        <time class="duration">20 minutes</time>
+      </a>
+
+      <a href="part3-slides.html" class="part-link" aria-label="Part 3: The DOM & Manipulation">
+        <article class="part-header">
+          <div class="part-icon icon-blue" aria-hidden="true">DOM</div>
+          <h2 class="part-title">Part 3: The DOM & Manipulation</h2>
+        </article>
+        <p class="part-description">Understand the DOM tree structure, select elements, modify content, and dynamically create/remove elements.</p>
+        <time class="duration">20 minutes</time>
+      </a>
+
+      <a href="part4-slides.html" class="part-link" aria-label="Part 4: Event Handling & Interactivity">
+        <article class="part-header">
+          <div class="part-icon icon-green" aria-hidden="true">evt</div>
+          <h2 class="part-title">Part 4: Event Handling & Interactivity</h2>
+        </article>
+        <p class="part-description">Make your pages interactive with event listeners. Handle clicks, keyboard input, and manage application state.</p>
+        <time class="duration">20 minutes</time>
+      </a>
+
+      <a href="part5-slides.html" class="part-link" aria-label="Part 5: Modern JavaScript & Assignment">
+        <article class="part-header">
+          <div class="part-icon icon-orange" aria-hidden="true">ES6</div>
+          <h2 class="part-title">Part 5: Modern JavaScript & Assignment</h2>
+        </article>
+        <p class="part-description">Arrow functions, destructuring, spread operator, and template literals. Plus Assignment 3 brief and requirements.</p>
+        <time class="duration">25 minutes</time>
+      </a>
+
+      <a href="part6-slides.html" class="part-link" aria-label="Part 6: Kahoot Quiz">
+        <article class="part-header">
+          <div class="part-icon icon-pink" aria-hidden="true">?!</div>
+          <h2 class="part-title">Part 6: Kahoot Quiz</h2>
+        </article>
+        <p class="part-description">Test your JavaScript knowledge! Functions, functional programming, DOM manipulation, events, and ES6 syntax.</p>
+        <time class="duration">15 minutes</time>
+      </a>
+    </nav>
+  </main>
+
+  <footer>
+    <p>Use arrow keys or click to navigate within each presentation</p>
+  </footer>
+</body>
+</html>

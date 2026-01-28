@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Part 4: Event Handling & Interactivity</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; }
+    .slideshow { height: 100vh; display: flex; flex-direction: column; }
+    .slide-container { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+    .slide { background: white; border-radius: 1rem; box-shadow: 0 10px 40px rgba(0,0,0,0.1); width: 100%; max-width: 1000px; height: 600px; padding: 3rem; display: none; flex-direction: column; }
+    .slide.active { display: flex; }
+    .controls { background: white; border-top: 1px solid #e5e7eb; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+    .btn { padding: 0.5rem 1.5rem; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; }
+    .btn-prev, .btn-next { background: #10b981; color: white; }
+    .btn:disabled { background: #d1d5db; cursor: not-allowed; }
+    .dots { display: flex; gap: 0.5rem; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #d1d5db; border: none; cursor: pointer; }
+    .dot.active { background: #10b981; width: 20px; border-radius: 5px; }
+    .slide-title { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+    .icon { width: 50px; height: 50px; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; font-weight: bold; }
+    .icon-green { background: #dcfce7; color: #15803d; }
+    .icon-blue { background: #dbeafe; color: #1d4ed8; }
+    .icon-purple { background: #f3e8ff; color: #7c3aed; }
+    .icon-orange { background: #ffedd5; color: #c2410c; }
+    .icon-cyan { background: #cffafe; color: #0891b2; }
+    .icon-yellow { background: #fef3c7; color: #b45309; }
+    .icon-pink { background: #fce7f3; color: #db2777; }
+    h1 { font-size: 2.5rem; color: #1f2937; }
+    h2 { font-size: 1.75rem; color: #1f2937; }
+    h3 { font-size: 1.25rem; color: #374151; margin-bottom: 0.5rem; }
+    .subtitle { color: #6b7280; font-size: 1.1rem; }
+    .content { flex: 1; display: flex; flex-direction: column; gap: 1rem; }
+    .card { background: #f9fafb; border-radius: 0.75rem; padding: 1.25rem; }
+    .card-highlight { background: #ecfdf5; border: 2px solid #6ee7b7; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; flex: 1; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; flex: 1; }
+    .title-slide { align-items: center; justify-content: center; text-align: center; }
+    .title-slide .icon { width: 80px; height: 80px; font-size: 1.5rem; margin-bottom: 1.5rem; border-radius: 50%; }
+    .title-slide h1 { margin-bottom: 1rem; }
+    .title-slide .subtitle { margin-bottom: 1.5rem; font-size: 1.25rem; }
+    .badge { background: #dcfce7; color: #15803d; padding: 0.5rem 1rem; border-radius: 2rem; font-size: 0.9rem; }
+    .counter { color: #6b7280; font-size: 0.9rem; }
+    pre { background: #1f2937; color: #f9fafb; padding: 1.25rem; border-radius: 0.5rem; font-size: 0.95rem; overflow-x: auto; font-family: 'Monaco', 'Menlo', monospace; }
+    code { font-family: 'Monaco', 'Menlo', monospace; }
+    .code-inline { background: #f3f4f6; padding: 0.2rem 0.5rem; border-radius: 0.25rem; font-size: 0.9rem; color: #15803d; }
+    .list-card { border-radius: 0.75rem; padding: 1.5rem; }
+    .list-card-green { background: #ecfdf5; border: 1px solid #6ee7b7; }
+    .list-card ul { list-style: none; }
+    .list-card li { padding: 0.5rem 0; display: flex; align-items: flex-start; gap: 0.5rem; color: #374151; }
+    .check { color: #10b981; font-weight: bold; }
+    .highlight-box { background: #ecfdf5; border: 2px solid #6ee7b7; border-radius: 0.75rem; padding: 1.5rem; margin-top: 1rem; }
+    .highlight-box p { color: #047857; font-weight: 500; font-size: 1.1rem; }
+    .event-flow { display: flex; align-items: center; justify-content: center; gap: 0.5rem; flex-wrap: wrap; }
+    .event-flow .step { background: #dcfce7; padding: 0.75rem 1rem; border-radius: 0.5rem; text-align: center; }
+    .event-flow .arrow { color: #10b981; font-size: 1.25rem; }
+  </style>
+</head>
+<body>
+  <main class="slideshow">
+    <div class="slide-container">
+      <!-- Slide 1: Title -->
+      <section class="slide active title-slide">
+        <div class="icon icon-green">evt</div>
+        <h1>Part 4: Event Handling</h1>
+        <p class="subtitle">Making Pages Interactive</p>
+        <span class="badge">20 Minutes</span>
+      </section>
+
+      <!-- Slide 2: Event-Driven Programming -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-green">!</div>
+          <div><h2>Event-Driven Programming</h2><p class="subtitle">The Web Interaction Model</p></div>
+        </header>
+        <div class="content">
+          <div class="event-flow" style="margin-bottom: 1.5rem;">
+            <div class="step">
+              <div style="font-size: 1.5rem;">1. Register</div>
+              <div style="font-size: 0.85rem; color: #6b7280;">Set up listener</div>
+            </div>
+            <div class="arrow">&#8594;</div>
+            <div class="step">
+              <div style="font-size: 1.5rem;">2. Wait</div>
+              <div style="font-size: 0.85rem; color: #6b7280;">User does something</div>
+            </div>
+            <div class="arrow">&#8594;</div>
+            <div class="step">
+              <div style="font-size: 1.5rem;">3. Execute</div>
+              <div style="font-size: 0.85rem; color: #6b7280;">Run callback</div>
+            </div>
+          </div>
+          <div class="grid-2">
+            <div>
+              <h3>The Pattern</h3>
+              <pre><span style="color:#f472b6">const</span> button = document
+  .querySelector(<span style="color:#a5f3fc">'#myButton'</span>);
+
+button.addEventListener(
+  <span style="color:#a5f3fc">'click'</span>,           <span style="color:#6b7280">// event type</span>
+  <span style="color:#f472b6">function</span>() {       <span style="color:#6b7280">// callback</span>
+    console.log(<span style="color:#a5f3fc">'Clicked!'</span>);
+  }
+);</pre>
+            </div>
+            <div>
+              <h3>Key Insight</h3>
+              <div class="card" style="background: #dcfce7; border: 1px solid #86efac;">
+                <p style="color: #15803d;">The callback function is <strong>not</strong> called immediately. It's stored and called <strong>later</strong> when the event occurs.</p>
+              </div>
+              <div class="card" style="margin-top: 1rem;">
+                <h3 style="font-size: 1rem;">Why Callbacks?</h3>
+                <p style="font-size: 0.9rem; color: #374151;">We don't know <em>when</em> the user will click. The browser calls our function when it happens.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 3: Common Events -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-blue">types</div>
+          <div><h2>Common Event Types</h2><p class="subtitle">What Users Do</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-3">
+            <div class="card">
+              <h3 style="color: #1d4ed8;">Mouse Events</h3>
+              <ul style="font-size: 0.9rem; color: #374151; list-style: none;">
+                <li><code class="code-inline" style="color: #1d4ed8;">'click'</code> - single click</li>
+                <li><code class="code-inline" style="color: #1d4ed8;">'dblclick'</code> - double click</li>
+                <li><code class="code-inline" style="color: #1d4ed8;">'mouseenter'</code> - hover in</li>
+                <li><code class="code-inline" style="color: #1d4ed8;">'mouseleave'</code> - hover out</li>
+                <li><code class="code-inline" style="color: #1d4ed8;">'mousedown'</code> - press</li>
+                <li><code class="code-inline" style="color: #1d4ed8;">'mouseup'</code> - release</li>
+              </ul>
+            </div>
+            <div class="card">
+              <h3 style="color: #7c3aed;">Keyboard Events</h3>
+              <ul style="font-size: 0.9rem; color: #374151; list-style: none;">
+                <li><code class="code-inline" style="color: #7c3aed;">'keydown'</code> - key pressed</li>
+                <li><code class="code-inline" style="color: #7c3aed;">'keyup'</code> - key released</li>
+                <li><code class="code-inline" style="color: #7c3aed;">'input'</code> - text changed</li>
+              </ul>
+              <div style="margin-top: 0.5rem; padding: 0.5rem; background: #f3e8ff; border-radius: 0.25rem;">
+                <p style="font-size: 0.8rem; color: #7c3aed;">Use <code>event.key</code> to check which key</p>
+              </div>
+            </div>
+            <div class="card">
+              <h3 style="color: #c2410c;">Form Events</h3>
+              <ul style="font-size: 0.9rem; color: #374151; list-style: none;">
+                <li><code class="code-inline" style="color: #c2410c;">'submit'</code> - form submitted</li>
+                <li><code class="code-inline" style="color: #c2410c;">'change'</code> - value changed</li>
+                <li><code class="code-inline" style="color: #c2410c;">'focus'</code> - element focused</li>
+                <li><code class="code-inline" style="color: #c2410c;">'blur'</code> - lost focus</li>
+              </ul>
+            </div>
+          </div>
+          <div class="card card-highlight" style="text-align: center;">
+            <p style="color: #047857;">Full list: <a href="https://developer.mozilla.org/en-US/docs/Web/Events" style="color: #047857;">MDN Web Events Reference</a></p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 4: The Event Object -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-purple">e</div>
+          <div><h2>The Event Object</h2><p class="subtitle">Information About What Happened</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>Accessing Event Details</h3>
+              <pre><span style="color:#6b7280">// The event object is passed to callback</span>
+button.addEventListener(<span style="color:#a5f3fc">'click'</span>,
+  <span style="color:#f472b6">function</span>(event) {
+    console.log(event.target);
+    <span style="color:#6b7280">// The element that was clicked</span>
+
+    console.log(event.type);
+    <span style="color:#6b7280">// "click"</span>
+  }
+);</pre>
+            </div>
+            <div>
+              <h3>Useful Properties</h3>
+              <div class="card" style="font-size: 0.9rem;">
+                <p><code class="code-inline" style="color: #7c3aed;">event.target</code> - element that triggered</p>
+                <p><code class="code-inline" style="color: #7c3aed;">event.type</code> - event type string</p>
+                <p><code class="code-inline" style="color: #7c3aed;">event.key</code> - which key (keyboard)</p>
+                <p><code class="code-inline" style="color: #7c3aed;">event.clientX/Y</code> - mouse position</p>
+              </div>
+              <div class="highlight-box" style="margin-top: 1rem; background: #f3e8ff; border-color: #c4b5fd;">
+                <p style="color: #6b21a8; font-size: 1rem;"><code class="code-inline" style="color: #6b21a8;">event.preventDefault()</code><br>Stop default browser behavior!</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 5: Preventing Default -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-orange">stop</div>
+          <div><h2>Preventing Default Behavior</h2><p class="subtitle">Taking Control</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>Form Submission Example</h3>
+              <pre style="font-size: 0.85rem;"><span style="color:#f472b6">const</span> form = document
+  .querySelector(<span style="color:#a5f3fc">'form'</span>);
+
+form.addEventListener(<span style="color:#a5f3fc">'submit'</span>,
+  <span style="color:#f472b6">function</span>(event) {
+    <span style="color:#6b7280">// Stop page from reloading!</span>
+    event.preventDefault();
+
+    <span style="color:#6b7280">// Now handle form data ourselves</span>
+    <span style="color:#f472b6">const</span> input = document
+      .querySelector(<span style="color:#a5f3fc">'#email'</span>);
+    console.log(input.value);
+  }
+);</pre>
+            </div>
+            <div>
+              <h3>Common Use Cases</h3>
+              <div class="card" style="margin-bottom: 1rem;">
+                <h3 style="font-size: 1rem; color: #c2410c;">Form Submit</h3>
+                <p style="font-size: 0.9rem;">Prevent page reload, handle with JavaScript instead</p>
+              </div>
+              <div class="card" style="margin-bottom: 1rem;">
+                <h3 style="font-size: 1rem; color: #c2410c;">Link Click</h3>
+                <p style="font-size: 0.9rem;">Prevent navigation, do something else</p>
+              </div>
+              <div class="card">
+                <h3 style="font-size: 1rem; color: #c2410c;">Keyboard Input</h3>
+                <p style="font-size: 0.9rem;">Prevent certain characters from being typed</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 6: State Management -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-cyan">state</div>
+          <div><h2>Managing Application State</h2><p class="subtitle">Keeping Track of Things</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>State = Data That Changes</h3>
+              <pre style="font-size: 0.85rem;"><span style="color:#6b7280">// State variable (outside handlers)</span>
+<span style="color:#f472b6">let</span> count = <span style="color:#fcd34d">0</span>;
+
+<span style="color:#f472b6">const</span> display = document
+  .querySelector(<span style="color:#a5f3fc">'#count'</span>);
+<span style="color:#f472b6">const</span> button = document
+  .querySelector(<span style="color:#a5f3fc">'#increment'</span>);
+
+button.addEventListener(<span style="color:#a5f3fc">'click'</span>,
+  <span style="color:#f472b6">function</span>() {
+    <span style="color:#6b7280">// Update state</span>
+    count = count + <span style="color:#fcd34d">1</span>;
+
+    <span style="color:#6b7280">// Update display</span>
+    display.textContent = count;
+  }
+);</pre>
+            </div>
+            <div>
+              <h3>The Pattern</h3>
+              <div class="card" style="background: #cffafe; border: 1px solid #67e8f9; margin-bottom: 1rem;">
+                <ol style="font-size: 0.95rem; color: #0e7490; padding-left: 1.25rem;">
+                  <li>Define state variables</li>
+                  <li>Event occurs</li>
+                  <li>Check/update state</li>
+                  <li>Update the DOM to reflect state</li>
+                </ol>
+              </div>
+              <div class="highlight-box" style="margin-top: 0; background: #cffafe; border-color: #67e8f9;">
+                <p style="color: #0e7490; font-size: 1rem;"><strong>Key Insight:</strong> State lives <em>outside</em> the event handler, but is <em>accessed inside</em> via closure!</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 7: AI Debugging -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-yellow">AI</div>
+          <div><h2>Debugging Events with AI</h2><p class="subtitle">Common Problems & Solutions</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>Problem: Handler Not Firing</h3>
+              <div class="card" style="background: #fef2f2; border: 1px solid #fca5a5; margin-bottom: 1rem;">
+                <p style="font-style: italic; color: #991b1b; font-size: 0.9rem;">"My click handler isn't working. The button exists in HTML but nothing happens when I click."</p>
+              </div>
+              <h3>Ask AI:</h3>
+              <div class="card" style="background: #ecfeff; border: 1px solid #a5f3fc;">
+                <p style="font-style: italic; color: #0e7490; font-size: 0.9rem;">"Why isn't my click event handler firing? The element exists in HTML."</p>
+              </div>
+            </div>
+            <div>
+              <h3>Common Causes</h3>
+              <div class="card">
+                <ul style="font-size: 0.9rem; color: #374151; list-style: none;">
+                  <li style="margin-bottom: 0.5rem;"><span style="color: #dc2626;">&#10007;</span> Script runs before DOM loads</li>
+                  <li style="margin-bottom: 0.5rem;"><span style="color: #dc2626;">&#10007;</span> Wrong selector (typo, wrong ID)</li>
+                  <li style="margin-bottom: 0.5rem;"><span style="color: #dc2626;">&#10007;</span> Called function instead of passing: <code class="code-inline" style="color: #dc2626;">fn()</code> vs <code class="code-inline" style="color: #15803d;">fn</code></li>
+                  <li><span style="color: #dc2626;">&#10007;</span> Element created dynamically</li>
+                </ul>
+              </div>
+              <div class="highlight-box" style="margin-top: 1rem;">
+                <p style="font-size: 0.95rem;">Tip: Put <code class="code-inline">&lt;script&gt;</code> at end of <code class="code-inline">&lt;body&gt;</code> or use <code class="code-inline">defer</code></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 8: Summary -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-green">evt</div>
+          <div><h2>Part 4 Complete!</h2><p class="subtitle">Event Handling Mastered</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="list-card list-card-green">
+            <ul style="font-size: 1.2rem;">
+              <li><span class="check">&#10003;</span> <code class="code-inline">addEventListener(type, callback)</code> pattern</li>
+              <li><span class="check">&#10003;</span> Event types: click, keyboard, form events</li>
+              <li><span class="check">&#10003;</span> Event object: <code class="code-inline">event.target</code>, <code class="code-inline">event.key</code></li>
+              <li><span class="check">&#10003;</span> <code class="code-inline">event.preventDefault()</code> to stop defaults</li>
+              <li><span class="check">&#10003;</span> State management with closures</li>
+            </ul>
+          </div>
+          <p style="text-align: center; color: #10b981; font-size: 1.25rem; margin-top: 1.5rem; font-weight: 500;">Next up: Part 5 — Modern JavaScript (ES6+) &#8594;</p>
+        </div>
+      </section>
+    </div>
+
+    <nav class="controls">
+      <button class="btn btn-prev" onclick="prevSlide()">&#8592; Previous</button>
+      <div class="dots" id="dots"></div>
+      <div style="display:flex;align-items:center;gap:1rem">
+        <span class="counter" id="counter">1 / 8</span>
+        <button class="btn btn-next" onclick="nextSlide()">Next &#8594;</button>
+      </div>
+    </nav>
+  </main>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const dotsContainer = document.getElementById('dots');
+    const counter = document.getElementById('counter');
+    let current = 0;
+    slides.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.className = 'dot' + (i === 0 ? ' active' : '');
+      dot.onclick = () => goToSlide(i);
+      dotsContainer.appendChild(dot);
+    });
+    function updateSlide() {
+      slides.forEach((s, i) => s.classList.toggle('active', i === current));
+      document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
+      counter.textContent = `${current + 1} / ${slides.length}`;
+      document.querySelector('.btn-prev').disabled = current === 0;
+      document.querySelector('.btn-next').disabled = current === slides.length - 1;
+    }
+    function nextSlide() { if (current < slides.length - 1) { current++; updateSlide(); } }
+    function prevSlide() { if (current > 0) { current--; updateSlide(); } }
+    function goToSlide(i) { current = i; updateSlide(); }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+      if (e.key === 'ArrowLeft') prevSlide();
+    });
+  </script>
+</body>
+</html>
