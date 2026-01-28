@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Client-Side Web Programming - Lesson 4</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f3f4f6;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+    .container {
+      background: white;
+      border-radius: 1rem;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+      max-width: 800px;
+      width: 100%;
+      padding: 3rem;
+    }
+    h1 {
+      font-size: 2.5rem;
+      color: #1f2937;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+    .subtitle {
+      color: #6b7280;
+      text-align: center;
+      margin-bottom: 3rem;
+      font-size: 1.1rem;
+    }
+    .parts-grid {
+      display: grid;
+      gap: 1.5rem;
+    }
+    .part-link {
+      display: block;
+      padding: 1.5rem;
+      background: #f9fafb;
+      border: 2px solid #e5e7eb;
+      border-radius: 0.75rem;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+    .part-link:hover {
+      border-color: #06b6d4;
+      background: #ecfeff;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .part-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 0.5rem;
+    }
+    .part-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      font-weight: bold;
+    }
+    .icon-cyan { background: #cffafe; color: #0891b2; }
+    .icon-blue { background: #dbeafe; color: #1d4ed8; }
+    .icon-purple { background: #f3e8ff; color: #7c3aed; }
+    .icon-green { background: #dcfce7; color: #15803d; }
+    .icon-orange { background: #ffedd5; color: #c2410c; }
+    .icon-pink { background: #fce7f3; color: #db2777; }
+    .part-title {
+      font-size: 1.25rem;
+      color: #1f2937;
+      font-weight: 600;
+    }
+    .part-description {
+      color: #6b7280;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+    .duration {
+      display: inline-block;
+      background: #e5e7eb;
+      color: #4b5563;
+      padding: 0.25rem 0.75rem;
+      border-radius: 1rem;
+      font-size: 0.85rem;
+      margin-top: 0.75rem;
+    }
+    footer {
+      margin-top: 3rem;
+      padding-top: 2rem;
+      border-top: 1px solid #e5e7eb;
+      text-align: center;
+      color: #6b7280;
+      font-size: 0.9rem;
+    }
+    @media (max-width: 640px) {
+      body { padding: 1rem; }
+      .container { padding: 2rem; }
+      h1 { font-size: 2rem; }
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <header>
+      <h1>Client-Side Web Programming</h1>
+      <p class="subtitle">Lesson 4: HTTP, APIs & Client-Side State Management</p>
+    </header>
+
+    <nav class="parts-grid">
+      <a href="part1-slides.html" class="part-link" aria-label="Part 1: HTTP Protocol Fundamentals">
+        <article class="part-header">
+          <div class="part-icon icon-cyan" aria-hidden="true">HTTP</div>
+          <h2 class="part-title">Part 1: HTTP Protocol Fundamentals</h2>
+        </article>
+        <p class="part-description">Understand the foundation of web communication: request/response cycle, methods, status codes, and headers.</p>
+        <time class="duration">20 minutes</time>
+      </a>
+
+      <a href="part2-slides.html" class="part-link" aria-label="Part 2: REST APIs & JSON">
+        <article class="part-header">
+          <div class="part-icon icon-blue" aria-hidden="true">API</div>
+          <h2 class="part-title">Part 2: REST APIs & JSON</h2>
+        </article>
+        <p class="part-description">Learn RESTful API design, JSON data format, authentication patterns, and hands-on practice with Postman.</p>
+        <time class="duration">25 minutes</time>
+      </a>
+
+      <a href="part3-slides.html" class="part-link" aria-label="Part 3: Fetch API in JavaScript">
+        <article class="part-header">
+          <div class="part-icon icon-purple" aria-hidden="true">fetch</div>
+          <h2 class="part-title">Part 3: Fetch API in JavaScript</h2>
+        </article>
+        <p class="part-description">Master the fetch() API, async/await patterns, error handling, and making authenticated API requests.</p>
+        <time class="duration">20 minutes</time>
+      </a>
+
+      <a href="part4-slides.html" class="part-link" aria-label="Part 4: Client-Side State Management">
+        <article class="part-header">
+          <div class="part-icon icon-green" aria-hidden="true">state</div>
+          <h2 class="part-title">Part 4: Client-Side State Management</h2>
+        </article>
+        <p class="part-description">Compare cookies, localStorage, and sessionStorage. Learn when to use each for different scenarios.</p>
+        <time class="duration">20 minutes</time>
+      </a>
+
+      <a href="part5-slides.html" class="part-link" aria-label="Part 5: HTTPS & HTML Forms">
+        <article class="part-header">
+          <div class="part-icon icon-orange" aria-hidden="true">form</div>
+          <h2 class="part-title">Part 5: HTTPS & HTML Forms</h2>
+        </article>
+        <p class="part-description">Understand HTTPS security, SSL/TLS basics, and handling HTML form submissions with JavaScript.</p>
+        <time class="duration">20 minutes</time>
+      </a>
+
+      <a href="part6-slides.html" class="part-link" aria-label="Part 6: Assignment & Kahoot">
+        <article class="part-header">
+          <div class="part-icon icon-pink" aria-hidden="true">HW</div>
+          <h2 class="part-title">Part 6: Assignment 4 & Kahoot Quiz</h2>
+        </article>
+        <p class="part-description">Assignment overview: Memory Game state persistence and Todo App with API. Test your knowledge with Kahoot!</p>
+        <time class="duration">15 minutes</time>
+      </a>
+    </nav>
+  </main>
+
+  <footer>
+    <p>Use arrow keys or click to navigate within each presentation</p>
+  </footer>
+</body>
+</html>

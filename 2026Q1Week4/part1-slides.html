@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Part 1: HTTP Protocol Fundamentals</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; }
+    .slideshow { height: 100vh; display: flex; flex-direction: column; }
+    .slide-container { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+    .slide { background: white; border-radius: 1rem; box-shadow: 0 10px 40px rgba(0,0,0,0.1); width: 100%; max-width: 1000px; height: 600px; padding: 3rem; display: none; flex-direction: column; }
+    .slide.active { display: flex; }
+    .controls { background: white; border-top: 1px solid #e5e7eb; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+    .btn { padding: 0.5rem 1.5rem; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; }
+    .btn-prev, .btn-next { background: #0891b2; color: white; }
+    .btn:disabled { background: #d1d5db; cursor: not-allowed; }
+    .dots { display: flex; gap: 0.5rem; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #d1d5db; border: none; cursor: pointer; }
+    .dot.active { background: #0891b2; width: 20px; border-radius: 5px; }
+    .slide-title { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+    .icon { width: 50px; height: 50px; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: bold; }
+    .icon-cyan { background: #cffafe; color: #0891b2; }
+    .icon-blue { background: #dbeafe; color: #1d4ed8; }
+    .icon-green { background: #dcfce7; color: #15803d; }
+    .icon-purple { background: #f3e8ff; color: #7c3aed; }
+    .icon-orange { background: #ffedd5; color: #c2410c; }
+    .icon-yellow { background: #fef3c7; color: #b45309; }
+    h1 { font-size: 2.5rem; color: #1f2937; }
+    h2 { font-size: 1.75rem; color: #1f2937; }
+    h3 { font-size: 1.25rem; color: #374151; margin-bottom: 0.5rem; }
+    .subtitle { color: #6b7280; font-size: 1.1rem; }
+    .content { flex: 1; display: flex; flex-direction: column; gap: 1rem; }
+    .card { background: #f9fafb; border-radius: 0.75rem; padding: 1.25rem; }
+    .card-highlight { background: #ecfeff; border: 2px solid #67e8f9; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; flex: 1; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; flex: 1; }
+    .title-slide { align-items: center; justify-content: center; text-align: center; }
+    .title-slide .icon { width: 80px; height: 80px; font-size: 1.5rem; margin-bottom: 1.5rem; border-radius: 50%; }
+    .title-slide h1 { margin-bottom: 1rem; }
+    .title-slide .subtitle { margin-bottom: 1.5rem; font-size: 1.25rem; }
+    .badge { background: #cffafe; color: #0891b2; padding: 0.5rem 1rem; border-radius: 2rem; font-size: 0.9rem; }
+    .counter { color: #6b7280; font-size: 0.9rem; }
+    pre { background: #1f2937; color: #f9fafb; padding: 1.25rem; border-radius: 0.5rem; font-size: 0.9rem; overflow-x: auto; font-family: 'Monaco', 'Menlo', monospace; }
+    code { font-family: 'Monaco', 'Menlo', monospace; }
+    .code-inline { background: #f3f4f6; padding: 0.2rem 0.5rem; border-radius: 0.25rem; font-size: 0.9rem; color: #0891b2; }
+    .list-card { border-radius: 0.75rem; padding: 1.5rem; }
+    .list-card-cyan { background: #ecfeff; border: 1px solid #67e8f9; }
+    .list-card ul { list-style: none; }
+    .list-card li { padding: 0.5rem 0; display: flex; align-items: flex-start; gap: 0.5rem; color: #374151; }
+    .check { color: #0891b2; font-weight: bold; }
+    .highlight-box { background: #ecfeff; border: 2px solid #67e8f9; border-radius: 0.75rem; padding: 1.5rem; margin-top: 1rem; }
+    .highlight-box p { color: #0e7490; font-weight: 500; font-size: 1.1rem; }
+    .flow-diagram { display: flex; align-items: center; justify-content: center; gap: 1rem; margin: 1rem 0; flex-wrap: wrap; }
+    .flow-box { padding: 1rem 1.5rem; border-radius: 0.5rem; text-align: center; font-weight: 500; }
+    .flow-arrow { font-size: 1.5rem; color: #0891b2; }
+    .status-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    .status-table th, .status-table td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #e5e7eb; }
+    .status-table th { background: #f9fafb; color: #374151; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <main class="slideshow">
+    <div class="slide-container">
+      <!-- Slide 1: Title -->
+      <section class="slide active title-slide">
+        <div class="icon icon-cyan">HTTP</div>
+        <h1>Part 1: HTTP Protocol Fundamentals</h1>
+        <p class="subtitle">The Foundation of Web Communication</p>
+        <span class="badge">20 Minutes</span>
+      </section>
+
+      <!-- Slide 2: What is HTTP? -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-cyan">?</div>
+          <div><h2>What is HTTP?</h2><p class="subtitle">HyperText Transfer Protocol</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>The Web's Language</h3>
+              <div class="card" style="margin-bottom: 1rem;">
+                <p style="font-size: 1.1rem; color: #374151;">HTTP is the <strong>protocol</strong> (set of rules) that browsers and servers use to communicate.</p>
+              </div>
+              <div class="card" style="background: #dcfce7; border: 1px solid #86efac;">
+                <h3 style="color: #15803d; font-size: 1rem;">Key Characteristics</h3>
+                <ul style="font-size: 0.9rem; color: #374151; list-style: none;">
+                  <li>&#8226; Human-readable (easy to debug)</li>
+                  <li>&#8226; Stateless (no memory between requests)</li>
+                  <li>&#8226; Extensible (via headers)</li>
+                  <li>&#8226; Client-server model</li>
+                </ul>
+              </div>
+            </div>
+            <div>
+              <h3>Client-Server Model</h3>
+              <div class="flow-diagram" style="flex-direction: column; gap: 0.5rem;">
+                <div class="flow-box" style="background: #dbeafe; color: #1d4ed8;">Browser (Client)</div>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                  <span style="color: #0891b2;">Request</span>
+                  <span class="flow-arrow">&#8595;</span>
+                </div>
+                <div class="flow-box" style="background: #cffafe; color: #0891b2;">Internet</div>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                  <span class="flow-arrow">&#8595;</span>
+                  <span style="color: #0891b2;">Response</span>
+                </div>
+                <div class="flow-box" style="background: #dcfce7; color: #15803d;">Web Server</div>
+              </div>
+            </div>
+          </div>
+          <div class="highlight-box" style="text-align: center;">
+            <p>The client <strong>always</strong> initiates the conversation. The server only responds.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 3: Request/Response Cycle -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-blue">&#8644;</div>
+          <div><h2>The Request/Response Cycle</h2><p class="subtitle">A Conversation in Two Parts</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>HTTP Request</h3>
+              <pre style="font-size: 0.85rem;"><span style="color:#22d3ee">GET</span> /users/123 <span style="color:#6b7280">HTTP/1.1</span>
+<span style="color:#a5f3fc">Host:</span> api.example.com
+<span style="color:#a5f3fc">Accept:</span> application/json
+<span style="color:#a5f3fc">Authorization:</span> Bearer abc123</pre>
+              <div class="card" style="margin-top: 1rem; font-size: 0.9rem;">
+                <p><strong>Method:</strong> What action to take</p>
+                <p><strong>Path:</strong> What resource to access</p>
+                <p><strong>Headers:</strong> Extra information</p>
+                <p><strong>Body:</strong> Data to send (optional)</p>
+              </div>
+            </div>
+            <div>
+              <h3>HTTP Response</h3>
+              <pre style="font-size: 0.85rem;"><span style="color:#6b7280">HTTP/1.1</span> <span style="color:#4ade80">200 OK</span>
+<span style="color:#a5f3fc">Content-Type:</span> application/json
+<span style="color:#a5f3fc">Content-Length:</span> 82
+
+{
+  "id": 123,
+  "name": "Alice",
+  "email": "alice@example.com"
+}</pre>
+            </div>
+          </div>
+          <div class="highlight-box" style="text-align: center;">
+            <p><strong>Demo:</strong> Open DevTools (F12) &#8594; Network tab &#8594; Refresh page &#8594; Click any request</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 4: HTTP Methods -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-green">CRUD</div>
+          <div><h2>HTTP Methods</h2><p class="subtitle">The Verbs of the Web</p></div>
+        </header>
+        <div class="content">
+          <table class="status-table">
+            <thead>
+              <tr>
+                <th>Method</th>
+                <th>Purpose</th>
+                <th>Has Body?</th>
+                <th>Example</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code class="code-inline" style="color: #22c55e;">GET</code></td>
+                <td>Retrieve data</td>
+                <td>No</td>
+                <td>Get user profile</td>
+              </tr>
+              <tr>
+                <td><code class="code-inline" style="color: #3b82f6;">POST</code></td>
+                <td>Create new resource</td>
+                <td>Yes</td>
+                <td>Create new user</td>
+              </tr>
+              <tr>
+                <td><code class="code-inline" style="color: #f59e0b;">PUT</code></td>
+                <td>Replace entire resource</td>
+                <td>Yes</td>
+                <td>Update user completely</td>
+              </tr>
+              <tr>
+                <td><code class="code-inline" style="color: #8b5cf6;">PATCH</code></td>
+                <td>Partial update</td>
+                <td>Yes</td>
+                <td>Update just email</td>
+              </tr>
+              <tr>
+                <td><code class="code-inline" style="color: #ef4444;">DELETE</code></td>
+                <td>Remove resource</td>
+                <td>No</td>
+                <td>Delete user</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="card card-highlight" style="margin-top: 1rem; text-align: center;">
+            <p style="color: #0e7490;"><strong>CRUD Mapping:</strong> Create=POST, Read=GET, Update=PUT/PATCH, Delete=DELETE</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 5: Status Codes -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-purple">200</div>
+          <div><h2>Status Codes</h2><p class="subtitle">The Server's Response</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-3" style="gap: 0.75rem;">
+            <div class="card" style="background: #dcfce7; border: 1px solid #86efac;">
+              <h3 style="color: #15803d;">2xx Success</h3>
+              <ul style="font-size: 0.85rem; color: #374151; list-style: none;">
+                <li><strong>200</strong> OK</li>
+                <li><strong>201</strong> Created</li>
+                <li><strong>204</strong> No Content</li>
+              </ul>
+            </div>
+            <div class="card" style="background: #dbeafe; border: 1px solid #93c5fd;">
+              <h3 style="color: #1d4ed8;">3xx Redirect</h3>
+              <ul style="font-size: 0.85rem; color: #374151; list-style: none;">
+                <li><strong>301</strong> Moved Permanently</li>
+                <li><strong>302</strong> Found (Temporary)</li>
+                <li><strong>304</strong> Not Modified</li>
+              </ul>
+            </div>
+            <div class="card" style="background: #fef3c7; border: 1px solid #fcd34d;">
+              <h3 style="color: #b45309;">4xx Client Error</h3>
+              <ul style="font-size: 0.85rem; color: #374151; list-style: none;">
+                <li><strong>400</strong> Bad Request</li>
+                <li><strong>401</strong> Unauthorized</li>
+                <li><strong>403</strong> Forbidden</li>
+                <li><strong>404</strong> Not Found</li>
+              </ul>
+            </div>
+          </div>
+          <div class="grid-2" style="margin-top: 0.75rem; flex: 0;">
+            <div class="card" style="background: #fef2f2; border: 1px solid #fca5a5;">
+              <h3 style="color: #dc2626;">5xx Server Error</h3>
+              <ul style="font-size: 0.85rem; color: #374151; list-style: none;">
+                <li><strong>500</strong> Internal Server Error</li>
+                <li><strong>502</strong> Bad Gateway</li>
+                <li><strong>503</strong> Service Unavailable</li>
+              </ul>
+            </div>
+            <div class="card" style="background: #ecfeff; border: 1px solid #67e8f9;">
+              <h3 style="color: #0891b2;">Quick Memory Trick</h3>
+              <p style="font-size: 0.9rem; color: #374151;">
+                <strong>2xx</strong> = "Here you go!"<br>
+                <strong>3xx</strong> = "Go look elsewhere"<br>
+                <strong>4xx</strong> = "You messed up"<br>
+                <strong>5xx</strong> = "I messed up"
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 6: Headers -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-orange">{ }</div>
+          <div><h2>HTTP Headers</h2><p class="subtitle">Metadata for Requests & Responses</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>Common Request Headers</h3>
+              <div class="card" style="font-size: 0.85rem;">
+                <p><code class="code-inline" style="color: #c2410c;">Content-Type</code><br>Format of data you're sending</p>
+                <p style="margin-top: 0.5rem;"><code class="code-inline" style="color: #c2410c;">Accept</code><br>Format you want back</p>
+                <p style="margin-top: 0.5rem;"><code class="code-inline" style="color: #c2410c;">Authorization</code><br>Authentication credentials</p>
+                <p style="margin-top: 0.5rem;"><code class="code-inline" style="color: #c2410c;">Cookie</code><br>Session data</p>
+              </div>
+            </div>
+            <div>
+              <h3>Common Response Headers</h3>
+              <div class="card" style="font-size: 0.85rem;">
+                <p><code class="code-inline" style="color: #c2410c;">Content-Type</code><br>Format of response data</p>
+                <p style="margin-top: 0.5rem;"><code class="code-inline" style="color: #c2410c;">Set-Cookie</code><br>Store data in browser</p>
+                <p style="margin-top: 0.5rem;"><code class="code-inline" style="color: #c2410c;">Cache-Control</code><br>Caching instructions</p>
+                <p style="margin-top: 0.5rem;"><code class="code-inline" style="color: #c2410c;">Location</code><br>Redirect URL (3xx)</p>
+              </div>
+            </div>
+          </div>
+          <div class="highlight-box">
+            <p style="text-align: center;"><strong>Most Common Content-Type:</strong> <code class="code-inline">application/json</code></p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 7: Stateless -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-yellow">?</div>
+          <div><h2>HTTP is Stateless</h2><p class="subtitle">But Sessions Exist?</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>The Problem</h3>
+              <div class="card" style="background: #fef2f2; border: 1px solid #fca5a5; margin-bottom: 1rem;">
+                <p style="color: #991b1b; font-size: 0.95rem;">HTTP has <strong>no memory</strong> between requests. Each request is completely independent.</p>
+              </div>
+              <div class="card">
+                <p style="font-size: 0.9rem; color: #374151;">Request 1: "I'm Alice, log me in"<br>
+                &#8595;<br>
+                Request 2: "Show my profile"<br>
+                Server: "Who are you?" &#129300;</p>
+              </div>
+            </div>
+            <div>
+              <h3>The Solution: Cookies</h3>
+              <div class="card" style="background: #dcfce7; border: 1px solid #86efac; margin-bottom: 1rem;">
+                <p style="color: #15803d; font-size: 0.95rem;">Cookies allow the browser to <strong>remember</strong> information between requests.</p>
+              </div>
+              <div class="card">
+                <p style="font-size: 0.9rem; color: #374151;">Login Response: <code class="code-inline">Set-Cookie: session=abc123</code><br>
+                &#8595;<br>
+                Next Request: <code class="code-inline">Cookie: session=abc123</code><br>
+                Server: "Welcome back, Alice!"</p>
+              </div>
+            </div>
+          </div>
+          <div class="highlight-box" style="text-align: center;">
+            <p>We'll cover cookies, localStorage, and sessionStorage in detail in Part 4!</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 8: Summary -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-cyan">HTTP</div>
+          <div><h2>Part 1 Complete!</h2><p class="subtitle">HTTP Fundamentals</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="list-card list-card-cyan">
+            <ul style="font-size: 1.2rem;">
+              <li><span class="check">&#10003;</span> HTTP = protocol for client-server communication</li>
+              <li><span class="check">&#10003;</span> Request/Response cycle with methods and status codes</li>
+              <li><span class="check">&#10003;</span> Methods: GET, POST, PUT, PATCH, DELETE</li>
+              <li><span class="check">&#10003;</span> Status codes: 2xx success, 4xx client error, 5xx server error</li>
+              <li><span class="check">&#10003;</span> Headers carry metadata (Content-Type, Authorization)</li>
+              <li><span class="check">&#10003;</span> HTTP is stateless; cookies enable sessions</li>
+            </ul>
+          </div>
+          <p style="text-align: center; color: #0891b2; font-size: 1.25rem; margin-top: 1.5rem; font-weight: 500;">Next up: Part 2 — REST APIs & JSON &#8594;</p>
+        </div>
+      </section>
+    </div>
+
+    <nav class="controls">
+      <button class="btn btn-prev" onclick="prevSlide()">&#8592; Previous</button>
+      <div class="dots" id="dots"></div>
+      <div style="display:flex;align-items:center;gap:1rem">
+        <span class="counter" id="counter">1 / 8</span>
+        <button class="btn btn-next" onclick="nextSlide()">Next &#8594;</button>
+      </div>
+    </nav>
+  </main>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const dotsContainer = document.getElementById('dots');
+    const counter = document.getElementById('counter');
+    let current = 0;
+    slides.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.className = 'dot' + (i === 0 ? ' active' : '');
+      dot.onclick = () => goToSlide(i);
+      dotsContainer.appendChild(dot);
+    });
+    function updateSlide() {
+      slides.forEach((s, i) => s.classList.toggle('active', i === current));
+      document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
+      counter.textContent = `${current + 1} / ${slides.length}`;
+      document.querySelector('.btn-prev').disabled = current === 0;
+      document.querySelector('.btn-next').disabled = current === slides.length - 1;
+    }
+    function nextSlide() { if (current < slides.length - 1) { current++; updateSlide(); } }
+    function prevSlide() { if (current > 0) { current--; updateSlide(); } }
+    function goToSlide(i) { current = i; updateSlide(); }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+      if (e.key === 'ArrowLeft') prevSlide();
+    });
+  </script>
+</body>
+</html>

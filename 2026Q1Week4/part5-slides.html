@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Part 5: HTTPS & HTML Forms</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; }
+    .slideshow { height: 100vh; display: flex; flex-direction: column; }
+    .slide-container { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+    .slide { background: white; border-radius: 1rem; box-shadow: 0 10px 40px rgba(0,0,0,0.1); width: 100%; max-width: 1000px; height: 600px; padding: 3rem; display: none; flex-direction: column; }
+    .slide.active { display: flex; }
+    .controls { background: white; border-top: 1px solid #e5e7eb; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+    .btn { padding: 0.5rem 1.5rem; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; }
+    .btn-prev, .btn-next { background: #f97316; color: white; }
+    .btn:disabled { background: #d1d5db; cursor: not-allowed; }
+    .dots { display: flex; gap: 0.5rem; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #d1d5db; border: none; cursor: pointer; }
+    .dot.active { background: #f97316; width: 20px; border-radius: 5px; }
+    .slide-title { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+    .icon { width: 50px; height: 50px; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: bold; }
+    .icon-orange { background: #ffedd5; color: #c2410c; }
+    .icon-green { background: #dcfce7; color: #15803d; }
+    .icon-blue { background: #dbeafe; color: #1d4ed8; }
+    .icon-purple { background: #f3e8ff; color: #7c3aed; }
+    .icon-cyan { background: #cffafe; color: #0891b2; }
+    .icon-yellow { background: #fef3c7; color: #b45309; }
+    h1 { font-size: 2.5rem; color: #1f2937; }
+    h2 { font-size: 1.75rem; color: #1f2937; }
+    h3 { font-size: 1.25rem; color: #374151; margin-bottom: 0.5rem; }
+    .subtitle { color: #6b7280; font-size: 1.1rem; }
+    .content { flex: 1; display: flex; flex-direction: column; gap: 1rem; }
+    .card { background: #f9fafb; border-radius: 0.75rem; padding: 1.25rem; }
+    .card-highlight { background: #fff7ed; border: 2px solid #fdba74; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; flex: 1; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; flex: 1; }
+    .title-slide { align-items: center; justify-content: center; text-align: center; }
+    .title-slide .icon { width: 80px; height: 80px; font-size: 1.25rem; margin-bottom: 1.5rem; border-radius: 50%; }
+    .title-slide h1 { margin-bottom: 1rem; }
+    .title-slide .subtitle { margin-bottom: 1.5rem; font-size: 1.25rem; }
+    .badge { background: #ffedd5; color: #c2410c; padding: 0.5rem 1rem; border-radius: 2rem; font-size: 0.9rem; }
+    .counter { color: #6b7280; font-size: 0.9rem; }
+    pre { background: #1f2937; color: #f9fafb; padding: 1.25rem; border-radius: 0.5rem; font-size: 0.85rem; overflow-x: auto; font-family: 'Monaco', 'Menlo', monospace; }
+    code { font-family: 'Monaco', 'Menlo', monospace; }
+    .code-inline { background: #f3f4f6; padding: 0.2rem 0.5rem; border-radius: 0.25rem; font-size: 0.9rem; color: #c2410c; }
+    .list-card { border-radius: 0.75rem; padding: 1.5rem; }
+    .list-card-orange { background: #fff7ed; border: 1px solid #fdba74; }
+    .list-card ul { list-style: none; }
+    .list-card li { padding: 0.5rem 0; display: flex; align-items: flex-start; gap: 0.5rem; color: #374151; }
+    .check { color: #f97316; font-weight: bold; }
+    .highlight-box { background: #fff7ed; border: 2px solid #fdba74; border-radius: 0.75rem; padding: 1.5rem; margin-top: 1rem; }
+    .highlight-box p { color: #c2410c; font-weight: 500; font-size: 1.1rem; }
+    .flow-diagram { display: flex; align-items: center; justify-content: center; gap: 0.5rem; flex-wrap: wrap; }
+    .flow-box { padding: 0.75rem 1rem; border-radius: 0.5rem; text-align: center; font-size: 0.85rem; }
+    .flow-arrow { font-size: 1.25rem; color: #f97316; }
+  </style>
+</head>
+<body>
+  <main class="slideshow">
+    <div class="slide-container">
+      <!-- Slide 1: Title -->
+      <section class="slide active title-slide">
+        <div class="icon icon-orange">form</div>
+        <h1>Part 5: HTTPS & HTML Forms</h1>
+        <p class="subtitle">Security and User Input</p>
+        <span class="badge">20 Minutes</span>
+      </section>
+
+      <!-- Slide 2: Why HTTPS? -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-green">lock</div>
+          <div><h2>Why HTTPS?</h2><p class="subtitle">The "S" Stands for Secure</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>HTTP Problems</h3>
+              <div class="card" style="background: #fef2f2; border: 1px solid #fca5a5; margin-bottom: 1rem;">
+                <p style="font-size: 0.9rem; color: #991b1b;"><strong>Plain HTTP is sent in clear text.</strong> Anyone on the network can read your data!</p>
+              </div>
+              <div class="card" style="font-size: 0.9rem;">
+                <p><strong>Risks:</strong></p>
+                <ul style="margin-left: 1rem; margin-top: 0.5rem; color: #374151;">
+                  <li>Passwords visible to attackers</li>
+                  <li>Session hijacking</li>
+                  <li>Data tampering</li>
+                  <li>Man-in-the-middle attacks</li>
+                </ul>
+              </div>
+            </div>
+            <div>
+              <h3>HTTPS Benefits</h3>
+              <div class="card" style="background: #dcfce7; border: 1px solid #86efac; margin-bottom: 1rem;">
+                <p style="font-size: 0.9rem; color: #15803d;"><strong>HTTPS encrypts all communication</strong> between browser and server.</p>
+              </div>
+              <div class="card" style="font-size: 0.9rem;">
+                <p><strong>Provides:</strong></p>
+                <ul style="margin-left: 1rem; margin-top: 0.5rem; color: #374151;">
+                  <li><strong>Encryption:</strong> Data is scrambled</li>
+                  <li><strong>Authentication:</strong> Verify server identity</li>
+                  <li><strong>Integrity:</strong> Detect tampering</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="highlight-box" style="text-align: center;">
+            <p>Look for the <strong>padlock icon</strong> in your browser's address bar!</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 3: SSL/TLS Handshake -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-blue">TLS</div>
+          <div><h2>How HTTPS Works</h2><p class="subtitle">SSL/TLS Handshake (Simplified)</p></div>
+        </header>
+        <div class="content">
+          <div class="flow-diagram" style="margin-bottom: 1.5rem;">
+            <div class="flow-box" style="background: #dbeafe; color: #1d4ed8;">1. Hello</div>
+            <div class="flow-arrow">&#8594;</div>
+            <div class="flow-box" style="background: #dcfce7; color: #15803d;">2. Certificate</div>
+            <div class="flow-arrow">&#8594;</div>
+            <div class="flow-box" style="background: #f3e8ff; color: #7c3aed;">3. Key Exchange</div>
+            <div class="flow-arrow">&#8594;</div>
+            <div class="flow-box" style="background: #fef3c7; color: #b45309;">4. Encrypted!</div>
+          </div>
+          <div class="grid-2">
+            <div>
+              <h3>The Process</h3>
+              <div class="card" style="font-size: 0.85rem;">
+                <p><strong>1. Client Hello:</strong> Browser says "I want a secure connection"</p>
+                <p style="margin-top: 0.5rem;"><strong>2. Certificate:</strong> Server sends its SSL certificate (proof of identity)</p>
+                <p style="margin-top: 0.5rem;"><strong>3. Key Exchange:</strong> They agree on encryption keys</p>
+                <p style="margin-top: 0.5rem;"><strong>4. Encrypted:</strong> All data is now encrypted</p>
+              </div>
+            </div>
+            <div>
+              <h3>SSL Certificates</h3>
+              <div class="card" style="margin-bottom: 1rem;">
+                <p style="font-size: 0.9rem; color: #374151;">A certificate proves the server is who it claims to be. Issued by trusted <strong>Certificate Authorities (CAs)</strong>.</p>
+              </div>
+              <div class="card" style="background: #fef3c7; border: 1px solid #fcd34d;">
+                <h3 style="font-size: 0.95rem; color: #b45309;">Certificate Warnings</h3>
+                <p style="font-size: 0.85rem; color: #374151;">Expired, self-signed, or mismatched certificates trigger browser warnings. Don't ignore them!</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 4: HTML Forms Basics -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-orange">form</div>
+          <div><h2>HTML Forms</h2><p class="subtitle">Collecting User Input</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>Basic Form Structure</h3>
+              <pre style="font-size: 0.8rem;"><span style="color:#6b7280">&lt;!-- HTML Form --&gt;</span>
+&lt;<span style="color:#f472b6">form</span> <span style="color:#a5f3fc">action</span>=<span style="color:#a5f3fc">"/api/login"</span> <span style="color:#a5f3fc">method</span>=<span style="color:#a5f3fc">"POST"</span>&gt;
+  &lt;<span style="color:#f472b6">label</span> <span style="color:#a5f3fc">for</span>=<span style="color:#a5f3fc">"email"</span>&gt;Email:&lt;/<span style="color:#f472b6">label</span>&gt;
+  &lt;<span style="color:#f472b6">input</span>
+    <span style="color:#a5f3fc">type</span>=<span style="color:#a5f3fc">"email"</span>
+    <span style="color:#a5f3fc">id</span>=<span style="color:#a5f3fc">"email"</span>
+    <span style="color:#a5f3fc">name</span>=<span style="color:#a5f3fc">"email"</span>
+    <span style="color:#a5f3fc">required</span>
+  &gt;
+
+  &lt;<span style="color:#f472b6">label</span> <span style="color:#a5f3fc">for</span>=<span style="color:#a5f3fc">"password"</span>&gt;Password:&lt;/<span style="color:#f472b6">label</span>&gt;
+  &lt;<span style="color:#f472b6">input</span>
+    <span style="color:#a5f3fc">type</span>=<span style="color:#a5f3fc">"password"</span>
+    <span style="color:#a5f3fc">id</span>=<span style="color:#a5f3fc">"password"</span>
+    <span style="color:#a5f3fc">name</span>=<span style="color:#a5f3fc">"password"</span>
+  &gt;
+
+  &lt;<span style="color:#f472b6">button</span> <span style="color:#a5f3fc">type</span>=<span style="color:#a5f3fc">"submit"</span>&gt;Login&lt;/<span style="color:#f472b6">button</span>&gt;
+&lt;/<span style="color:#f472b6">form</span>&gt;</pre>
+            </div>
+            <div>
+              <h3>Key Attributes</h3>
+              <div class="card" style="margin-bottom: 0.75rem;">
+                <p style="font-size: 0.9rem;"><code class="code-inline">action</code> - URL to send data to</p>
+              </div>
+              <div class="card" style="margin-bottom: 0.75rem;">
+                <p style="font-size: 0.9rem;"><code class="code-inline">method</code> - HTTP method (GET or POST)</p>
+              </div>
+              <div class="card" style="margin-bottom: 0.75rem;">
+                <p style="font-size: 0.9rem;"><code class="code-inline">name</code> - Key for the data (required!)</p>
+              </div>
+              <div class="card" style="background: #fef3c7; border: 1px solid #fcd34d;">
+                <h3 style="font-size: 0.95rem; color: #b45309;">Default Behavior</h3>
+                <p style="font-size: 0.85rem; color: #374151;">Forms cause a <strong>full page reload</strong> when submitted. We usually want to prevent this!</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 5: Handling Forms with JS -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-purple">JS</div>
+          <div><h2>Handling Forms with JavaScript</h2><p class="subtitle">preventDefault + fetch</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>Intercept the Submit</h3>
+              <pre style="font-size: 0.75rem;"><span style="color:#f472b6">const</span> form = document.querySelector(<span style="color:#a5f3fc">'form'</span>);
+
+form.addEventListener(<span style="color:#a5f3fc">'submit'</span>, <span style="color:#f472b6">async</span> (event) => {
+  <span style="color:#6b7280">// Stop the page reload!</span>
+  event.preventDefault();
+
+  <span style="color:#6b7280">// Get form data</span>
+  <span style="color:#f472b6">const</span> formData = <span style="color:#f472b6">new</span> FormData(form);
+  <span style="color:#f472b6">const</span> data = Object.fromEntries(formData);
+
+  <span style="color:#6b7280">// Send via fetch instead</span>
+  <span style="color:#f472b6">const</span> response = <span style="color:#f472b6">await</span> fetch(<span style="color:#a5f3fc">'/api/login'</span>, {
+    method: <span style="color:#a5f3fc">'POST'</span>,
+    headers: {
+      <span style="color:#a5f3fc">'Content-Type'</span>: <span style="color:#a5f3fc">'application/json'</span>
+    },
+    body: JSON.stringify(data)
+  });
+
+  <span style="color:#f472b6">const</span> result = <span style="color:#f472b6">await</span> response.json();
+  console.log(result);
+});</pre>
+            </div>
+            <div>
+              <h3>Why This Pattern?</h3>
+              <div class="card" style="margin-bottom: 0.75rem;">
+                <p style="font-size: 0.9rem; color: #374151;"><strong>No page reload</strong> = Better UX</p>
+              </div>
+              <div class="card" style="margin-bottom: 0.75rem;">
+                <p style="font-size: 0.9rem; color: #374151;"><strong>Custom headers</strong> = Send JSON, auth tokens</p>
+              </div>
+              <div class="card" style="margin-bottom: 0.75rem;">
+                <p style="font-size: 0.9rem; color: #374151;"><strong>Handle response</strong> = Update UI, show errors</p>
+              </div>
+              <div class="card" style="background: #f3e8ff; border: 1px solid #c4b5fd;">
+                <h3 style="font-size: 0.95rem; color: #7c3aed;">FormData API</h3>
+                <p style="font-size: 0.85rem; color: #374151;"><code class="code-inline" style="color: #7c3aed;">new FormData(form)</code> collects all input values by their <code class="code-inline" style="color: #7c3aed;">name</code> attribute.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 6: Input Types -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-cyan">input</div>
+          <div><h2>Common Input Types</h2><p class="subtitle">HTML5 Form Controls</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-3" style="gap: 0.75rem;">
+            <div class="card" style="font-size: 0.85rem;">
+              <h3 style="font-size: 1rem;">Text Inputs</h3>
+              <p><code class="code-inline">type="text"</code></p>
+              <p><code class="code-inline">type="email"</code></p>
+              <p><code class="code-inline">type="password"</code></p>
+              <p><code class="code-inline">type="tel"</code></p>
+              <p><code class="code-inline">type="url"</code></p>
+            </div>
+            <div class="card" style="font-size: 0.85rem;">
+              <h3 style="font-size: 1rem;">Selection</h3>
+              <p><code class="code-inline">type="checkbox"</code></p>
+              <p><code class="code-inline">type="radio"</code></p>
+              <p><code class="code-inline">&lt;select&gt;</code></p>
+              <p><code class="code-inline">type="range"</code></p>
+            </div>
+            <div class="card" style="font-size: 0.85rem;">
+              <h3 style="font-size: 1rem;">Other</h3>
+              <p><code class="code-inline">type="number"</code></p>
+              <p><code class="code-inline">type="date"</code></p>
+              <p><code class="code-inline">type="file"</code></p>
+              <p><code class="code-inline">type="hidden"</code></p>
+              <p><code class="code-inline">&lt;textarea&gt;</code></p>
+            </div>
+          </div>
+          <div class="grid-2" style="margin-top: 0.75rem; flex: 0;">
+            <div class="card">
+              <h3 style="font-size: 1rem;">Validation Attributes</h3>
+              <p style="font-size: 0.85rem;"><code class="code-inline">required</code> - Must have value</p>
+              <p style="font-size: 0.85rem;"><code class="code-inline">minlength</code> / <code class="code-inline">maxlength</code></p>
+              <p style="font-size: 0.85rem;"><code class="code-inline">min</code> / <code class="code-inline">max</code> (numbers)</p>
+              <p style="font-size: 0.85rem;"><code class="code-inline">pattern</code> - Regex validation</p>
+            </div>
+            <div class="card" style="background: #ecfeff; border: 1px solid #67e8f9;">
+              <h3 style="font-size: 1rem; color: #0891b2;">Browser Validation</h3>
+              <p style="font-size: 0.85rem; color: #374151;">HTML5 inputs provide built-in validation. The browser won't submit if validation fails!</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 7: Assignment Example -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-yellow">ex</div>
+          <div><h2>Assignment 4 Example</h2><p class="subtitle">Login Form Pattern</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>HTML</h3>
+              <pre style="font-size: 0.75rem;">&lt;<span style="color:#f472b6">form</span> <span style="color:#a5f3fc">id</span>=<span style="color:#a5f3fc">"login-form"</span>&gt;
+  &lt;<span style="color:#f472b6">input</span>
+    <span style="color:#a5f3fc">type</span>=<span style="color:#a5f3fc">"text"</span>
+    <span style="color:#a5f3fc">name</span>=<span style="color:#a5f3fc">"username"</span>
+    <span style="color:#a5f3fc">placeholder</span>=<span style="color:#a5f3fc">"Username"</span>
+    <span style="color:#a5f3fc">required</span>
+  &gt;
+  &lt;<span style="color:#f472b6">input</span>
+    <span style="color:#a5f3fc">type</span>=<span style="color:#a5f3fc">"password"</span>
+    <span style="color:#a5f3fc">name</span>=<span style="color:#a5f3fc">"password"</span>
+    <span style="color:#a5f3fc">placeholder</span>=<span style="color:#a5f3fc">"Password"</span>
+    <span style="color:#a5f3fc">required</span>
+  &gt;
+  &lt;<span style="color:#f472b6">button</span> <span style="color:#a5f3fc">type</span>=<span style="color:#a5f3fc">"submit"</span>&gt;Login&lt;/<span style="color:#f472b6">button</span>&gt;
+&lt;/<span style="color:#f472b6">form</span>&gt;</pre>
+            </div>
+            <div>
+              <h3>JavaScript</h3>
+              <pre style="font-size: 0.7rem;"><span style="color:#f472b6">const</span> form = document.querySelector(<span style="color:#a5f3fc">'#login-form'</span>);
+
+form.addEventListener(<span style="color:#a5f3fc">'submit'</span>, <span style="color:#f472b6">async</span> (e) => {
+  e.preventDefault();
+  <span style="color:#f472b6">const</span> data = Object.fromEntries(
+    <span style="color:#f472b6">new</span> FormData(form)
+  );
+
+  <span style="color:#f472b6">const</span> res = <span style="color:#f472b6">await</span> fetch(<span style="color:#a5f3fc">'/login'</span>, {
+    method: <span style="color:#a5f3fc">'POST'</span>,
+    headers: {<span style="color:#a5f3fc">'Content-Type'</span>: <span style="color:#a5f3fc">'application/json'</span>},
+    body: JSON.stringify(data)
+  });
+
+  <span style="color:#f472b6">const</span> { authToken } = <span style="color:#f472b6">await</span> res.json();
+
+  <span style="color:#6b7280">// Store token as cookie!</span>
+  document.cookie = <span style="color:#a5f3fc">`authToken=</span><span style="color:#fcd34d">${authToken}</span><span style="color:#a5f3fc">`</span>;
+});</pre>
+            </div>
+          </div>
+          <div class="highlight-box" style="text-align: center;">
+            <p>This pattern combines: Forms + fetch + Cookies. Use it for Assignment 4!</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 8: Summary -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-orange">form</div>
+          <div><h2>Part 5 Complete!</h2><p class="subtitle">HTTPS & HTML Forms</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="list-card list-card-orange">
+            <ul style="font-size: 1.1rem;">
+              <li><span class="check">&#10003;</span> HTTPS encrypts all communication</li>
+              <li><span class="check">&#10003;</span> SSL certificates verify server identity</li>
+              <li><span class="check">&#10003;</span> Forms collect user input with <code class="code-inline">&lt;input&gt;</code> elements</li>
+              <li><span class="check">&#10003;</span> <code class="code-inline">preventDefault()</code> stops page reload</li>
+              <li><span class="check">&#10003;</span> <code class="code-inline">FormData</code> collects form values</li>
+              <li><span class="check">&#10003;</span> Combine with fetch() for modern form handling</li>
+            </ul>
+          </div>
+          <p style="text-align: center; color: #f97316; font-size: 1.25rem; margin-top: 1.5rem; font-weight: 500;">Final Part: Assignment 4 & Kahoot Quiz &#8594;</p>
+        </div>
+      </section>
+    </div>
+
+    <nav class="controls">
+      <button class="btn btn-prev" onclick="prevSlide()">&#8592; Previous</button>
+      <div class="dots" id="dots"></div>
+      <div style="display:flex;align-items:center;gap:1rem">
+        <span class="counter" id="counter">1 / 8</span>
+        <button class="btn btn-next" onclick="nextSlide()">Next &#8594;</button>
+      </div>
+    </nav>
+  </main>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const dotsContainer = document.getElementById('dots');
+    const counter = document.getElementById('counter');
+    let current = 0;
+    slides.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.className = 'dot' + (i === 0 ? ' active' : '');
+      dot.onclick = () => goToSlide(i);
+      dotsContainer.appendChild(dot);
+    });
+    function updateSlide() {
+      slides.forEach((s, i) => s.classList.toggle('active', i === current));
+      document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
+      counter.textContent = `${current + 1} / ${slides.length}`;
+      document.querySelector('.btn-prev').disabled = current === 0;
+      document.querySelector('.btn-next').disabled = current === slides.length - 1;
+    }
+    function nextSlide() { if (current < slides.length - 1) { current++; updateSlide(); } }
+    function prevSlide() { if (current > 0) { current--; updateSlide(); } }
+    function goToSlide(i) { current = i; updateSlide(); }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+      if (e.key === 'ArrowLeft') prevSlide();
+    });
+  </script>
+</body>
+</html>

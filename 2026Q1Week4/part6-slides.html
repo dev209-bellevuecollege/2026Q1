@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Part 6: Assignment 4 & Kahoot Quiz</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; }
+    .slideshow { height: 100vh; display: flex; flex-direction: column; }
+    .slide-container { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+    .slide { background: white; border-radius: 1rem; box-shadow: 0 10px 40px rgba(0,0,0,0.1); width: 100%; max-width: 1000px; height: 600px; padding: 3rem; display: none; flex-direction: column; }
+    .slide.active { display: flex; }
+    .controls { background: white; border-top: 1px solid #e5e7eb; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+    .btn { padding: 0.5rem 1.5rem; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; }
+    .btn-prev, .btn-next { background: #ec4899; color: white; }
+    .btn:disabled { background: #d1d5db; cursor: not-allowed; }
+    .dots { display: flex; gap: 0.5rem; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #d1d5db; border: none; cursor: pointer; }
+    .dot.active { background: #ec4899; width: 20px; border-radius: 5px; }
+    .slide-title { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+    .icon { width: 50px; height: 50px; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: bold; }
+    .icon-pink { background: #fce7f3; color: #db2777; }
+    .icon-blue { background: #dbeafe; color: #1d4ed8; }
+    .icon-green { background: #dcfce7; color: #15803d; }
+    .icon-purple { background: #f3e8ff; color: #7c3aed; }
+    .icon-orange { background: #ffedd5; color: #c2410c; }
+    .icon-cyan { background: #cffafe; color: #0891b2; }
+    h1 { font-size: 2.5rem; color: #1f2937; }
+    h2 { font-size: 1.75rem; color: #1f2937; }
+    h3 { font-size: 1.25rem; color: #374151; margin-bottom: 0.5rem; }
+    .subtitle { color: #6b7280; font-size: 1.1rem; }
+    .content { flex: 1; display: flex; flex-direction: column; gap: 1rem; }
+    .card { background: #f9fafb; border-radius: 0.75rem; padding: 1.25rem; }
+    .card-highlight { background: #fdf2f8; border: 2px solid #f9a8d4; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; flex: 1; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; flex: 1; }
+    .title-slide { align-items: center; justify-content: center; text-align: center; }
+    .title-slide .icon { width: 80px; height: 80px; font-size: 1.5rem; margin-bottom: 1.5rem; border-radius: 50%; }
+    .title-slide h1 { margin-bottom: 1rem; }
+    .title-slide .subtitle { margin-bottom: 1.5rem; font-size: 1.25rem; }
+    .badge { background: #fce7f3; color: #db2777; padding: 0.5rem 1rem; border-radius: 2rem; font-size: 0.9rem; }
+    .counter { color: #6b7280; font-size: 0.9rem; }
+    pre { background: #1f2937; color: #f9fafb; padding: 1.25rem; border-radius: 0.5rem; font-size: 0.9rem; overflow-x: auto; font-family: 'Monaco', 'Menlo', monospace; }
+    .code-inline { background: #f3f4f6; padding: 0.2rem 0.5rem; border-radius: 0.25rem; font-size: 0.9rem; color: #db2777; font-family: 'Monaco', 'Menlo', monospace; }
+    .list-card { border-radius: 0.75rem; padding: 1.5rem; }
+    .list-card-pink { background: #fdf2f8; border: 1px solid #f9a8d4; }
+    .list-card ul { list-style: none; }
+    .list-card li { padding: 0.5rem 0; display: flex; align-items: flex-start; gap: 0.5rem; color: #374151; }
+    .check { color: #ec4899; font-weight: bold; }
+    .highlight-box { background: #fdf2f8; border: 2px solid #f9a8d4; border-radius: 0.75rem; padding: 1.5rem; margin-top: 1rem; }
+    .highlight-box p { color: #db2777; font-weight: 500; font-size: 1.1rem; text-align: center; }
+    .quiz-question { font-size: 1.4rem; color: #1f2937; margin-bottom: 1.5rem; text-align: center; }
+    .quiz-options { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .quiz-option { padding: 1.25rem; border-radius: 0.75rem; font-size: 1rem; text-align: center; font-weight: 500; }
+    .option-a { background: #fee2e2; color: #991b1b; }
+    .option-b { background: #dbeafe; color: #1d4ed8; }
+    .option-c { background: #fef3c7; color: #b45309; }
+    .option-d { background: #dcfce7; color: #15803d; }
+    .part-box { padding: 1rem; border-radius: 0.75rem; margin-bottom: 0.75rem; }
+  </style>
+</head>
+<body>
+  <main class="slideshow">
+    <div class="slide-container">
+      <!-- Slide 1: Title -->
+      <section class="slide active title-slide">
+        <div class="icon icon-pink">HW</div>
+        <h1>Part 6: Assignment 4 & Quiz</h1>
+        <p class="subtitle">Memory Game Upgrade + Todo App with API</p>
+        <span class="badge">15 Minutes</span>
+      </section>
+
+      <!-- Slide 2: Assignment Overview -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-pink">4</div>
+          <div><h2>Assignment 4 Overview</h2><p class="subtitle">Two Parts, 30 Points Total</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div class="part-box" style="background: #f3e8ff; border: 2px solid #c4b5fd;">
+              <h3 style="color: #7c3aed;">Part 1: Memory Game Upgrade</h3>
+              <p style="font-size: 1.25rem; font-weight: bold; color: #7c3aed;">15 points</p>
+              <p style="font-size: 0.9rem; color: #374151; margin-top: 0.5rem;">Add state persistence to your existing memory game from Assignment 3.</p>
+            </div>
+            <div class="part-box" style="background: #dbeafe; border: 2px solid #93c5fd;">
+              <h3 style="color: #1d4ed8;">Part 2: Todo App with API</h3>
+              <p style="font-size: 1.25rem; font-weight: bold; color: #1d4ed8;">15 points</p>
+              <p style="font-size: 0.9rem; color: #374151; margin-top: 0.5rem;">Build a todo list app that connects to a REST API backend.</p>
+            </div>
+          </div>
+          <div class="highlight-box">
+            <p><strong>Key Skills:</strong> State management (cookies, localStorage, sessionStorage), fetch API, forms, authentication</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 3: Part 1 Details -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-purple">1</div>
+          <div><h2>Part 1: Memory Game Upgrade</h2><p class="subtitle">State Persistence</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>Requirements</h3>
+              <div class="card" style="margin-bottom: 0.75rem;">
+                <p style="font-size: 0.95rem;"><strong>Survive Page Refresh (F5)</strong></p>
+                <ul style="font-size: 0.85rem; color: #374151; margin-left: 1rem; margin-top: 0.5rem;">
+                  <li>Cards stay in their state (flipped/matched)</li>
+                  <li>Move counter doesn't reset</li>
+                </ul>
+              </div>
+              <div class="card" style="margin-bottom: 0.75rem;">
+                <p style="font-size: 0.95rem;"><strong>Cross-Tab Total Moves</strong></p>
+                <p style="font-size: 0.85rem; color: #374151;">Track total moves across ALL browser tabs</p>
+              </div>
+              <div class="card">
+                <p style="font-size: 0.95rem;"><strong>Unique Games Per Tab</strong></p>
+                <p style="font-size: 0.85rem; color: #374151;">Each new tab = new, independent game</p>
+              </div>
+            </div>
+            <div>
+              <h3>Think About It!</h3>
+              <div class="card" style="background: #fef3c7; border: 1px solid #fcd34d; margin-bottom: 0.75rem;">
+                <p style="font-size: 0.95rem; color: #92400e;"><strong>Which storage should you use for each requirement?</strong></p>
+                <ul style="font-size: 0.85rem; color: #374151; margin-left: 1rem; margin-top: 0.5rem;">
+                  <li>Per-tab game state?</li>
+                  <li>Cross-tab total moves?</li>
+                </ul>
+              </div>
+              <div class="card" style="background: #f3e8ff; border: 1px solid #c4b5fd; margin-bottom: 0.75rem;">
+                <p style="font-size: 0.9rem; color: #6b21a8;"><strong>Hint:</strong> Review the comparison table from Part 4!</p>
+              </div>
+              <div class="card card-highlight">
+                <p style="font-size: 0.9rem; color: #db2777;"><strong>Required:</strong> Explain WHY you chose each storage type in your submission!</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 4: Part 2 Details -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-blue">2</div>
+          <div><h2>Part 2: Todo App with API</h2><p class="subtitle">Full CRUD Application</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>Features Required</h3>
+              <div class="card" style="font-size: 0.9rem;">
+                <ul style="list-style: none; color: #374151;">
+                  <li style="margin-bottom: 0.5rem;">&#10003; <strong>Register</strong> a new user</li>
+                  <li style="margin-bottom: 0.5rem;">&#10003; <strong>Login</strong> and <strong>Logout</strong></li>
+                  <li style="margin-bottom: 0.5rem;">&#10003; <strong>Create</strong> todo items</li>
+                  <li style="margin-bottom: 0.5rem;">&#10003; <strong>Edit</strong> todos (title, description, status)</li>
+                  <li style="margin-bottom: 0.5rem;">&#10003; <strong>Delete</strong> todo items</li>
+                  <li style="margin-bottom: 0.5rem;">&#10003; <strong>Mark complete</strong></li>
+                  <li>&#10003; <strong>View</strong> the todo list</li>
+                </ul>
+              </div>
+            </div>
+            <div>
+              <h3>Technical Requirements</h3>
+              <div class="card" style="margin-bottom: 0.75rem;">
+                <p style="font-size: 0.9rem;"><strong>HTML/CSS/JS only</strong> - no libraries!</p>
+              </div>
+              <div class="card" style="margin-bottom: 0.75rem;">
+                <p style="font-size: 0.9rem;"><strong>Use HTML forms</strong> for all input</p>
+              </div>
+              <div class="card" style="background: #fef3c7; border: 1px solid #fcd34d;">
+                <p style="font-size: 0.9rem;"><strong>Store authToken appropriately</strong></p>
+                <p style="font-size: 0.8rem; color: #6b7280; margin-top: 0.25rem;">Think: which storage type makes sense?</p>
+              </div>
+            </div>
+          </div>
+          <div class="card" style="background: #ecfeff; border: 1px solid #67e8f9; margin-top: 0.5rem; text-align: center;">
+            <p style="font-size: 0.9rem;"><strong>API Swagger Docs:</strong> app.swaggerhub.com/apis/bellevuecollegedev20/todo-list_api/1.0.0</p>
+            <p style="font-size: 0.9rem; margin-top: 0.25rem;"><strong>Backend Repo:</strong> github.com/dev209-bellevuecollege/hw4</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 5: API Hint -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-cyan">tip</div>
+          <div><h2>API Call Pattern</h2><p class="subtitle">Using the authToken</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>After Login: Store Token</h3>
+              <pre style="font-size: 0.8rem;"><span style="color:#6b7280">// Login response contains authToken</span>
+<span style="color:#f472b6">const</span> { authToken } = <span style="color:#f472b6">await</span> response.json();
+
+<span style="color:#6b7280">// Store the token using appropriate storage</span>
+<span style="color:#6b7280">// (You decide: cookie, localStorage, or</span>
+<span style="color:#6b7280">//  sessionStorage?)</span></pre>
+              <div class="card" style="margin-top: 0.75rem; background: #fef3c7; border: 1px solid #fcd34d;">
+                <p style="font-size: 0.85rem; color: #92400e;"><strong>Think:</strong> What are the tradeoffs of each storage type for auth tokens?</p>
+              </div>
+            </div>
+            <div>
+              <h3>Making Authenticated Requests</h3>
+              <pre style="font-size: 0.8rem;"><span style="color:#6b7280">// Retrieve your stored token</span>
+<span style="color:#f472b6">const</span> token = getStoredToken();
+
+<span style="color:#f472b6">const</span> response = <span style="color:#f472b6">await</span> fetch(
+  <span style="color:#a5f3fc">'http://localhost:3000/todos'</span>,
+  {
+    method: <span style="color:#a5f3fc">'GET'</span>,
+    headers: {
+      <span style="color:#a5f3fc">'Authorization'</span>: <span style="color:#a5f3fc">`Bearer </span><span style="color:#fcd34d">${token}</span><span style="color:#a5f3fc">`</span>
+    }
+  }
+);</pre>
+            </div>
+          </div>
+          <div class="highlight-box">
+            <p>The <code class="code-inline">Authorization: Bearer &lt;token&gt;</code> header is required for all authenticated API calls!</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 6: Extra Credit -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-green">+</div>
+          <div><h2>Extra Credit</h2><p class="subtitle">Bonus Points Available</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>Part 1: Memory Game (+3 pts)</h3>
+              <div class="card" style="background: #dcfce7; border: 1px solid #86efac;">
+                <p style="font-size: 0.9rem; color: #374151;">If you did Assignment 3 extra credit:</p>
+                <ul style="font-size: 0.85rem; color: #374151; margin-left: 1rem; margin-top: 0.5rem;">
+                  <li>Game difficulty persists (+1)</li>
+                  <li>Card style persists (+1)</li>
+                  <li>Timer doesn't reset (+1)</li>
+                </ul>
+              </div>
+            </div>
+            <div>
+              <h3>Part 2: Todo App (+4 pts)</h3>
+              <div class="card" style="background: #dcfce7; border: 1px solid #86efac;">
+                <ul style="font-size: 0.9rem; color: #374151; list-style: none;">
+                  <li style="margin-bottom: 0.5rem;"><strong>+2 pts:</strong> Nice styling and visual design</li>
+                  <li><strong>+2 pts:</strong> State survives page refresh</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="card card-highlight" style="margin-top: 1rem;">
+            <h3 style="color: #db2777;">Submission Notes</h3>
+            <ul style="font-size: 0.9rem; color: #374151; list-style: none; margin-top: 0.5rem;">
+              <li><strong>Part 1:</strong> Submit published URL + GitHub repo</li>
+              <li><strong>Part 2:</strong> GitHub repo only (local server won't work for others)</li>
+              <li><strong>Both:</strong> Explain your storage choices!</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 7: Kahoot -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-pink">?</div>
+          <div><h2>Kahoot Quiz Topics</h2><p class="subtitle">Test Your Knowledge!</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="grid-3">
+            <div class="card" style="background: #cffafe; text-align: center;">
+              <h3 style="color: #0891b2;">HTTP</h3>
+              <p style="font-size: 0.85rem; color: #374151;">Methods, status codes, headers</p>
+            </div>
+            <div class="card" style="background: #dbeafe; text-align: center;">
+              <h3 style="color: #1d4ed8;">REST APIs</h3>
+              <p style="font-size: 0.85rem; color: #374151;">Endpoints, JSON, authentication</p>
+            </div>
+            <div class="card" style="background: #f3e8ff; text-align: center;">
+              <h3 style="color: #7c3aed;">fetch()</h3>
+              <p style="font-size: 0.85rem; color: #374151;">Syntax, async/await, errors</p>
+            </div>
+            <div class="card" style="background: #dcfce7; text-align: center;">
+              <h3 style="color: #15803d;">Storage</h3>
+              <p style="font-size: 0.85rem; color: #374151;">Cookies vs localStorage vs sessionStorage</p>
+            </div>
+            <div class="card" style="background: #ffedd5; text-align: center;">
+              <h3 style="color: #c2410c;">Forms</h3>
+              <p style="font-size: 0.85rem; color: #374151;">preventDefault, FormData</p>
+            </div>
+            <div class="card" style="background: #fce7f3; text-align: center;">
+              <h3 style="color: #db2777;">HTTPS</h3>
+              <p style="font-size: 0.85rem; color: #374151;">Encryption, certificates</p>
+            </div>
+          </div>
+          <div class="highlight-box">
+            <p>Get your phones ready! Go to <strong>kahoot.it</strong></p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 8: Week Summary -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-pink">&#10003;</div>
+          <div><h2>Week 4 Complete!</h2><p class="subtitle">What We Learned Today</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="list-card list-card-pink">
+            <ul style="font-size: 1.1rem;">
+              <li><span class="check">&#10003;</span> HTTP protocol: requests, responses, methods, status codes</li>
+              <li><span class="check">&#10003;</span> REST APIs: resource-based design, JSON, authentication</li>
+              <li><span class="check">&#10003;</span> fetch() API with async/await</li>
+              <li><span class="check">&#10003;</span> Client-side storage: cookies, localStorage, sessionStorage</li>
+              <li><span class="check">&#10003;</span> HTTPS encryption and security</li>
+              <li><span class="check">&#10003;</span> HTML forms with JavaScript handling</li>
+            </ul>
+          </div>
+          <div class="highlight-box">
+            <p><strong>Next Week:</strong> Introduction to React!</p>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <nav class="controls">
+      <button class="btn btn-prev" onclick="prevSlide()">&#8592; Previous</button>
+      <div class="dots" id="dots"></div>
+      <div style="display:flex;align-items:center;gap:1rem">
+        <span class="counter" id="counter">1 / 8</span>
+        <button class="btn btn-next" onclick="nextSlide()">Next &#8594;</button>
+      </div>
+    </nav>
+  </main>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const dotsContainer = document.getElementById('dots');
+    const counter = document.getElementById('counter');
+    let current = 0;
+    slides.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.className = 'dot' + (i === 0 ? ' active' : '');
+      dot.onclick = () => goToSlide(i);
+      dotsContainer.appendChild(dot);
+    });
+    function updateSlide() {
+      slides.forEach((s, i) => s.classList.toggle('active', i === current));
+      document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
+      counter.textContent = `${current + 1} / ${slides.length}`;
+      document.querySelector('.btn-prev').disabled = current === 0;
+      document.querySelector('.btn-next').disabled = current === slides.length - 1;
+    }
+    function nextSlide() { if (current < slides.length - 1) { current++; updateSlide(); } }
+    function prevSlide() { if (current > 0) { current--; updateSlide(); } }
+    function goToSlide(i) { current = i; updateSlide(); }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+      if (e.key === 'ArrowLeft') prevSlide();
+    });
+  </script>
+</body>
+</html>

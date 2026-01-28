@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Part 4: Client-Side State Management</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; }
+    .slideshow { height: 100vh; display: flex; flex-direction: column; }
+    .slide-container { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+    .slide { background: white; border-radius: 1rem; box-shadow: 0 10px 40px rgba(0,0,0,0.1); width: 100%; max-width: 1000px; height: 600px; padding: 3rem; display: none; flex-direction: column; }
+    .slide.active { display: flex; }
+    .controls { background: white; border-top: 1px solid #e5e7eb; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+    .btn { padding: 0.5rem 1.5rem; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; }
+    .btn-prev, .btn-next { background: #10b981; color: white; }
+    .btn:disabled { background: #d1d5db; cursor: not-allowed; }
+    .dots { display: flex; gap: 0.5rem; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #d1d5db; border: none; cursor: pointer; }
+    .dot.active { background: #10b981; width: 20px; border-radius: 5px; }
+    .slide-title { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+    .icon { width: 50px; height: 50px; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: bold; }
+    .icon-green { background: #dcfce7; color: #15803d; }
+    .icon-blue { background: #dbeafe; color: #1d4ed8; }
+    .icon-purple { background: #f3e8ff; color: #7c3aed; }
+    .icon-orange { background: #ffedd5; color: #c2410c; }
+    .icon-cyan { background: #cffafe; color: #0891b2; }
+    .icon-yellow { background: #fef3c7; color: #b45309; }
+    h1 { font-size: 2.5rem; color: #1f2937; }
+    h2 { font-size: 1.75rem; color: #1f2937; }
+    h3 { font-size: 1.25rem; color: #374151; margin-bottom: 0.5rem; }
+    .subtitle { color: #6b7280; font-size: 1.1rem; }
+    .content { flex: 1; display: flex; flex-direction: column; gap: 1rem; }
+    .card { background: #f9fafb; border-radius: 0.75rem; padding: 1.25rem; }
+    .card-highlight { background: #ecfdf5; border: 2px solid #6ee7b7; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; flex: 1; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; flex: 1; }
+    .title-slide { align-items: center; justify-content: center; text-align: center; }
+    .title-slide .icon { width: 80px; height: 80px; font-size: 1.25rem; margin-bottom: 1.5rem; border-radius: 50%; }
+    .title-slide h1 { margin-bottom: 1rem; }
+    .title-slide .subtitle { margin-bottom: 1.5rem; font-size: 1.25rem; }
+    .badge { background: #dcfce7; color: #15803d; padding: 0.5rem 1rem; border-radius: 2rem; font-size: 0.9rem; }
+    .counter { color: #6b7280; font-size: 0.9rem; }
+    pre { background: #1f2937; color: #f9fafb; padding: 1.25rem; border-radius: 0.5rem; font-size: 0.85rem; overflow-x: auto; font-family: 'Monaco', 'Menlo', monospace; }
+    code { font-family: 'Monaco', 'Menlo', monospace; }
+    .code-inline { background: #f3f4f6; padding: 0.2rem 0.5rem; border-radius: 0.25rem; font-size: 0.9rem; color: #15803d; }
+    .list-card { border-radius: 0.75rem; padding: 1.5rem; }
+    .list-card-green { background: #ecfdf5; border: 1px solid #6ee7b7; }
+    .list-card ul { list-style: none; }
+    .list-card li { padding: 0.5rem 0; display: flex; align-items: flex-start; gap: 0.5rem; color: #374151; }
+    .check { color: #10b981; font-weight: bold; }
+    .highlight-box { background: #ecfdf5; border: 2px solid #6ee7b7; border-radius: 0.75rem; padding: 1.5rem; margin-top: 1rem; }
+    .highlight-box p { color: #047857; font-weight: 500; font-size: 1.1rem; }
+    .compare-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .compare-table th, .compare-table td { padding: 0.75rem; text-align: center; border: 1px solid #e5e7eb; }
+    .compare-table th { background: #f9fafb; color: #374151; font-weight: 600; }
+    .compare-table td:first-child { text-align: left; font-weight: 500; }
+    .yes { color: #15803d; font-weight: bold; }
+    .no { color: #dc2626; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <main class="slideshow">
+    <div class="slide-container">
+      <!-- Slide 1: Title -->
+      <section class="slide active title-slide">
+        <div class="icon icon-green">state</div>
+        <h1>Part 4: Client-Side State</h1>
+        <p class="subtitle">Cookies, localStorage & sessionStorage</p>
+        <span class="badge">20 Minutes</span>
+      </section>
+
+      <!-- Slide 2: The Three Options -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-green">3</div>
+          <div><h2>Three Storage Options</h2><p class="subtitle">Persisting Data in the Browser</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-3">
+            <div class="card" style="background: #fef3c7; border: 2px solid #fcd34d;">
+              <h3 style="color: #b45309; text-align: center;">Cookies</h3>
+              <p style="font-size: 0.85rem; color: #374151; text-align: center; margin-top: 0.5rem;">Small data sent to server with every request. Best for authentication.</p>
+            </div>
+            <div class="card" style="background: #dbeafe; border: 2px solid #93c5fd;">
+              <h3 style="color: #1d4ed8; text-align: center;">localStorage</h3>
+              <p style="font-size: 0.85rem; color: #374151; text-align: center; margin-top: 0.5rem;">Persistent storage shared across all tabs. Data survives browser close.</p>
+            </div>
+            <div class="card" style="background: #f3e8ff; border: 2px solid #c4b5fd;">
+              <h3 style="color: #7c3aed; text-align: center;">sessionStorage</h3>
+              <p style="font-size: 0.85rem; color: #374151; text-align: center; margin-top: 0.5rem;">Per-tab storage. Data cleared when tab closes. Each tab is isolated.</p>
+            </div>
+          </div>
+          <table class="compare-table" style="margin-top: 1rem;">
+            <thead>
+              <tr>
+                <th>Feature</th>
+                <th style="background: #fef3c7;">Cookies</th>
+                <th style="background: #dbeafe;">localStorage</th>
+                <th style="background: #f3e8ff;">sessionStorage</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Capacity</td>
+                <td>~4 KB</td>
+                <td>~10 MB</td>
+                <td>~5 MB</td>
+              </tr>
+              <tr>
+                <td>Sent to Server</td>
+                <td class="yes">Yes (auto)</td>
+                <td class="no">No</td>
+                <td class="no">No</td>
+              </tr>
+              <tr>
+                <td>Shared Across Tabs</td>
+                <td class="yes">Yes</td>
+                <td class="yes">Yes</td>
+                <td class="no">No</td>
+              </tr>
+              <tr>
+                <td>Survives Browser Close</td>
+                <td>Configurable</td>
+                <td class="yes">Yes</td>
+                <td class="no">No</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Slide 3: localStorage -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-blue">local</div>
+          <div><h2>localStorage</h2><p class="subtitle">Persistent, Cross-Tab Storage</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>Basic API</h3>
+              <pre><span style="color:#6b7280">// Store data</span>
+localStorage.setItem(<span style="color:#a5f3fc">'theme'</span>, <span style="color:#a5f3fc">'dark'</span>);
+
+<span style="color:#6b7280">// Retrieve data</span>
+<span style="color:#f472b6">const</span> theme = localStorage.getItem(<span style="color:#a5f3fc">'theme'</span>);
+
+<span style="color:#6b7280">// Remove item</span>
+localStorage.removeItem(<span style="color:#a5f3fc">'theme'</span>);
+
+<span style="color:#6b7280">// Clear everything</span>
+localStorage.clear();</pre>
+            </div>
+            <div>
+              <h3>Storing Objects</h3>
+              <pre><span style="color:#6b7280">// Objects must be stringified!</span>
+<span style="color:#f472b6">const</span> user = { name: <span style="color:#a5f3fc">'Alice'</span>, age: <span style="color:#fcd34d">25</span> };
+
+<span style="color:#6b7280">// Save</span>
+localStorage.setItem(
+  <span style="color:#a5f3fc">'user'</span>,
+  JSON.stringify(user)
+);
+
+<span style="color:#6b7280">// Load</span>
+<span style="color:#f472b6">const</span> loaded = JSON.parse(
+  localStorage.getItem(<span style="color:#a5f3fc">'user'</span>)
+);</pre>
+            </div>
+          </div>
+          <div class="card card-highlight" style="margin-top: 0.5rem;">
+            <p style="color: #047857; text-align: center;"><strong>Use Case:</strong> User preferences, theme settings, cached data, cross-tab shared state</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 4: sessionStorage -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-purple">session</div>
+          <div><h2>sessionStorage</h2><p class="subtitle">Per-Tab, Temporary Storage</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>Same API as localStorage</h3>
+              <pre><span style="color:#6b7280">// Store data (this tab only)</span>
+sessionStorage.setItem(
+  <span style="color:#a5f3fc">'gameState'</span>,
+  JSON.stringify(currentGame)
+);
+
+<span style="color:#6b7280">// Retrieve data</span>
+<span style="color:#f472b6">const</span> game = JSON.parse(
+  sessionStorage.getItem(<span style="color:#a5f3fc">'gameState'</span>)
+);
+
+<span style="color:#6b7280">// Remove / Clear</span>
+sessionStorage.removeItem(<span style="color:#a5f3fc">'gameState'</span>);
+sessionStorage.clear();</pre>
+            </div>
+            <div>
+              <h3>Key Difference</h3>
+              <div class="card" style="background: #f3e8ff; border: 1px solid #c4b5fd; margin-bottom: 1rem;">
+                <p style="color: #7c3aed; font-size: 0.95rem;"><strong>Each tab has its own sessionStorage.</strong> Opening a new tab = new, empty storage.</p>
+              </div>
+              <div class="card">
+                <h3 style="font-size: 1rem;">When to Use</h3>
+                <ul style="font-size: 0.85rem; color: #374151; list-style: none;">
+                  <li>&#8226; Form data that shouldn't persist</li>
+                  <li>&#8226; Single-tab game state</li>
+                  <li>&#8226; Temporary wizard/flow data</li>
+                  <li>&#8226; Data that should reset per session</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="highlight-box" style="text-align: center;">
+            <p><strong>Key Point:</strong> Perfect for data that should reset when the user closes the tab.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 5: Cookies -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-orange">cookie</div>
+          <div><h2>Cookies</h2><p class="subtitle">Server-Accessible Storage</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>Setting Cookies</h3>
+              <pre style="font-size: 0.8rem;"><span style="color:#6b7280">// Basic cookie</span>
+document.cookie = <span style="color:#a5f3fc">"username=Alice"</span>;
+
+<span style="color:#6b7280">// With expiration (seconds)</span>
+document.cookie = <span style="color:#a5f3fc">"token=abc123; max-age=3600"</span>;
+
+<span style="color:#6b7280">// With path and secure</span>
+document.cookie = <span style="color:#a5f3fc">"authToken=xyz; path=/; secure"</span>;
+
+<span style="color:#6b7280">// Delete (set max-age to 0)</span>
+document.cookie = <span style="color:#a5f3fc">"token=; max-age=0"</span>;</pre>
+            </div>
+            <div>
+              <h3>Reading Cookies</h3>
+              <pre style="font-size: 0.8rem;"><span style="color:#6b7280">// Returns ALL cookies as one string</span>
+console.log(document.cookie);
+<span style="color:#6b7280">// "username=Alice; token=abc123"</span>
+
+<span style="color:#6b7280">// Helper function to get one cookie</span>
+<span style="color:#f472b6">function</span> <span style="color:#a5f3fc">getCookie</span>(name) {
+  <span style="color:#f472b6">const</span> cookies = document.cookie.split(<span style="color:#a5f3fc">'; '</span>);
+  <span style="color:#f472b6">for</span> (<span style="color:#f472b6">const</span> cookie <span style="color:#f472b6">of</span> cookies) {
+    <span style="color:#f472b6">const</span> [key, val] = cookie.split(<span style="color:#a5f3fc">'='</span>);
+    <span style="color:#f472b6">if</span> (key === name) <span style="color:#f472b6">return</span> val;
+  }
+  <span style="color:#f472b6">return null</span>;
+}</pre>
+            </div>
+          </div>
+          <div class="card card-highlight" style="margin-top: 0.5rem;">
+            <p style="color: #047857; text-align: center;"><strong>Use Case:</strong> Authentication tokens, session IDs, data the server needs to access</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 6: Cookie Security -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-yellow">lock</div>
+          <div><h2>Cookie Security Flags</h2><p class="subtitle">Protecting Sensitive Data</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>Security Attributes</h3>
+              <div class="card" style="margin-bottom: 0.75rem;">
+                <h3 style="font-size: 1rem; color: #b45309;">Secure</h3>
+                <p style="font-size: 0.85rem; color: #374151;">Only sent over HTTPS connections</p>
+                <code style="font-size: 0.8rem; color: #6b7280;">cookie=value; Secure</code>
+              </div>
+              <div class="card" style="margin-bottom: 0.75rem;">
+                <h3 style="font-size: 1rem; color: #b45309;">HttpOnly</h3>
+                <p style="font-size: 0.85rem; color: #374151;">JavaScript cannot access (set by server only)</p>
+                <code style="font-size: 0.8rem; color: #6b7280;">Set-Cookie: token=abc; HttpOnly</code>
+              </div>
+              <div class="card">
+                <h3 style="font-size: 1rem; color: #b45309;">SameSite</h3>
+                <p style="font-size: 0.85rem; color: #374151;">Controls cross-site sending</p>
+                <code style="font-size: 0.8rem; color: #6b7280;">Strict | Lax | None</code>
+              </div>
+            </div>
+            <div>
+              <h3>SameSite Values</h3>
+              <div class="card" style="font-size: 0.85rem; margin-bottom: 1rem;">
+                <p><strong>Strict:</strong> Never sent cross-site</p>
+                <p style="margin-top: 0.5rem;"><strong>Lax:</strong> Sent on top-level navigations (default)</p>
+                <p style="margin-top: 0.5rem;"><strong>None:</strong> Always sent (requires Secure)</p>
+              </div>
+              <div class="card" style="background: #fef2f2; border: 1px solid #fca5a5;">
+                <h3 style="font-size: 1rem; color: #dc2626;">Security Note</h3>
+                <p style="font-size: 0.85rem; color: #374151;">Auth tokens should ideally be HttpOnly (server-set). In learning environments, JS-accessible cookies are often used for simplicity.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 7: Decision Framework -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-cyan">?</div>
+          <div><h2>Which Storage to Use?</h2><p class="subtitle">Decision Framework</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>Ask These Questions</h3>
+              <div class="card" style="font-size: 0.9rem; margin-bottom: 1rem;">
+                <p><strong>1. Does the server need this data?</strong></p>
+                <p style="color: #6b7280; margin-left: 1rem;">Yes &#8594; Cookies</p>
+                <p style="margin-top: 0.75rem;"><strong>2. Should it persist after browser close?</strong></p>
+                <p style="color: #6b7280; margin-left: 1rem;">Yes &#8594; localStorage or Cookies</p>
+                <p style="margin-top: 0.75rem;"><strong>3. Should each tab have its own copy?</strong></p>
+                <p style="color: #6b7280; margin-left: 1rem;">Yes &#8594; sessionStorage</p>
+                <p style="margin-top: 0.75rem;"><strong>4. Should all tabs share this data?</strong></p>
+                <p style="color: #6b7280; margin-left: 1rem;">Yes &#8594; localStorage</p>
+              </div>
+            </div>
+            <div>
+              <h3>Common Use Cases</h3>
+              <div class="card" style="background: #f3e8ff; border: 1px solid #c4b5fd; margin-bottom: 0.75rem;">
+                <p style="font-size: 0.9rem;"><strong>Shopping cart items:</strong></p>
+                <p style="color: #7c3aed;">&#8594; localStorage (persist across sessions)</p>
+              </div>
+              <div class="card" style="background: #dbeafe; border: 1px solid #93c5fd; margin-bottom: 0.75rem;">
+                <p style="font-size: 0.9rem;"><strong>Form wizard progress:</strong></p>
+                <p style="color: #1d4ed8;">&#8594; sessionStorage (reset on new visit)</p>
+              </div>
+              <div class="card" style="background: #fef3c7; border: 1px solid #fcd34d;">
+                <p style="font-size: 0.9rem;"><strong>User login session:</strong></p>
+                <p style="color: #b45309;">&#8594; Cookie (server needs it)</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 8: Summary -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-green">state</div>
+          <div><h2>Part 4 Complete!</h2><p class="subtitle">Client-Side State Management</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="list-card list-card-green">
+            <ul style="font-size: 1.1rem;">
+              <li><span class="check">&#10003;</span> <strong>Cookies:</strong> Small, sent to server, for auth</li>
+              <li><span class="check">&#10003;</span> <strong>localStorage:</strong> Persistent, shared across tabs</li>
+              <li><span class="check">&#10003;</span> <strong>sessionStorage:</strong> Per-tab, cleared on close</li>
+              <li><span class="check">&#10003;</span> All use <code class="code-inline">setItem()</code> / <code class="code-inline">getItem()</code></li>
+              <li><span class="check">&#10003;</span> Objects must be JSON stringified</li>
+              <li><span class="check">&#10003;</span> Choose based on scope and persistence needs</li>
+            </ul>
+          </div>
+          <p style="text-align: center; color: #10b981; font-size: 1.25rem; margin-top: 1.5rem; font-weight: 500;">Next up: Part 5 — HTTPS & HTML Forms &#8594;</p>
+        </div>
+      </section>
+    </div>
+
+    <nav class="controls">
+      <button class="btn btn-prev" onclick="prevSlide()">&#8592; Previous</button>
+      <div class="dots" id="dots"></div>
+      <div style="display:flex;align-items:center;gap:1rem">
+        <span class="counter" id="counter">1 / 8</span>
+        <button class="btn btn-next" onclick="nextSlide()">Next &#8594;</button>
+      </div>
+    </nav>
+  </main>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const dotsContainer = document.getElementById('dots');
+    const counter = document.getElementById('counter');
+    let current = 0;
+    slides.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.className = 'dot' + (i === 0 ? ' active' : '');
+      dot.onclick = () => goToSlide(i);
+      dotsContainer.appendChild(dot);
+    });
+    function updateSlide() {
+      slides.forEach((s, i) => s.classList.toggle('active', i === current));
+      document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
+      counter.textContent = `${current + 1} / ${slides.length}`;
+      document.querySelector('.btn-prev').disabled = current === 0;
+      document.querySelector('.btn-next').disabled = current === slides.length - 1;
+    }
+    function nextSlide() { if (current < slides.length - 1) { current++; updateSlide(); } }
+    function prevSlide() { if (current > 0) { current--; updateSlide(); } }
+    function goToSlide(i) { current = i; updateSlide(); }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+      if (e.key === 'ArrowLeft') prevSlide();
+    });
+  </script>
+</body>
+</html>

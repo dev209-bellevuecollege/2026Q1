@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Part 3: Fetch API in JavaScript</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; }
+    .slideshow { height: 100vh; display: flex; flex-direction: column; }
+    .slide-container { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+    .slide { background: white; border-radius: 1rem; box-shadow: 0 10px 40px rgba(0,0,0,0.1); width: 100%; max-width: 1000px; height: 600px; padding: 3rem; display: none; flex-direction: column; }
+    .slide.active { display: flex; }
+    .controls { background: white; border-top: 1px solid #e5e7eb; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+    .btn { padding: 0.5rem 1.5rem; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; }
+    .btn-prev, .btn-next { background: #8b5cf6; color: white; }
+    .btn:disabled { background: #d1d5db; cursor: not-allowed; }
+    .dots { display: flex; gap: 0.5rem; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #d1d5db; border: none; cursor: pointer; }
+    .dot.active { background: #8b5cf6; width: 20px; border-radius: 5px; }
+    .slide-title { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+    .icon { width: 50px; height: 50px; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: bold; }
+    .icon-purple { background: #f3e8ff; color: #7c3aed; }
+    .icon-blue { background: #dbeafe; color: #1d4ed8; }
+    .icon-green { background: #dcfce7; color: #15803d; }
+    .icon-orange { background: #ffedd5; color: #c2410c; }
+    .icon-cyan { background: #cffafe; color: #0891b2; }
+    .icon-yellow { background: #fef3c7; color: #b45309; }
+    .icon-red { background: #fef2f2; color: #dc2626; }
+    h1 { font-size: 2.5rem; color: #1f2937; }
+    h2 { font-size: 1.75rem; color: #1f2937; }
+    h3 { font-size: 1.25rem; color: #374151; margin-bottom: 0.5rem; }
+    .subtitle { color: #6b7280; font-size: 1.1rem; }
+    .content { flex: 1; display: flex; flex-direction: column; gap: 1rem; }
+    .card { background: #f9fafb; border-radius: 0.75rem; padding: 1.25rem; }
+    .card-highlight { background: #faf5ff; border: 2px solid #c4b5fd; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; flex: 1; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; flex: 1; }
+    .title-slide { align-items: center; justify-content: center; text-align: center; }
+    .title-slide .icon { width: 80px; height: 80px; font-size: 1.25rem; margin-bottom: 1.5rem; border-radius: 50%; }
+    .title-slide h1 { margin-bottom: 1rem; }
+    .title-slide .subtitle { margin-bottom: 1.5rem; font-size: 1.25rem; }
+    .badge { background: #f3e8ff; color: #7c3aed; padding: 0.5rem 1rem; border-radius: 2rem; font-size: 0.9rem; }
+    .counter { color: #6b7280; font-size: 0.9rem; }
+    pre { background: #1f2937; color: #f9fafb; padding: 1.25rem; border-radius: 0.5rem; font-size: 0.85rem; overflow-x: auto; font-family: 'Monaco', 'Menlo', monospace; }
+    code { font-family: 'Monaco', 'Menlo', monospace; }
+    .code-inline { background: #f3f4f6; padding: 0.2rem 0.5rem; border-radius: 0.25rem; font-size: 0.9rem; color: #7c3aed; }
+    .list-card { border-radius: 0.75rem; padding: 1.5rem; }
+    .list-card-purple { background: #faf5ff; border: 1px solid #c4b5fd; }
+    .list-card ul { list-style: none; }
+    .list-card li { padding: 0.5rem 0; display: flex; align-items: flex-start; gap: 0.5rem; color: #374151; }
+    .check { color: #8b5cf6; font-weight: bold; }
+    .highlight-box { background: #faf5ff; border: 2px solid #c4b5fd; border-radius: 0.75rem; padding: 1.5rem; margin-top: 1rem; }
+    .highlight-box p { color: #6b21a8; font-weight: 500; font-size: 1.1rem; }
+  </style>
+</head>
+<body>
+  <main class="slideshow">
+    <div class="slide-container">
+      <!-- Slide 1: Title -->
+      <section class="slide active title-slide">
+        <div class="icon icon-purple">fetch</div>
+        <h1>Part 3: Fetch API in JavaScript</h1>
+        <p class="subtitle">Making HTTP Requests from Code</p>
+        <span class="badge">20 Minutes</span>
+      </section>
+
+      <!-- Slide 2: What is fetch()? -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-purple">?</div>
+          <div><h2>What is fetch()?</h2><p class="subtitle">The Modern Way to Make HTTP Requests</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>The Basics</h3>
+              <div class="card" style="margin-bottom: 1rem;">
+                <p style="font-size: 1rem; color: #374151;"><code class="code-inline">fetch()</code> is a built-in browser function that makes HTTP requests and returns a <strong>Promise</strong>.</p>
+              </div>
+              <pre><span style="color:#6b7280">// Simple GET request</span>
+fetch(<span style="color:#a5f3fc">'https://api.example.com/users'</span>)
+  .then(response => response.json())
+  .then(data => {
+    console.log(data);
+  });</pre>
+            </div>
+            <div>
+              <h3>What's a Promise?</h3>
+              <div class="card" style="background: #f3e8ff; border: 1px solid #c4b5fd; margin-bottom: 1rem;">
+                <p style="font-size: 0.95rem; color: #6b21a8;">A <strong>Promise</strong> represents a value that will be available in the future (when the HTTP request completes).</p>
+              </div>
+              <div class="card">
+                <h3 style="font-size: 1rem;">Promise States</h3>
+                <p style="font-size: 0.9rem; color: #374151;">
+                  <strong>Pending:</strong> Request in progress<br>
+                  <strong>Fulfilled:</strong> Success! Data received<br>
+                  <strong>Rejected:</strong> Error occurred
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="highlight-box" style="text-align: center;">
+            <p><code class="code-inline">.then()</code> runs when the promise resolves. Chain them for multi-step operations.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 3: Async/Await -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-green">async</div>
+          <div><h2>Async/Await</h2><p class="subtitle">Cleaner Promise Syntax</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>With .then() (Verbose)</h3>
+              <pre style="font-size: 0.8rem;">fetch(<span style="color:#a5f3fc">'https://api.example.com/users'</span>)
+  .then(response => {
+    <span style="color:#f472b6">return</span> response.json();
+  })
+  .then(data => {
+    console.log(data);
+  })
+  .catch(error => {
+    console.error(error);
+  });</pre>
+            </div>
+            <div>
+              <h3>With async/await (Clean!)</h3>
+              <pre style="font-size: 0.8rem;"><span style="color:#f472b6">async function</span> <span style="color:#a5f3fc">getUsers</span>() {
+  <span style="color:#f472b6">try</span> {
+    <span style="color:#f472b6">const</span> response = <span style="color:#f472b6">await</span> fetch(
+      <span style="color:#a5f3fc">'https://api.example.com/users'</span>
+    );
+    <span style="color:#f472b6">const</span> data = <span style="color:#f472b6">await</span> response.json();
+    console.log(data);
+  } <span style="color:#f472b6">catch</span> (error) {
+    console.error(error);
+  }
+}</pre>
+            </div>
+          </div>
+          <div class="card card-highlight" style="margin-top: 1rem;">
+            <p style="color: #6b21a8; text-align: center;"><strong>Key:</strong> <code class="code-inline">await</code> pauses execution until the Promise resolves. Only works inside <code class="code-inline">async</code> functions.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 4: GET Requests -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-blue">GET</div>
+          <div><h2>GET Requests</h2><p class="subtitle">Fetching Data</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>Basic GET</h3>
+              <pre style="font-size: 0.8rem;"><span style="color:#f472b6">async function</span> <span style="color:#a5f3fc">getTodos</span>() {
+  <span style="color:#f472b6">const</span> response = <span style="color:#f472b6">await</span> fetch(
+    <span style="color:#a5f3fc">'https://jsonplaceholder.typicode.com/todos'</span>
+  );
+
+  <span style="color:#f472b6">const</span> todos = <span style="color:#f472b6">await</span> response.json();
+
+  console.log(todos);
+  <span style="color:#6b7280">// Array of todo objects</span>
+}</pre>
+            </div>
+            <div>
+              <h3>GET with Auth Header</h3>
+              <pre style="font-size: 0.8rem;"><span style="color:#f472b6">async function</span> <span style="color:#a5f3fc">getMyTodos</span>(token) {
+  <span style="color:#f472b6">const</span> response = <span style="color:#f472b6">await</span> fetch(
+    <span style="color:#a5f3fc">'https://api.example.com/todos'</span>,
+    {
+      <span style="color:#a5f3fc">headers</span>: {
+        <span style="color:#a5f3fc">'Authorization'</span>: <span style="color:#a5f3fc">`Bearer </span><span style="color:#fcd34d">${token}</span><span style="color:#a5f3fc">`</span>
+      }
+    }
+  );
+
+  <span style="color:#f472b6">return</span> response.json();
+}</pre>
+            </div>
+          </div>
+          <div class="highlight-box" style="text-align: center;">
+            <p><strong>Remember:</strong> <code class="code-inline">fetch()</code> returns a Response object. Call <code class="code-inline">.json()</code> to parse the body!</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 5: POST Requests -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-orange">POST</div>
+          <div><h2>POST Requests</h2><p class="subtitle">Sending Data</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>Creating a Resource</h3>
+              <pre style="font-size: 0.75rem;"><span style="color:#f472b6">async function</span> <span style="color:#a5f3fc">createTodo</span>(token, todoData) {
+  <span style="color:#f472b6">const</span> response = <span style="color:#f472b6">await</span> fetch(
+    <span style="color:#a5f3fc">'https://api.example.com/todos'</span>,
+    {
+      <span style="color:#a5f3fc">method</span>: <span style="color:#a5f3fc">'POST'</span>,
+      <span style="color:#a5f3fc">headers</span>: {
+        <span style="color:#a5f3fc">'Content-Type'</span>: <span style="color:#a5f3fc">'application/json'</span>,
+        <span style="color:#a5f3fc">'Authorization'</span>: <span style="color:#a5f3fc">`Bearer </span><span style="color:#fcd34d">${token}</span><span style="color:#a5f3fc">`</span>
+      },
+      <span style="color:#a5f3fc">body</span>: JSON.stringify(todoData)
+    }
+  );
+
+  <span style="color:#f472b6">return</span> response.json();
+}</pre>
+            </div>
+            <div>
+              <h3>Usage</h3>
+              <pre style="font-size: 0.8rem;"><span style="color:#f472b6">const</span> newTodo = {
+  title: <span style="color:#a5f3fc">'Learn fetch API'</span>,
+  description: <span style="color:#a5f3fc">'Master async requests'</span>,
+  completed: <span style="color:#fcd34d">false</span>
+};
+
+<span style="color:#f472b6">const</span> created = <span style="color:#f472b6">await</span> createTodo(
+  myToken,
+  newTodo
+);
+
+console.log(created.id); <span style="color:#6b7280">// New ID</span></pre>
+              <div class="card" style="margin-top: 1rem;">
+                <h3 style="font-size: 0.95rem;">Key Points</h3>
+                <p style="font-size: 0.85rem; color: #374151;">
+                  &#8226; Set <code class="code-inline">method: 'POST'</code><br>
+                  &#8226; Set <code class="code-inline">Content-Type</code> header<br>
+                  &#8226; <code class="code-inline">JSON.stringify()</code> the body
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 6: Error Handling -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-red">!</div>
+          <div><h2>Error Handling</h2><p class="subtitle">Two Types of Errors</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>Network Errors</h3>
+              <div class="card" style="background: #fef2f2; border: 1px solid #fca5a5; margin-bottom: 1rem;">
+                <p style="font-size: 0.9rem; color: #991b1b;"><strong>Caught by try/catch:</strong> No internet, server down, DNS failure, CORS blocked</p>
+              </div>
+              <h3>HTTP Errors</h3>
+              <div class="card" style="background: #fef3c7; border: 1px solid #fcd34d;">
+                <p style="font-size: 0.9rem; color: #92400e;"><strong>NOT caught by try/catch:</strong> 404, 401, 500 responses. fetch() considers these "successful" requests!</p>
+              </div>
+            </div>
+            <div>
+              <h3>Proper Error Handling</h3>
+              <pre style="font-size: 0.75rem;"><span style="color:#f472b6">async function</span> <span style="color:#a5f3fc">fetchData</span>(url) {
+  <span style="color:#f472b6">try</span> {
+    <span style="color:#f472b6">const</span> response = <span style="color:#f472b6">await</span> fetch(url);
+
+    <span style="color:#6b7280">// Check for HTTP errors!</span>
+    <span style="color:#f472b6">if</span> (!response.ok) {
+      <span style="color:#f472b6">throw new</span> Error(
+        <span style="color:#a5f3fc">`HTTP error: </span><span style="color:#fcd34d">${response.status}</span><span style="color:#a5f3fc">`</span>
+      );
+    }
+
+    <span style="color:#f472b6">return await</span> response.json();
+  } <span style="color:#f472b6">catch</span> (error) {
+    console.error(<span style="color:#a5f3fc">'Fetch failed:'</span>, error);
+    <span style="color:#f472b6">throw</span> error;
+  }
+}</pre>
+            </div>
+          </div>
+          <div class="highlight-box" style="text-align: center;">
+            <p><strong>Always check <code class="code-inline">response.ok</code></strong> or <code class="code-inline">response.status</code> before processing!</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 7: Same-Origin Policy -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-yellow">SOP</div>
+          <div><h2>Same-Origin Policy</h2><p class="subtitle">Understanding Browser Security</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>What is an "Origin"?</h3>
+              <div class="card" style="background: #faf5ff; border: 1px solid #c4b5fd; margin-bottom: 1rem;">
+                <p style="font-size: 0.95rem; color: #6b21a8;"><strong>Origin = Protocol + Domain + Port</strong></p>
+              </div>
+              <div class="card" style="font-size: 0.85rem;">
+                <p style="font-family: monospace; color: #15803d;">&#10003; https://example.com:443</p>
+                <p style="font-family: monospace; color: #15803d;">&#10003; https://example.com (same)</p>
+                <p style="margin-top: 0.75rem; font-family: monospace; color: #dc2626;">&#10007; http://example.com (protocol)</p>
+                <p style="font-family: monospace; color: #dc2626;">&#10007; https://api.example.com (domain)</p>
+                <p style="font-family: monospace; color: #dc2626;">&#10007; https://example.com:8080 (port)</p>
+              </div>
+            </div>
+            <div>
+              <h3>Why Same-Origin Policy?</h3>
+              <div class="card" style="background: #fef2f2; border: 1px solid #fca5a5; margin-bottom: 1rem;">
+                <h3 style="font-size: 0.95rem; color: #991b1b;">Security Threat Example</h3>
+                <p style="font-size: 0.85rem; color: #374151;">Without SOP, a malicious site could:</p>
+                <p style="font-size: 0.85rem; color: #374151;">1. Load in an iframe while you're logged in to your bank</p>
+                <p style="font-size: 0.85rem; color: #374151;">2. Use JavaScript to read your account data</p>
+                <p style="font-size: 0.85rem; color: #374151;">3. Transfer money without your knowledge</p>
+              </div>
+              <div class="card" style="background: #dcfce7; border: 1px solid #86efac;">
+                <p style="font-size: 0.9rem; color: #15803d;"><strong>SOP prevents this</strong> by blocking scripts from accessing data from different origins.</p>
+              </div>
+            </div>
+          </div>
+          <div class="highlight-box" style="text-align: center;">
+            <p>Same-Origin Policy is a <strong>browser security feature</strong> that isolates origins from each other.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 8: CORS Explained -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-yellow">CORS</div>
+          <div><h2>CORS Explained</h2><p class="subtitle">Cross-Origin Resource Sharing</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>The Problem</h3>
+              <div class="card" style="background: #fef2f2; border: 1px solid #fca5a5; margin-bottom: 1rem;">
+                <p style="font-size: 0.85rem; color: #991b1b; font-family: monospace;">Access to fetch at 'https://api.com' from origin 'https://mysite.com' has been blocked by CORS policy</p>
+              </div>
+              <div class="card">
+                <p style="font-size: 0.9rem; color: #374151;"><strong>Why?</strong> Your app at <code class="code-inline">mysite.com</code> is trying to fetch from a different origin <code class="code-inline">api.com</code>.</p>
+              </div>
+            </div>
+            <div>
+              <h3>The Solution</h3>
+              <div class="card" style="background: #dcfce7; border: 1px solid #86efac; margin-bottom: 1rem;">
+                <p style="font-size: 0.9rem; color: #15803d;">The <strong>server</strong> must include CORS headers to explicitly allow cross-origin requests.</p>
+              </div>
+              <div class="card" style="font-size: 0.85rem;">
+                <p style="font-family: monospace; color: #374151;">Access-Control-Allow-Origin: *</p>
+                <p style="margin-top: 0.5rem; color: #6b7280;">or specific origin:</p>
+                <p style="font-family: monospace; color: #374151;">Access-Control-Allow-Origin: https://mysite.com</p>
+              </div>
+            </div>
+          </div>
+          <div class="card card-highlight" style="margin-top: 1rem; text-align: center;">
+            <p style="color: #6b21a8;"><strong>Key Point:</strong> CORS is a server-side configuration. You cannot fix CORS errors from your JavaScript code!</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 9: Preflight Requests -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-cyan">OPTIONS</div>
+          <div><h2>Preflight Requests</h2><p class="subtitle">When Browsers Ask Permission First</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>Simple vs Preflighted</h3>
+              <div class="card" style="margin-bottom: 1rem;">
+                <h3 style="font-size: 0.95rem; color: #15803d;">Simple Requests (No Preflight)</h3>
+                <p style="font-size: 0.85rem; color: #374151;">
+                  &#8226; GET, HEAD, or POST only<br>
+                  &#8226; Only standard headers<br>
+                  &#8226; Content-Type: text/plain, form-data, or urlencoded
+                </p>
+              </div>
+              <div class="card" style="background: #fef3c7; border: 1px solid #fcd34d;">
+                <h3 style="font-size: 0.95rem; color: #92400e;">Preflighted Requests</h3>
+                <p style="font-size: 0.85rem; color: #374151;">
+                  &#8226; PUT, DELETE, PATCH methods<br>
+                  &#8226; Custom headers (Authorization)<br>
+                  &#8226; Content-Type: application/json
+                </p>
+              </div>
+            </div>
+            <div>
+              <h3>What Happens?</h3>
+              <pre style="font-size: 0.75rem;"><span style="color:#6b7280">// Your code</span>
+fetch(<span style="color:#a5f3fc">'https://api.example.com/todos'</span>, {
+  method: <span style="color:#a5f3fc">'POST'</span>,
+  headers: {
+    <span style="color:#a5f3fc">'Content-Type'</span>: <span style="color:#a5f3fc">'application/json'</span>,
+    <span style="color:#a5f3fc">'Authorization'</span>: <span style="color:#a5f3fc">'Bearer token'</span>
+  }
+});
+
+<span style="color:#6b7280">// Browser automatically sends OPTIONS first:</span>
+<span style="color:#fcd34d">OPTIONS /todos</span>
+<span style="color:#6b7280">// Server responds with allowed methods/headers</span>
+<span style="color:#6b7280">// Then browser sends actual POST request</span></pre>
+            </div>
+          </div>
+          <div class="highlight-box" style="text-align: center;">
+            <p>Preflight is <strong>automatic</strong>. You'll see OPTIONS requests in DevTools Network tab.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 10: Debugging CORS -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-red">Debug</div>
+          <div><h2>Debugging CORS</h2><p class="subtitle">Common Issues and Solutions</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>Use DevTools Network Tab</h3>
+              <div class="card" style="margin-bottom: 1rem;">
+                <p style="font-size: 0.85rem; color: #374151;">
+                  1. Open DevTools (F12)<br>
+                  2. Go to Network tab<br>
+                  3. Look for the failed request (red)<br>
+                  4. Check Response Headers for CORS headers
+                </p>
+              </div>
+              <div class="card" style="background: #fef2f2; border: 1px solid #fca5a5;">
+                <h3 style="font-size: 0.9rem; color: #991b1b;">Common Causes</h3>
+                <p style="font-size: 0.85rem; color: #374151;">
+                  &#8226; Server not sending CORS headers<br>
+                  &#8226; Wrong origin in Allow-Origin<br>
+                  &#8226; Missing credentials handling<br>
+                  &#8226; Preflight failing (OPTIONS denied)
+                </p>
+              </div>
+            </div>
+            <div>
+              <h3>What You Can Control</h3>
+              <div class="card" style="background: #dcfce7; border: 1px solid #86efac; margin-bottom: 1rem;">
+                <h3 style="font-size: 0.9rem; color: #15803d;">Solutions</h3>
+                <p style="font-size: 0.85rem; color: #374151;">
+                  &#10003; Use APIs that support CORS<br>
+                  &#10003; Use your own backend as proxy<br>
+                  &#10003; During development: browser extensions<br>
+                  &#10003; Configure server (if you control it)
+                </p>
+              </div>
+              <div class="card" style="background: #dbeafe; border: 1px solid #93c5fd;">
+                <p style="font-size: 0.9rem; color: #1d4ed8;"><strong>Good News:</strong> The Todo API for Assignment 4 has CORS properly configured!</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 11: Summary -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-purple">fetch</div>
+          <div><h2>Part 3 Complete!</h2><p class="subtitle">Fetch API Mastered</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="list-card list-card-purple">
+            <ul style="font-size: 1.05rem;">
+              <li><span class="check">&#10003;</span> <code class="code-inline">fetch()</code> returns a Promise</li>
+              <li><span class="check">&#10003;</span> Use <code class="code-inline">async/await</code> for cleaner code</li>
+              <li><span class="check">&#10003;</span> GET: default method, add headers for auth</li>
+              <li><span class="check">&#10003;</span> POST: set method, Content-Type, and body</li>
+              <li><span class="check">&#10003;</span> Check <code class="code-inline">response.ok</code> for HTTP errors</li>
+              <li><span class="check">&#10003;</span> Same-Origin Policy protects users from malicious sites</li>
+              <li><span class="check">&#10003;</span> CORS must be enabled on the server (not client-side fix)</li>
+              <li><span class="check">&#10003;</span> Preflight requests (OPTIONS) happen automatically</li>
+            </ul>
+          </div>
+          <p style="text-align: center; color: #8b5cf6; font-size: 1.25rem; margin-top: 1.5rem; font-weight: 500;">Next up: Part 4 — Client-Side State Management &#8594;</p>
+        </div>
+      </section>
+    </div>
+
+    <nav class="controls">
+      <button class="btn btn-prev" onclick="prevSlide()">&#8592; Previous</button>
+      <div class="dots" id="dots"></div>
+      <div style="display:flex;align-items:center;gap:1rem">
+        <span class="counter" id="counter">1 / 11</span>
+        <button class="btn btn-next" onclick="nextSlide()">Next &#8594;</button>
+      </div>
+    </nav>
+  </main>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const dotsContainer = document.getElementById('dots');
+    const counter = document.getElementById('counter');
+    let current = 0;
+    slides.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.className = 'dot' + (i === 0 ? ' active' : '');
+      dot.onclick = () => goToSlide(i);
+      dotsContainer.appendChild(dot);
+    });
+    function updateSlide() {
+      slides.forEach((s, i) => s.classList.toggle('active', i === current));
+      document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
+      counter.textContent = `${current + 1} / ${slides.length}`;
+      document.querySelector('.btn-prev').disabled = current === 0;
+      document.querySelector('.btn-next').disabled = current === slides.length - 1;
+    }
+    function nextSlide() { if (current < slides.length - 1) { current++; updateSlide(); } }
+    function prevSlide() { if (current > 0) { current--; updateSlide(); } }
+    function goToSlide(i) { current = i; updateSlide(); }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+      if (e.key === 'ArrowLeft') prevSlide();
+    });
+  </script>
+</body>
+</html>

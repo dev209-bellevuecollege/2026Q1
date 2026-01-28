@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Part 2: REST APIs & JSON</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; }
+    .slideshow { height: 100vh; display: flex; flex-direction: column; }
+    .slide-container { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+    .slide { background: white; border-radius: 1rem; box-shadow: 0 10px 40px rgba(0,0,0,0.1); width: 100%; max-width: 1000px; height: 600px; padding: 3rem; display: none; flex-direction: column; }
+    .slide.active { display: flex; }
+    .controls { background: white; border-top: 1px solid #e5e7eb; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+    .btn { padding: 0.5rem 1.5rem; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; }
+    .btn-prev, .btn-next { background: #3b82f6; color: white; }
+    .btn:disabled { background: #d1d5db; cursor: not-allowed; }
+    .dots { display: flex; gap: 0.5rem; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #d1d5db; border: none; cursor: pointer; }
+    .dot.active { background: #3b82f6; width: 20px; border-radius: 5px; }
+    .slide-title { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+    .icon { width: 50px; height: 50px; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: bold; }
+    .icon-blue { background: #dbeafe; color: #1d4ed8; }
+    .icon-green { background: #dcfce7; color: #15803d; }
+    .icon-purple { background: #f3e8ff; color: #7c3aed; }
+    .icon-orange { background: #ffedd5; color: #c2410c; }
+    .icon-cyan { background: #cffafe; color: #0891b2; }
+    .icon-yellow { background: #fef3c7; color: #b45309; }
+    h1 { font-size: 2.5rem; color: #1f2937; }
+    h2 { font-size: 1.75rem; color: #1f2937; }
+    h3 { font-size: 1.25rem; color: #374151; margin-bottom: 0.5rem; }
+    .subtitle { color: #6b7280; font-size: 1.1rem; }
+    .content { flex: 1; display: flex; flex-direction: column; gap: 1rem; }
+    .card { background: #f9fafb; border-radius: 0.75rem; padding: 1.25rem; }
+    .card-highlight { background: #eff6ff; border: 2px solid #93c5fd; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; flex: 1; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; flex: 1; }
+    .title-slide { align-items: center; justify-content: center; text-align: center; }
+    .title-slide .icon { width: 80px; height: 80px; font-size: 1.5rem; margin-bottom: 1.5rem; border-radius: 50%; }
+    .title-slide h1 { margin-bottom: 1rem; }
+    .title-slide .subtitle { margin-bottom: 1.5rem; font-size: 1.25rem; }
+    .badge { background: #dbeafe; color: #1d4ed8; padding: 0.5rem 1rem; border-radius: 2rem; font-size: 0.9rem; }
+    .counter { color: #6b7280; font-size: 0.9rem; }
+    pre { background: #1f2937; color: #f9fafb; padding: 1.25rem; border-radius: 0.5rem; font-size: 0.9rem; overflow-x: auto; font-family: 'Monaco', 'Menlo', monospace; }
+    code { font-family: 'Monaco', 'Menlo', monospace; }
+    .code-inline { background: #f3f4f6; padding: 0.2rem 0.5rem; border-radius: 0.25rem; font-size: 0.9rem; color: #1d4ed8; }
+    .list-card { border-radius: 0.75rem; padding: 1.5rem; }
+    .list-card-blue { background: #eff6ff; border: 1px solid #93c5fd; }
+    .list-card ul { list-style: none; }
+    .list-card li { padding: 0.5rem 0; display: flex; align-items: flex-start; gap: 0.5rem; color: #374151; }
+    .check { color: #3b82f6; font-weight: bold; }
+    .highlight-box { background: #eff6ff; border: 2px solid #93c5fd; border-radius: 0.75rem; padding: 1.5rem; margin-top: 1rem; }
+    .highlight-box p { color: #1d4ed8; font-weight: 500; font-size: 1.1rem; }
+    .api-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .api-table th, .api-table td { padding: 0.6rem; text-align: left; border-bottom: 1px solid #e5e7eb; }
+    .api-table th { background: #f9fafb; color: #374151; font-weight: 600; }
+    .method-get { color: #22c55e; font-weight: bold; }
+    .method-post { color: #3b82f6; font-weight: bold; }
+    .method-put { color: #f59e0b; font-weight: bold; }
+    .method-delete { color: #ef4444; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <main class="slideshow">
+    <div class="slide-container">
+      <!-- Slide 1: Title -->
+      <section class="slide active title-slide">
+        <div class="icon icon-blue">API</div>
+        <h1>Part 2: REST APIs & JSON</h1>
+        <p class="subtitle">Connecting to the World's Data</p>
+        <span class="badge">25 Minutes</span>
+      </section>
+
+      <!-- Slide 2: What is an API? -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-blue">?</div>
+          <div><h2>What is an API?</h2><p class="subtitle">Application Programming Interface</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>The Waiter Analogy</h3>
+              <div class="card" style="margin-bottom: 1rem;">
+                <p style="font-size: 1rem; color: #374151;">An API is like a <strong>waiter</strong> at a restaurant:</p>
+                <ul style="margin-top: 0.5rem; margin-left: 1rem; color: #374151; font-size: 0.9rem;">
+                  <li>You (client) make a request from the menu</li>
+                  <li>Waiter (API) takes your order to the kitchen</li>
+                  <li>Kitchen (server) prepares the food</li>
+                  <li>Waiter brings back your meal (response)</li>
+                </ul>
+              </div>
+              <div class="card" style="background: #dbeafe; border: 1px solid #93c5fd;">
+                <p style="color: #1d4ed8; font-size: 0.95rem;"><strong>Key Point:</strong> You don't need to know HOW the kitchen works. You just need to know the menu (API documentation).</p>
+              </div>
+            </div>
+            <div>
+              <h3>Web APIs</h3>
+              <div class="card" style="margin-bottom: 1rem;">
+                <p style="font-size: 0.95rem; color: #374151;">A <strong>Web API</strong> allows different applications to communicate over HTTP.</p>
+              </div>
+              <h3>Examples</h3>
+              <div class="card" style="font-size: 0.9rem;">
+                <p><strong>Weather API:</strong> Get current weather data</p>
+                <p><strong>Twitter API:</strong> Post tweets, read timelines</p>
+                <p><strong>Stripe API:</strong> Process payments</p>
+                <p><strong>Your Todo API:</strong> Manage todo items</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 3: What is REST? -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-green">REST</div>
+          <div><h2>What is REST?</h2><p class="subtitle">Representational State Transfer</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>REST Principles</h3>
+              <div class="card" style="margin-bottom: 1rem;">
+                <p style="font-size: 0.95rem; color: #374151;">REST is an <strong>architectural style</strong> for designing APIs. It's a set of conventions, not a strict protocol.</p>
+              </div>
+              <div class="card" style="background: #dcfce7; border: 1px solid #86efac;">
+                <h3 style="color: #15803d; font-size: 1rem;">Key Characteristics</h3>
+                <ul style="font-size: 0.85rem; color: #374151; list-style: none;">
+                  <li>&#8226; <strong>Stateless:</strong> Each request is independent</li>
+                  <li>&#8226; <strong>Resource-based:</strong> URLs represent "things"</li>
+                  <li>&#8226; <strong>HTTP methods:</strong> Actions on resources</li>
+                  <li>&#8226; <strong>Standard formats:</strong> Usually JSON</li>
+                </ul>
+              </div>
+            </div>
+            <div>
+              <h3>Resource-Based URLs</h3>
+              <div class="card" style="font-family: monospace; font-size: 0.85rem;">
+                <p style="color: #6b7280;">// Resources are NOUNS, not verbs</p>
+                <p style="margin-top: 0.5rem;"><span style="color: #22c55e;">&#10003;</span> <code>/users</code></p>
+                <p><span style="color: #22c55e;">&#10003;</span> <code>/users/123</code></p>
+                <p><span style="color: #22c55e;">&#10003;</span> <code>/users/123/posts</code></p>
+                <p style="margin-top: 0.75rem; color: #6b7280;">// NOT like this:</p>
+                <p><span style="color: #ef4444;">&#10007;</span> <code>/getUser</code></p>
+                <p><span style="color: #ef4444;">&#10007;</span> <code>/deleteUser/123</code></p>
+              </div>
+              <div class="highlight-box" style="margin-top: 1rem; padding: 1rem;">
+                <p style="font-size: 0.95rem;">The HTTP <strong>method</strong> defines the action, the URL defines the <strong>resource</strong>.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 4: REST Endpoints -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-purple">CRUD</div>
+          <div><h2>REST Endpoints</h2><p class="subtitle">CRUD Operations on Resources</p></div>
+        </header>
+        <div class="content">
+          <h3>Todo API Example</h3>
+          <table class="api-table" style="margin-top: 0.5rem;">
+            <thead>
+              <tr>
+                <th>Action</th>
+                <th>Method</th>
+                <th>Endpoint</th>
+                <th>Body</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>List all todos</td>
+                <td><span class="method-get">GET</span></td>
+                <td><code>/todos</code></td>
+                <td>-</td>
+              </tr>
+              <tr>
+                <td>Get one todo</td>
+                <td><span class="method-get">GET</span></td>
+                <td><code>/todos/123</code></td>
+                <td>-</td>
+              </tr>
+              <tr>
+                <td>Create todo</td>
+                <td><span class="method-post">POST</span></td>
+                <td><code>/todos</code></td>
+                <td>{ title, description }</td>
+              </tr>
+              <tr>
+                <td>Update todo</td>
+                <td><span class="method-put">PUT</span></td>
+                <td><code>/todos/123</code></td>
+                <td>{ title, description, completed }</td>
+              </tr>
+              <tr>
+                <td>Delete todo</td>
+                <td><span class="method-delete">DELETE</span></td>
+                <td><code>/todos/123</code></td>
+                <td>-</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="highlight-box" style="text-align: center;">
+            <p><strong>Pattern:</strong> <code class="code-inline">/resource</code> for collections, <code class="code-inline">/resource/:id</code> for single items</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 5: JSON -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-orange">{ }</div>
+          <div><h2>JSON: The Data Format</h2><p class="subtitle">JavaScript Object Notation</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>JSON Syntax</h3>
+              <pre style="font-size: 0.85rem;">{
+  <span style="color:#a5f3fc">"id"</span>: <span style="color:#fcd34d">123</span>,
+  <span style="color:#a5f3fc">"title"</span>: <span style="color:#a5f3fc">"Buy groceries"</span>,
+  <span style="color:#a5f3fc">"completed"</span>: <span style="color:#fcd34d">false</span>,
+  <span style="color:#a5f3fc">"tags"</span>: [<span style="color:#a5f3fc">"shopping"</span>, <span style="color:#a5f3fc">"urgent"</span>],
+  <span style="color:#a5f3fc">"user"</span>: {
+    <span style="color:#a5f3fc">"id"</span>: <span style="color:#fcd34d">1</span>,
+    <span style="color:#a5f3fc">"name"</span>: <span style="color:#a5f3fc">"Alice"</span>
+  }
+}</pre>
+            </div>
+            <div>
+              <h3>JSON Rules</h3>
+              <div class="card" style="margin-bottom: 1rem;">
+                <ul style="font-size: 0.9rem; color: #374151; list-style: none;">
+                  <li>&#8226; Keys must be <strong>double-quoted</strong> strings</li>
+                  <li>&#8226; Values: strings, numbers, booleans, null, arrays, objects</li>
+                  <li>&#8226; No trailing commas</li>
+                  <li>&#8226; No comments</li>
+                  <li>&#8226; No undefined</li>
+                </ul>
+              </div>
+              <h3>JavaScript Conversion</h3>
+              <div class="card" style="font-family: monospace; font-size: 0.85rem; background: #f3f4f6;">
+                <p><code>JSON.parse(string)</code> &#8594; Object</p>
+                <p><code>JSON.stringify(obj)</code> &#8594; String</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 6: Authentication -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-yellow">key</div>
+          <div><h2>API Authentication</h2><p class="subtitle">Proving Who You Are</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>Common Methods</h3>
+              <div class="card" style="margin-bottom: 1rem;">
+                <h3 style="font-size: 1rem; color: #b45309;">API Keys</h3>
+                <p style="font-size: 0.85rem; color: #374151;">A secret key passed in header or query param</p>
+                <pre style="font-size: 0.75rem; margin-top: 0.5rem; padding: 0.75rem;"><span style="color:#a5f3fc">X-API-Key:</span> your-api-key-here</pre>
+              </div>
+              <div class="card" style="background: #fef3c7; border: 1px solid #fcd34d;">
+                <h3 style="font-size: 1rem; color: #b45309;">Bearer Tokens (JWT)</h3>
+                <p style="font-size: 0.85rem; color: #374151;">Token received after login, sent with each request</p>
+                <pre style="font-size: 0.75rem; margin-top: 0.5rem; padding: 0.75rem; background: #fef3c7; color: #92400e;"><span style="color:#b45309">Authorization:</span> Bearer eyJhbGci...</pre>
+              </div>
+            </div>
+            <div>
+              <h3>Auth Flow (Your Todo App)</h3>
+              <div class="card" style="font-size: 0.85rem;">
+                <p><strong>1. Register</strong></p>
+                <p style="color: #6b7280;">POST /users &#8594; Create account</p>
+                <p style="margin-top: 0.75rem;"><strong>2. Login</strong></p>
+                <p style="color: #6b7280;">POST /login &#8594; Get authToken</p>
+                <p style="margin-top: 0.75rem;"><strong>3. Use Token</strong></p>
+                <p style="color: #6b7280;">Include in Authorization header</p>
+                <p style="margin-top: 0.75rem;"><strong>4. Access Protected Routes</strong></p>
+                <p style="color: #6b7280;">GET /todos (with token)</p>
+              </div>
+            </div>
+          </div>
+          <div class="highlight-box" style="text-align: center;">
+            <p><strong>Assignment 4:</strong> Store your authToken as a <strong>cookie</strong>!</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 7: Swagger/OpenAPI -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-cyan">docs</div>
+          <div><h2>Reading API Documentation</h2><p class="subtitle">Swagger / OpenAPI</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>What is OpenAPI/Swagger?</h3>
+              <div class="card" style="margin-bottom: 1rem;">
+                <p style="font-size: 0.95rem; color: #374151;">A <strong>standard format</strong> for describing REST APIs. Swagger UI provides an interactive way to explore and test APIs.</p>
+              </div>
+              <h3>What You'll Find</h3>
+              <div class="card" style="font-size: 0.9rem;">
+                <p>&#8226; Available endpoints (paths)</p>
+                <p>&#8226; HTTP methods for each endpoint</p>
+                <p>&#8226; Request parameters & body schema</p>
+                <p>&#8226; Response formats & status codes</p>
+                <p>&#8226; Authentication requirements</p>
+              </div>
+            </div>
+            <div>
+              <h3>Todo API Swagger</h3>
+              <div class="card" style="background: #ecfeff; border: 1px solid #67e8f9; margin-bottom: 1rem;">
+                <p style="font-size: 0.85rem; color: #0e7490; word-break: break-all;"><strong>URL:</strong> app.swaggerhub.com/apis/bellevuecollegedev20/todo-list_api/1.0.0</p>
+              </div>
+              <div class="card">
+                <h3 style="font-size: 1rem;">Try It Out Feature</h3>
+                <p style="font-size: 0.85rem; color: #374151;">Swagger lets you test API calls directly in the browser - no code needed!</p>
+              </div>
+              <div class="highlight-box" style="margin-top: 1rem; padding: 1rem;">
+                <p style="font-size: 0.95rem;"><strong>Demo:</strong> Let's explore the Todo API docs together!</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 8: Postman Demo -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-orange">PM</div>
+          <div><h2>Live Demo: Postman</h2><p class="subtitle">Testing APIs Without Code</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>What is Postman?</h3>
+              <div class="card" style="margin-bottom: 1rem;">
+                <p style="font-size: 0.95rem; color: #374151;">A tool for making HTTP requests and testing APIs. Essential for API development and debugging.</p>
+              </div>
+              <h3>Demo Steps</h3>
+              <div class="card" style="font-size: 0.9rem;">
+                <p><strong>1.</strong> GET request to JSONPlaceholder</p>
+                <p><strong>2.</strong> POST request with JSON body</p>
+                <p><strong>3.</strong> Set Authorization header</p>
+                <p><strong>4.</strong> Inspect response headers</p>
+              </div>
+            </div>
+            <div>
+              <h3>Practice API</h3>
+              <pre style="font-size: 0.8rem;"><span style="color:#6b7280">// JSONPlaceholder (free fake API)</span>
+
+<span style="color:#22c55e">GET</span> https://jsonplaceholder.typicode.com/todos
+
+<span style="color:#22c55e">GET</span> https://jsonplaceholder.typicode.com/todos/1
+
+<span style="color:#3b82f6">POST</span> https://jsonplaceholder.typicode.com/todos
+<span style="color:#a5f3fc">Content-Type:</span> application/json
+{
+  "title": "Learn APIs",
+  "completed": false,
+  "userId": 1
+}</pre>
+            </div>
+          </div>
+          <div class="highlight-box" style="text-align: center;">
+            <p><strong>Download:</strong> postman.com/downloads (if you haven't already!)</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 9: Summary -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-blue">API</div>
+          <div><h2>Part 2 Complete!</h2><p class="subtitle">REST APIs & JSON</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="list-card list-card-blue">
+            <ul style="font-size: 1.15rem;">
+              <li><span class="check">&#10003;</span> API = interface for applications to communicate</li>
+              <li><span class="check">&#10003;</span> REST = resource-based URLs + HTTP methods</li>
+              <li><span class="check">&#10003;</span> JSON = standard data format for APIs</li>
+              <li><span class="check">&#10003;</span> Authentication via API keys or Bearer tokens</li>
+              <li><span class="check">&#10003;</span> Swagger/OpenAPI for documentation</li>
+              <li><span class="check">&#10003;</span> Postman for testing API requests</li>
+            </ul>
+          </div>
+          <p style="text-align: center; color: #3b82f6; font-size: 1.25rem; margin-top: 1.5rem; font-weight: 500;">Next up: Part 3 — Fetch API in JavaScript &#8594;</p>
+        </div>
+      </section>
+    </div>
+
+    <nav class="controls">
+      <button class="btn btn-prev" onclick="prevSlide()">&#8592; Previous</button>
+      <div class="dots" id="dots"></div>
+      <div style="display:flex;align-items:center;gap:1rem">
+        <span class="counter" id="counter">1 / 9</span>
+        <button class="btn btn-next" onclick="nextSlide()">Next &#8594;</button>
+      </div>
+    </nav>
+  </main>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const dotsContainer = document.getElementById('dots');
+    const counter = document.getElementById('counter');
+    let current = 0;
+    slides.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.className = 'dot' + (i === 0 ? ' active' : '');
+      dot.onclick = () => goToSlide(i);
+      dotsContainer.appendChild(dot);
+    });
+    function updateSlide() {
+      slides.forEach((s, i) => s.classList.toggle('active', i === current));
+      document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
+      counter.textContent = `${current + 1} / ${slides.length}`;
+      document.querySelector('.btn-prev').disabled = current === 0;
+      document.querySelector('.btn-next').disabled = current === slides.length - 1;
+    }
+    function nextSlide() { if (current < slides.length - 1) { current++; updateSlide(); } }
+    function prevSlide() { if (current > 0) { current--; updateSlide(); } }
+    function goToSlide(i) { current = i; updateSlide(); }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+      if (e.key === 'ArrowLeft') prevSlide();
+    });
+  </script>
+</body>
+</html>
