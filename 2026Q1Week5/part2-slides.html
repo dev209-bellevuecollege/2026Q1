@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Part 2: React Development Environment</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; }
+    .slideshow { height: 100vh; display: flex; flex-direction: column; }
+    .slide-container { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+    .slide { background: white; border-radius: 1rem; box-shadow: 0 10px 40px rgba(0,0,0,0.1); width: 100%; max-width: 1000px; height: 600px; padding: 3rem; display: none; flex-direction: column; }
+    .slide.active { display: flex; }
+    .controls { background: white; border-top: 1px solid #e5e7eb; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+    .btn { padding: 0.5rem 1.5rem; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; }
+    .btn-prev, .btn-next { background: #0891b2; color: white; }
+    .btn:disabled { background: #d1d5db; cursor: not-allowed; }
+    .dots { display: flex; gap: 0.5rem; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #d1d5db; border: none; cursor: pointer; }
+    .dot.active { background: #0891b2; width: 20px; border-radius: 5px; }
+    .slide-title { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+    .icon { width: 50px; height: 50px; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: bold; }
+    .icon-green { background: #dcfce7; color: #15803d; }
+    .icon-cyan { background: #cffafe; color: #0891b2; }
+    .icon-blue { background: #dbeafe; color: #1d4ed8; }
+    .icon-purple { background: #f3e8ff; color: #7c3aed; }
+    .icon-orange { background: #ffedd5; color: #c2410c; }
+    .icon-yellow { background: #fef3c7; color: #b45309; }
+    h1 { font-size: 2.5rem; color: #1f2937; }
+    h2 { font-size: 1.75rem; color: #1f2937; }
+    h3 { font-size: 1.25rem; color: #374151; margin-bottom: 0.5rem; }
+    .subtitle { color: #6b7280; font-size: 1.1rem; }
+    .content { flex: 1; display: flex; flex-direction: column; gap: 1rem; }
+    .card { background: #f9fafb; border-radius: 0.75rem; padding: 1.25rem; }
+    .card-highlight { background: #ecfeff; border: 2px solid #67e8f9; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; flex: 1; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; flex: 1; }
+    .title-slide { align-items: center; justify-content: center; text-align: center; }
+    .title-slide .icon { width: 80px; height: 80px; font-size: 1.5rem; margin-bottom: 1.5rem; border-radius: 50%; }
+    .title-slide h1 { margin-bottom: 1rem; }
+    .title-slide .subtitle { margin-bottom: 1.5rem; font-size: 1.25rem; }
+    .badge { background: #cffafe; color: #0891b2; padding: 0.5rem 1rem; border-radius: 2rem; font-size: 0.9rem; }
+    .counter { color: #6b7280; font-size: 0.9rem; }
+    pre { background: #1f2937; color: #f9fafb; padding: 1.25rem; border-radius: 0.5rem; font-size: 0.9rem; overflow-x: auto; font-family: 'Monaco', 'Menlo', monospace; }
+    code { font-family: 'Monaco', 'Menlo', monospace; }
+    .code-inline { background: #f3f4f6; padding: 0.2rem 0.5rem; border-radius: 0.25rem; font-size: 0.9rem; color: #0891b2; }
+    .list-card { border-radius: 0.75rem; padding: 1.5rem; }
+    .list-card-cyan { background: #ecfeff; border: 1px solid #67e8f9; }
+    .list-card ul { list-style: none; }
+    .list-card li { padding: 0.5rem 0; display: flex; align-items: flex-start; gap: 0.5rem; color: #374151; }
+    .check { color: #0891b2; font-weight: bold; }
+    .highlight-box { background: #ecfeff; border: 2px solid #67e8f9; border-radius: 0.75rem; padding: 1.5rem; margin-top: 1rem; }
+    .highlight-box p { color: #0e7490; font-weight: 500; font-size: 1.1rem; }
+    .flow-diagram { display: flex; align-items: center; justify-content: center; gap: 1rem; margin: 1rem 0; flex-wrap: wrap; }
+    .flow-box { padding: 1rem 1.5rem; border-radius: 0.5rem; text-align: center; font-weight: 500; }
+    .flow-arrow { font-size: 1.5rem; color: #0891b2; }
+    .file-tree { font-family: 'Monaco', 'Menlo', monospace; font-size: 0.85rem; background: #1f2937; color: #f9fafb; padding: 1rem; border-radius: 0.5rem; white-space: pre; line-height: 1.5; }
+    .file-tree .folder { color: #67e8f9; }
+    .file-tree .file { color: #a5f3fc; }
+    .file-tree .comment { color: #6b7280; }
+  </style>
+</head>
+<body>
+  <main class="slideshow">
+    <div class="slide-container">
+      <!-- Slide 1: Title -->
+      <section class="slide active title-slide">
+        <div class="icon icon-cyan">Dev</div>
+        <h1>Part 2: React Development Environment</h1>
+        <p class="subtitle">Setting Up Your React Workspace</p>
+        <span class="badge">15 Minutes</span>
+      </section>
+
+      <!-- Slide 2: Vite - The Build Tool -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-purple">Vite</div>
+          <div><h2>Vite: The Modern Build Tool</h2><p class="subtitle">Fast Development Server & Bundler</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>What is Vite?</h3>
+              <div class="card" style="margin-bottom: 1rem;">
+                <p style="font-size: 0.95rem; color: #374151;">Vite (French for "fast") is a <strong>build tool</strong> that provides:</p>
+                <ul style="font-size: 0.9rem; color: #374151; list-style: none; margin-top: 0.5rem;">
+                  <li>&#8226; Instant dev server startup</li>
+                  <li>&#8226; Hot Module Replacement (HMR)</li>
+                  <li>&#8226; Optimized production builds</li>
+                </ul>
+              </div>
+              <div class="card" style="background: #f3e8ff; border: 1px solid #c4b5fd;">
+                <h3 style="color: #7c3aed; font-size: 1rem;">Why Not Create React App?</h3>
+                <p style="font-size: 0.85rem; color: #374151;">CRA is deprecated. Vite is the modern standard - much faster and more flexible.</p>
+              </div>
+            </div>
+            <div>
+              <h3>Create a New React Project</h3>
+              <pre style="font-size: 0.85rem;"><span style="color:#6b7280"># Create new project</span>
+<span style="color:#a5f3fc">npm create vite@latest</span> my-app -- --template react
+
+<span style="color:#6b7280"># Navigate into folder</span>
+<span style="color:#a5f3fc">cd</span> my-app
+
+<span style="color:#6b7280"># Install dependencies</span>
+<span style="color:#a5f3fc">npm install</span>
+
+<span style="color:#6b7280"># Start development server</span>
+<span style="color:#a5f3fc">npm run dev</span></pre>
+              <div class="highlight-box" style="margin-top: 1rem; padding: 1rem;">
+                <p style="font-size: 0.95rem;">Dev server runs at <code class="code-inline">http://localhost:5173</code></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 3: Project Structure -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-cyan">&#128193;</div>
+          <div><h2>React Project Structure</h2><p class="subtitle">Understanding the File Layout</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>Directory Layout</h3>
+              <div class="file-tree"><span class="folder">my-app/</span>
+|-- <span class="file">index.html</span>        <span class="comment"># Entry HTML file</span>
+|-- <span class="file">package.json</span>     <span class="comment"># Project config</span>
+|-- <span class="file">vite.config.js</span>   <span class="comment"># Vite settings</span>
+|-- <span class="folder">node_modules/</span>    <span class="comment"># Installed packages</span>
+|-- <span class="folder">public/</span>          <span class="comment"># Static assets</span>
+|   +-- <span class="file">vite.svg</span>
++-- <span class="folder">src/</span>             <span class="comment"># Your code lives here!</span>
+    |-- <span class="file">main.jsx</span>     <span class="comment"># App entry point</span>
+    |-- <span class="file">App.jsx</span>      <span class="comment"># Root component</span>
+    |-- <span class="file">App.css</span>      <span class="comment"># App styles</span>
+    +-- <span class="file">index.css</span>    <span class="comment"># Global styles</span></div>
+            </div>
+            <div>
+              <h3>Key Files Explained</h3>
+              <div class="card" style="margin-bottom: 0.75rem;">
+                <h3 style="font-size: 1rem; color: #0891b2;">index.html</h3>
+                <p style="font-size: 0.85rem; color: #374151;">Contains a single <code class="code-inline">&lt;div id="root"&gt;</code> where React injects all content.</p>
+              </div>
+              <div class="card" style="margin-bottom: 0.75rem;">
+                <h3 style="font-size: 1rem; color: #0891b2;">src/main.jsx</h3>
+                <p style="font-size: 0.85rem; color: #374151;">Creates the React root and renders the App component into the DOM.</p>
+              </div>
+              <div class="card" style="margin-bottom: 0.75rem;">
+                <h3 style="font-size: 1rem; color: #0891b2;">src/App.jsx</h3>
+                <p style="font-size: 0.85rem; color: #374151;">Your main component - the starting point of your UI.</p>
+              </div>
+              <div class="card" style="background: #dcfce7; border: 1px solid #86efac;">
+                <h3 style="font-size: 1rem; color: #15803d;">.jsx Extension</h3>
+                <p style="font-size: 0.85rem; color: #374151;">Files with JSX syntax use .jsx (or .tsx for TypeScript)</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 4: index.html -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-orange">HTML</div>
+          <div><h2>The Entry Point: index.html</h2><p class="subtitle">Where React Takes Over</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>index.html Contents</h3>
+              <pre style="font-size: 0.8rem;"><span style="color:#6b7280">&lt;!DOCTYPE html&gt;</span>
+<span style="color:#67e8f9">&lt;html</span> lang="en"<span style="color:#67e8f9">&gt;</span>
+<span style="color:#67e8f9">&lt;head&gt;</span>
+  <span style="color:#67e8f9">&lt;meta</span> charset="UTF-8" <span style="color:#67e8f9">/&gt;</span>
+  <span style="color:#67e8f9">&lt;meta</span> name="viewport"
+        content="width=device-width" <span style="color:#67e8f9">/&gt;</span>
+  <span style="color:#67e8f9">&lt;title&gt;</span>Vite + React<span style="color:#67e8f9">&lt;/title&gt;</span>
+<span style="color:#67e8f9">&lt;/head&gt;</span>
+<span style="color:#67e8f9">&lt;body&gt;</span>
+  <span style="color:#fcd34d">&lt;div id="root"&gt;&lt;/div&gt;</span>
+  <span style="color:#67e8f9">&lt;script</span> type="module"
+          src="/src/main.jsx"<span style="color:#67e8f9">&gt;&lt;/script&gt;</span>
+<span style="color:#67e8f9">&lt;/body&gt;</span>
+<span style="color:#67e8f9">&lt;/html&gt;</span></pre>
+            </div>
+            <div>
+              <h3>What's Happening?</h3>
+              <div class="card" style="margin-bottom: 1rem; background: #fef3c7; border: 1px solid #fcd34d;">
+                <h3 style="color: #b45309; font-size: 1rem;">The Empty Container</h3>
+                <p style="font-size: 0.9rem; color: #374151;"><code class="code-inline">&lt;div id="root"&gt;</code> is initially <strong>empty</strong>. React fills it with content!</p>
+              </div>
+              <div class="card" style="margin-bottom: 1rem;">
+                <h3 style="color: #0891b2; font-size: 1rem;">Module Script</h3>
+                <p style="font-size: 0.9rem; color: #374151;"><code class="code-inline">type="module"</code> enables ES6 imports. Vite processes <code class="code-inline">main.jsx</code> automatically.</p>
+              </div>
+              <div class="card" style="background: #dcfce7; border: 1px solid #86efac;">
+                <h3 style="color: #15803d; font-size: 1rem;">Minimal HTML</h3>
+                <p style="font-size: 0.9rem; color: #374151;">The HTML stays simple - all UI is generated by JavaScript (React)!</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 5: main.jsx -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-blue">main</div>
+          <div><h2>The Bootstrap: main.jsx</h2><p class="subtitle">Starting the React Application</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>main.jsx Contents</h3>
+              <pre style="font-size: 0.85rem;"><span style="color:#c4b5fd">import</span> React <span style="color:#c4b5fd">from</span> <span style="color:#a5f3fc">'react'</span>
+<span style="color:#c4b5fd">import</span> ReactDOM <span style="color:#c4b5fd">from</span> <span style="color:#a5f3fc">'react-dom/client'</span>
+<span style="color:#c4b5fd">import</span> App <span style="color:#c4b5fd">from</span> <span style="color:#a5f3fc">'./App.jsx'</span>
+<span style="color:#c4b5fd">import</span> <span style="color:#a5f3fc">'./index.css'</span>
+
+ReactDOM.<span style="color:#fcd34d">createRoot</span>(
+  document.<span style="color:#fcd34d">getElementById</span>(<span style="color:#a5f3fc">'root'</span>)
+).<span style="color:#fcd34d">render</span>(
+  <span style="color:#67e8f9">&lt;React.StrictMode&gt;</span>
+    <span style="color:#67e8f9">&lt;App /&gt;</span>
+  <span style="color:#67e8f9">&lt;/React.StrictMode&gt;</span>
+)</pre>
+            </div>
+            <div>
+              <h3>Line by Line</h3>
+              <div class="card" style="font-size: 0.85rem; margin-bottom: 0.75rem;">
+                <p><strong>Lines 1-4:</strong> Import React, ReactDOM, your App component, and global CSS</p>
+              </div>
+              <div class="card" style="font-size: 0.85rem; margin-bottom: 0.75rem;">
+                <p><strong>createRoot():</strong> Creates a React "root" attached to the #root div</p>
+              </div>
+              <div class="card" style="font-size: 0.85rem; margin-bottom: 0.75rem;">
+                <p><strong>render():</strong> Tells React what to display in that root</p>
+              </div>
+              <div class="card" style="font-size: 0.85rem; background: #f3e8ff; border: 1px solid #c4b5fd;">
+                <p><strong>StrictMode:</strong> Development helper that warns about potential problems (doesn't affect production)</p>
+              </div>
+            </div>
+          </div>
+          <div class="highlight-box" style="text-align: center;">
+            <p>This file rarely changes - it just bootstraps your app!</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 6: Development Workflow -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-green">&#9881;</div>
+          <div><h2>Development Workflow</h2><p class="subtitle">Hot Module Replacement</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>npm Scripts (package.json)</h3>
+              <pre style="font-size: 0.85rem;"><span style="color:#a5f3fc">"scripts"</span>: {
+  <span style="color:#a5f3fc">"dev"</span>: <span style="color:#a5f3fc">"vite"</span>,
+  <span style="color:#a5f3fc">"build"</span>: <span style="color:#a5f3fc">"vite build"</span>,
+  <span style="color:#a5f3fc">"preview"</span>: <span style="color:#a5f3fc">"vite preview"</span>
+}</pre>
+              <div class="card" style="margin-top: 1rem;">
+                <p style="font-size: 0.9rem;"><code class="code-inline">npm run dev</code> - Start development</p>
+                <p style="font-size: 0.9rem;"><code class="code-inline">npm run build</code> - Create production build</p>
+                <p style="font-size: 0.9rem;"><code class="code-inline">npm run preview</code> - Preview production</p>
+              </div>
+            </div>
+            <div>
+              <h3>Hot Module Replacement (HMR)</h3>
+              <div class="card" style="background: #dcfce7; border: 1px solid #86efac; margin-bottom: 1rem;">
+                <p style="font-size: 0.95rem; color: #15803d;"><strong>Instant updates!</strong> When you save a file, only that component updates - no full page reload.</p>
+              </div>
+              <h3>The Dev Experience</h3>
+              <div class="card">
+                <ul style="font-size: 0.9rem; color: #374151; list-style: none;">
+                  <li>1. Start server with <code class="code-inline">npm run dev</code></li>
+                  <li>2. Open http://localhost:5173</li>
+                  <li>3. Edit code, save file</li>
+                  <li>4. See changes instantly!</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="highlight-box" style="text-align: center;">
+            <p><strong>Demo:</strong> Let's create a new React project and explore it!</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 7: Summary -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-cyan">Dev</div>
+          <div><h2>Part 2 Complete!</h2><p class="subtitle">React Development Environment</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="list-card list-card-cyan">
+            <ul style="font-size: 1.15rem;">
+              <li><span class="check">&#10003;</span> Vite is the modern build tool for React projects</li>
+              <li><span class="check">&#10003;</span> <code class="code-inline">npm create vite@latest</code> scaffolds a new project</li>
+              <li><span class="check">&#10003;</span> index.html has an empty #root div for React</li>
+              <li><span class="check">&#10003;</span> main.jsx bootstraps React and renders App</li>
+              <li><span class="check">&#10003;</span> Hot Module Replacement gives instant feedback</li>
+            </ul>
+          </div>
+          <p style="text-align: center; color: #0891b2; font-size: 1.25rem; margin-top: 1.5rem; font-weight: 500;">Next up: Part 3 &#8212; Introduction to React & JSX &#8594;</p>
+        </div>
+      </section>
+    </div>
+
+    <nav class="controls">
+      <button class="btn btn-prev" onclick="prevSlide()">&#8592; Previous</button>
+      <div class="dots" id="dots"></div>
+      <div style="display:flex;align-items:center;gap:1rem">
+        <span class="counter" id="counter">1 / 7</span>
+        <button class="btn btn-next" onclick="nextSlide()">Next &#8594;</button>
+      </div>
+    </nav>
+  </main>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const dotsContainer = document.getElementById('dots');
+    const counter = document.getElementById('counter');
+    let current = 0;
+    slides.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.className = 'dot' + (i === 0 ? ' active' : '');
+      dot.onclick = () => goToSlide(i);
+      dotsContainer.appendChild(dot);
+    });
+    function updateSlide() {
+      slides.forEach((s, i) => s.classList.toggle('active', i === current));
+      document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
+      counter.textContent = `${current + 1} / ${slides.length}`;
+      document.querySelector('.btn-prev').disabled = current === 0;
+      document.querySelector('.btn-next').disabled = current === slides.length - 1;
+    }
+    function nextSlide() { if (current < slides.length - 1) { current++; updateSlide(); } }
+    function prevSlide() { if (current > 0) { current--; updateSlide(); } }
+    function goToSlide(i) { current = i; updateSlide(); }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+      if (e.key === 'ArrowLeft') prevSlide();
+    });
+  </script>
+</body>
+</html>

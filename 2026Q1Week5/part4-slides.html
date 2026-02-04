@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Part 4: React Components</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; }
+    .slideshow { height: 100vh; display: flex; flex-direction: column; }
+    .slide-container { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+    .slide { background: white; border-radius: 1rem; box-shadow: 0 10px 40px rgba(0,0,0,0.1); width: 100%; max-width: 1000px; height: 600px; padding: 3rem; display: none; flex-direction: column; }
+    .slide.active { display: flex; }
+    .controls { background: white; border-top: 1px solid #e5e7eb; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+    .btn { padding: 0.5rem 1.5rem; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; }
+    .btn-prev, .btn-next { background: #7c3aed; color: white; }
+    .btn:disabled { background: #d1d5db; cursor: not-allowed; }
+    .dots { display: flex; gap: 0.5rem; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #d1d5db; border: none; cursor: pointer; }
+    .dot.active { background: #7c3aed; width: 20px; border-radius: 5px; }
+    .slide-title { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+    .icon { width: 50px; height: 50px; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: bold; }
+    .icon-green { background: #dcfce7; color: #15803d; }
+    .icon-cyan { background: #cffafe; color: #0891b2; }
+    .icon-blue { background: #dbeafe; color: #1d4ed8; }
+    .icon-purple { background: #f3e8ff; color: #7c3aed; }
+    .icon-orange { background: #ffedd5; color: #c2410c; }
+    .icon-yellow { background: #fef3c7; color: #b45309; }
+    h1 { font-size: 2.5rem; color: #1f2937; }
+    h2 { font-size: 1.75rem; color: #1f2937; }
+    h3 { font-size: 1.25rem; color: #374151; margin-bottom: 0.5rem; }
+    .subtitle { color: #6b7280; font-size: 1.1rem; }
+    .content { flex: 1; display: flex; flex-direction: column; gap: 1rem; }
+    .card { background: #f9fafb; border-radius: 0.75rem; padding: 1.25rem; }
+    .card-highlight { background: #faf5ff; border: 2px solid #c4b5fd; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; flex: 1; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; flex: 1; }
+    .title-slide { align-items: center; justify-content: center; text-align: center; }
+    .title-slide .icon { width: 80px; height: 80px; font-size: 1.5rem; margin-bottom: 1.5rem; border-radius: 50%; }
+    .title-slide h1 { margin-bottom: 1rem; }
+    .title-slide .subtitle { margin-bottom: 1.5rem; font-size: 1.25rem; }
+    .badge { background: #f3e8ff; color: #7c3aed; padding: 0.5rem 1rem; border-radius: 2rem; font-size: 0.9rem; }
+    .counter { color: #6b7280; font-size: 0.9rem; }
+    pre { background: #1f2937; color: #f9fafb; padding: 1.25rem; border-radius: 0.5rem; font-size: 0.9rem; overflow-x: auto; font-family: 'Monaco', 'Menlo', monospace; }
+    code { font-family: 'Monaco', 'Menlo', monospace; }
+    .code-inline { background: #f3f4f6; padding: 0.2rem 0.5rem; border-radius: 0.25rem; font-size: 0.9rem; color: #7c3aed; }
+    .list-card { border-radius: 0.75rem; padding: 1.5rem; }
+    .list-card-purple { background: #faf5ff; border: 1px solid #c4b5fd; }
+    .list-card ul { list-style: none; }
+    .list-card li { padding: 0.5rem 0; display: flex; align-items: flex-start; gap: 0.5rem; color: #374151; }
+    .check { color: #7c3aed; font-weight: bold; }
+    .highlight-box { background: #faf5ff; border: 2px solid #c4b5fd; border-radius: 0.75rem; padding: 1.5rem; margin-top: 1rem; }
+    .highlight-box p { color: #7c3aed; font-weight: 500; font-size: 1.1rem; }
+    .flow-diagram { display: flex; align-items: center; justify-content: center; gap: 1rem; margin: 1rem 0; flex-wrap: wrap; }
+    .flow-box { padding: 1rem 1.5rem; border-radius: 0.5rem; text-align: center; font-weight: 500; }
+    .flow-arrow { font-size: 1.5rem; color: #7c3aed; }
+    .file-tree { font-family: 'Monaco', 'Menlo', monospace; font-size: 0.85rem; background: #1f2937; color: #f9fafb; padding: 1rem; border-radius: 0.5rem; white-space: pre; line-height: 1.5; }
+    .file-tree .folder { color: #c4b5fd; }
+    .file-tree .file { color: #a5f3fc; }
+    .file-tree .comment { color: #6b7280; }
+  </style>
+</head>
+<body>
+  <main class="slideshow">
+    <div class="slide-container">
+      <!-- Slide 1: Title -->
+      <section class="slide active title-slide">
+        <div class="icon icon-purple">{ }</div>
+        <h1>Part 4: React Components</h1>
+        <p class="subtitle">Building Reusable UI Pieces</p>
+        <span class="badge">20 Minutes</span>
+      </section>
+
+      <!-- Slide 2: What is a Component? -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-purple">fn</div>
+          <div><h2>Function Components</h2><p class="subtitle">The Modern Way to Build React</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>A Component is a Function</h3>
+              <pre style="font-size: 0.85rem;"><span style="color:#6b7280">// A simple component</span>
+<span style="color:#c4b5fd">function</span> <span style="color:#fcd34d">Greeting</span>() {
+  <span style="color:#c4b5fd">return</span> (
+    <span style="color:#67e8f9">&lt;div&gt;</span>
+      <span style="color:#67e8f9">&lt;h1&gt;</span>Hello, World!<span style="color:#67e8f9">&lt;/h1&gt;</span>
+      <span style="color:#67e8f9">&lt;p&gt;</span>Welcome to React<span style="color:#67e8f9">&lt;/p&gt;</span>
+    <span style="color:#67e8f9">&lt;/div&gt;</span>
+  );
+}
+
+<span style="color:#6b7280">// Using the component</span>
+<span style="color:#67e8f9">&lt;Greeting /&gt;</span></pre>
+            </div>
+            <div>
+              <h3>Component Rules</h3>
+              <div class="card" style="margin-bottom: 0.75rem; background: #dcfce7; border: 1px solid #86efac;">
+                <h3 style="color: #15803d; font-size: 1rem;">&#10003; Must Follow</h3>
+                <ul style="font-size: 0.85rem; color: #374151; list-style: none;">
+                  <li>&#8226; Name starts with <strong>Capital letter</strong></li>
+                  <li>&#8226; Returns JSX (or null)</li>
+                  <li>&#8226; Returns single parent element</li>
+                </ul>
+              </div>
+              <div class="card" style="background: #fef2f2; border: 1px solid #fca5a5;">
+                <h3 style="color: #dc2626; font-size: 1rem;">&#10007; Common Mistakes</h3>
+                <ul style="font-size: 0.85rem; color: #374151; list-style: none;">
+                  <li>&#8226; <code class="code-inline">greeting()</code> - lowercase name</li>
+                  <li>&#8226; <code class="code-inline">Greeting()</code> - calling as function</li>
+                  <li>&#8226; Forgetting to return JSX</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="highlight-box" style="text-align: center;">
+            <p>Components are <strong>instantiated</strong> with JSX syntax: <code class="code-inline">&lt;Greeting /&gt;</code> NOT <code class="code-inline">Greeting()</code></p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 3: Component with Logic -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-cyan">logic</div>
+          <div><h2>Components with Logic</h2><p class="subtitle">JavaScript Before the Return</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>Adding Logic</h3>
+              <pre style="font-size: 0.8rem;"><span style="color:#c4b5fd">function</span> <span style="color:#fcd34d">UserCard</span>() {
+  <span style="color:#6b7280">// Variables and logic go HERE</span>
+  <span style="color:#c4b5fd">const</span> name = <span style="color:#a5f3fc">"Alice"</span>;
+  <span style="color:#c4b5fd">const</span> age = <span style="color:#fcd34d">25</span>;
+  <span style="color:#c4b5fd">const</span> isAdult = age >= <span style="color:#fcd34d">18</span>;
+
+  <span style="color:#c4b5fd">const</span> greeting = isAdult
+    ? <span style="color:#a5f3fc">"Welcome!"</span>
+    : <span style="color:#a5f3fc">"Hi there!"</span>;
+
+  <span style="color:#6b7280">// JSX uses those variables</span>
+  <span style="color:#c4b5fd">return</span> (
+    <span style="color:#67e8f9">&lt;div</span> className="card"<span style="color:#67e8f9">&gt;</span>
+      <span style="color:#67e8f9">&lt;h2&gt;</span>{name}<span style="color:#67e8f9">&lt;/h2&gt;</span>
+      <span style="color:#67e8f9">&lt;p&gt;</span>Age: {age}<span style="color:#67e8f9">&lt;/p&gt;</span>
+      <span style="color:#67e8f9">&lt;p&gt;</span>{greeting}<span style="color:#67e8f9">&lt;/p&gt;</span>
+    <span style="color:#67e8f9">&lt;/div&gt;</span>
+  );
+}</pre>
+            </div>
+            <div>
+              <h3>The Pattern</h3>
+              <div class="flow-diagram" style="flex-direction: column; gap: 0.5rem; align-items: stretch;">
+                <div class="flow-box" style="background: #f3e8ff; color: #7c3aed;">1. Define variables & logic</div>
+                <span class="flow-arrow" style="text-align: center;">&#8595;</span>
+                <div class="flow-box" style="background: #cffafe; color: #0891b2;">2. Calculate derived values</div>
+                <span class="flow-arrow" style="text-align: center;">&#8595;</span>
+                <div class="flow-box" style="background: #dcfce7; color: #15803d;">3. Return JSX using those values</div>
+              </div>
+              <div class="card" style="margin-top: 1rem; background: #fef3c7; border: 1px solid #fcd34d;">
+                <p style="font-size: 0.9rem; color: #92400e;"><strong>Tip:</strong> Keep the return statement clean! Move complex logic before it.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 4: Component Composition -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-blue">&#128736;</div>
+          <div><h2>Component Composition</h2><p class="subtitle">Components Inside Components</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>Building a Page</h3>
+              <pre style="font-size: 0.8rem;"><span style="color:#c4b5fd">function</span> <span style="color:#fcd34d">Header</span>() {
+  <span style="color:#c4b5fd">return</span> <span style="color:#67e8f9">&lt;header&gt;</span>My Site<span style="color:#67e8f9">&lt;/header&gt;</span>;
+}
+
+<span style="color:#c4b5fd">function</span> <span style="color:#fcd34d">Footer</span>() {
+  <span style="color:#c4b5fd">return</span> <span style="color:#67e8f9">&lt;footer&gt;</span>&copy; 2026<span style="color:#67e8f9">&lt;/footer&gt;</span>;
+}
+
+<span style="color:#c4b5fd">function</span> <span style="color:#fcd34d">App</span>() {
+  <span style="color:#c4b5fd">return</span> (
+    <span style="color:#67e8f9">&lt;div&gt;</span>
+      <span style="color:#67e8f9">&lt;Header /&gt;</span>
+      <span style="color:#67e8f9">&lt;main&gt;</span>
+        <span style="color:#67e8f9">&lt;h1&gt;</span>Welcome<span style="color:#67e8f9">&lt;/h1&gt;</span>
+        <span style="color:#67e8f9">&lt;p&gt;</span>Page content...<span style="color:#67e8f9">&lt;/p&gt;</span>
+      <span style="color:#67e8f9">&lt;/main&gt;</span>
+      <span style="color:#67e8f9">&lt;Footer /&gt;</span>
+    <span style="color:#67e8f9">&lt;/div&gt;</span>
+  );
+}</pre>
+            </div>
+            <div>
+              <h3>Component Tree</h3>
+              <div class="card" style="font-family: monospace; font-size: 0.9rem; background: #f9fafb;">
+                <div style="padding-left: 0;">
+                  <span style="color: #7c3aed; font-weight: bold;">App</span>
+                  <div style="padding-left: 1.5rem; border-left: 2px solid #e5e7eb; margin-left: 0.5rem;">
+                    <p style="color: #1d4ed8;">&#9500; Header</p>
+                    <p style="color: #6b7280;">&#9500; main</p>
+                    <p style="color: #0891b2;">&#9492; Footer</p>
+                  </div>
+                </div>
+              </div>
+              <div class="card" style="margin-top: 1rem; background: #dcfce7; border: 1px solid #86efac;">
+                <h3 style="color: #15803d; font-size: 1rem;">Benefits</h3>
+                <ul style="font-size: 0.85rem; color: #374151; list-style: none;">
+                  <li>&#8226; Reuse Header/Footer anywhere</li>
+                  <li>&#8226; Easy to understand structure</li>
+                  <li>&#8226; Change one place, updates everywhere</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 5: Fragments -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-orange">&lt;&gt;</div>
+          <div><h2>Fragments</h2><p class="subtitle">Grouping Without Extra DOM Elements</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>The Problem</h3>
+              <pre style="font-size: 0.8rem;"><span style="color:#6b7280">// This adds an extra &lt;div&gt; to the DOM</span>
+<span style="color:#c4b5fd">function</span> <span style="color:#fcd34d">UserInfo</span>() {
+  <span style="color:#c4b5fd">return</span> (
+    <span style="color:#fef3c7">&lt;div&gt;</span>  <span style="color:#6b7280">// Extra wrapper!</span>
+      <span style="color:#67e8f9">&lt;h2&gt;</span>Alice<span style="color:#67e8f9">&lt;/h2&gt;</span>
+      <span style="color:#67e8f9">&lt;p&gt;</span>Developer<span style="color:#67e8f9">&lt;/p&gt;</span>
+    <span style="color:#fef3c7">&lt;/div&gt;</span>
+  );
+}</pre>
+              <div class="card" style="margin-top: 1rem; background: #fef2f2; border: 1px solid #fca5a5;">
+                <p style="font-size: 0.9rem; color: #991b1b;">Extra divs can break CSS layouts (flexbox, grid) and add unnecessary DOM nodes.</p>
+              </div>
+            </div>
+            <div>
+              <h3>The Solution: Fragments</h3>
+              <pre style="font-size: 0.8rem;"><span style="color:#6b7280">// Using Fragment syntax</span>
+<span style="color:#c4b5fd">function</span> <span style="color:#fcd34d">UserInfo</span>() {
+  <span style="color:#c4b5fd">return</span> (
+    <span style="color:#86efac">&lt;&gt;</span>  <span style="color:#6b7280">// No extra DOM element!</span>
+      <span style="color:#67e8f9">&lt;h2&gt;</span>Alice<span style="color:#67e8f9">&lt;/h2&gt;</span>
+      <span style="color:#67e8f9">&lt;p&gt;</span>Developer<span style="color:#67e8f9">&lt;/p&gt;</span>
+    <span style="color:#86efac">&lt;/&gt;</span>
+  );
+}
+
+<span style="color:#6b7280">// Or use React.Fragment</span>
+<span style="color:#67e8f9">&lt;React.Fragment&gt;</span>
+  ...
+<span style="color:#67e8f9">&lt;/React.Fragment&gt;</span></pre>
+            </div>
+          </div>
+          <div class="highlight-box" style="text-align: center;">
+            <p><code class="code-inline">&lt;&gt;...&lt;/&gt;</code> is shorthand for <code class="code-inline">&lt;React.Fragment&gt;</code> - groups children without adding DOM elements</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 6: File Organization -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-green">&#128193;</div>
+          <div><h2>File Organization</h2><p class="subtitle">One Component Per File</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>Project Structure</h3>
+              <div class="file-tree"><span class="folder">src/</span>
+|-- <span class="file">main.jsx</span>         <span class="comment"># Entry point</span>
+|-- <span class="file">App.jsx</span>          <span class="comment"># Root component</span>
+|-- <span class="file">index.css</span>        <span class="comment"># Global styles</span>
++-- <span class="folder">components/</span>      <span class="comment"># Your components</span>
+    |-- <span class="file">Header.jsx</span>
+    |-- <span class="file">Header.css</span>   <span class="comment"># Component styles</span>
+    |-- <span class="file">Footer.jsx</span>
+    |-- <span class="file">Card.jsx</span>
+    +-- <span class="file">Button.jsx</span></div>
+            </div>
+            <div>
+              <h3>Export & Import</h3>
+              <pre style="font-size: 0.8rem;"><span style="color:#6b7280">// Header.jsx</span>
+<span style="color:#c4b5fd">function</span> <span style="color:#fcd34d">Header</span>() {
+  <span style="color:#c4b5fd">return</span> <span style="color:#67e8f9">&lt;header&gt;</span>...<span style="color:#67e8f9">&lt;/header&gt;</span>;
+}
+
+<span style="color:#c4b5fd">export default</span> Header;
+
+
+<span style="color:#6b7280">// App.jsx</span>
+<span style="color:#c4b5fd">import</span> Header <span style="color:#c4b5fd">from</span> <span style="color:#a5f3fc">'./components/Header'</span>;
+
+<span style="color:#c4b5fd">function</span> <span style="color:#fcd34d">App</span>() {
+  <span style="color:#c4b5fd">return</span> (
+    <span style="color:#67e8f9">&lt;div&gt;</span>
+      <span style="color:#67e8f9">&lt;Header /&gt;</span>
+      ...
+    <span style="color:#67e8f9">&lt;/div&gt;</span>
+  );
+}</pre>
+            </div>
+          </div>
+          <div class="highlight-box" style="text-align: center;">
+            <p><strong>Convention:</strong> Component names = PascalCase, file names = match component name</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 7: Class Components (Legacy) -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-yellow">old</div>
+          <div><h2>Class Components (Legacy)</h2><p class="subtitle">What You Might See in Older Code</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>Old Way: Class Components</h3>
+              <pre style="font-size: 0.8rem;"><span style="color:#c4b5fd">import</span> React <span style="color:#c4b5fd">from</span> <span style="color:#a5f3fc">'react'</span>;
+
+<span style="color:#c4b5fd">class</span> <span style="color:#fcd34d">Greeting</span> <span style="color:#c4b5fd">extends</span> React.Component {
+  <span style="color:#fcd34d">render</span>() {
+    <span style="color:#c4b5fd">return</span> (
+      <span style="color:#67e8f9">&lt;h1&gt;</span>Hello World<span style="color:#67e8f9">&lt;/h1&gt;</span>
+    );
+  }
+}</pre>
+              <div class="card" style="margin-top: 1rem; background: #fef3c7; border: 1px solid #fcd34d;">
+                <p style="font-size: 0.9rem; color: #92400e;"><strong>Note:</strong> You'll see this in older tutorials, Stack Overflow, and legacy codebases.</p>
+              </div>
+            </div>
+            <div>
+              <h3>Modern Way: Function Components</h3>
+              <pre style="font-size: 0.8rem;"><span style="color:#c4b5fd">function</span> <span style="color:#fcd34d">Greeting</span>() {
+  <span style="color:#c4b5fd">return</span> (
+    <span style="color:#67e8f9">&lt;h1&gt;</span>Hello World<span style="color:#67e8f9">&lt;/h1&gt;</span>
+  );
+}</pre>
+              <div class="card" style="margin-top: 1rem; background: #dcfce7; border: 1px solid #86efac;">
+                <h3 style="color: #15803d; font-size: 1rem;">Why Function Components?</h3>
+                <ul style="font-size: 0.85rem; color: #374151; list-style: none;">
+                  <li>&#8226; Simpler syntax</li>
+                  <li>&#8226; Hooks (state management)</li>
+                  <li>&#8226; Better performance</li>
+                  <li>&#8226; React team recommendation</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="highlight-box" style="text-align: center;">
+            <p><strong>Rule:</strong> Always use function components for new code!</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 8: Summary -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-purple">{ }</div>
+          <div><h2>Part 4 Complete!</h2><p class="subtitle">React Components</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="list-card list-card-purple">
+            <ul style="font-size: 1.15rem;">
+              <li><span class="check">&#10003;</span> Components are functions that return JSX</li>
+              <li><span class="check">&#10003;</span> Component names must start with Capital letters</li>
+              <li><span class="check">&#10003;</span> Use <code class="code-inline">&lt;ComponentName /&gt;</code> to render components</li>
+              <li><span class="check">&#10003;</span> Fragments <code class="code-inline">&lt;&gt;...&lt;/&gt;</code> group without extra DOM</li>
+              <li><span class="check">&#10003;</span> One component per file, use import/export</li>
+              <li><span class="check">&#10003;</span> Always use function components (not class)</li>
+            </ul>
+          </div>
+          <p style="text-align: center; color: #7c3aed; font-size: 1.25rem; margin-top: 1.5rem; font-weight: 500;">Next up: Part 5 &#8212; Props & Rendering &#8594;</p>
+        </div>
+      </section>
+    </div>
+
+    <nav class="controls">
+      <button class="btn btn-prev" onclick="prevSlide()">&#8592; Previous</button>
+      <div class="dots" id="dots"></div>
+      <div style="display:flex;align-items:center;gap:1rem">
+        <span class="counter" id="counter">1 / 8</span>
+        <button class="btn btn-next" onclick="nextSlide()">Next &#8594;</button>
+      </div>
+    </nav>
+  </main>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const dotsContainer = document.getElementById('dots');
+    const counter = document.getElementById('counter');
+    let current = 0;
+    slides.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.className = 'dot' + (i === 0 ? ' active' : '');
+      dot.onclick = () => goToSlide(i);
+      dotsContainer.appendChild(dot);
+    });
+    function updateSlide() {
+      slides.forEach((s, i) => s.classList.toggle('active', i === current));
+      document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
+      counter.textContent = `${current + 1} / ${slides.length}`;
+      document.querySelector('.btn-prev').disabled = current === 0;
+      document.querySelector('.btn-next').disabled = current === slides.length - 1;
+    }
+    function nextSlide() { if (current < slides.length - 1) { current++; updateSlide(); } }
+    function prevSlide() { if (current > 0) { current--; updateSlide(); } }
+    function goToSlide(i) { current = i; updateSlide(); }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+      if (e.key === 'ArrowLeft') prevSlide();
+    });
+  </script>
+</body>
+</html>

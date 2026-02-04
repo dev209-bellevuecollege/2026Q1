@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Part 3: Introduction to React & JSX</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; }
+    .slideshow { height: 100vh; display: flex; flex-direction: column; }
+    .slide-container { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+    .slide { background: white; border-radius: 1rem; box-shadow: 0 10px 40px rgba(0,0,0,0.1); width: 100%; max-width: 1000px; height: 600px; padding: 3rem; display: none; flex-direction: column; }
+    .slide.active { display: flex; }
+    .controls { background: white; border-top: 1px solid #e5e7eb; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+    .btn { padding: 0.5rem 1.5rem; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; }
+    .btn-prev, .btn-next { background: #1d4ed8; color: white; }
+    .btn:disabled { background: #d1d5db; cursor: not-allowed; }
+    .dots { display: flex; gap: 0.5rem; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #d1d5db; border: none; cursor: pointer; }
+    .dot.active { background: #1d4ed8; width: 20px; border-radius: 5px; }
+    .slide-title { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+    .icon { width: 50px; height: 50px; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: bold; }
+    .icon-green { background: #dcfce7; color: #15803d; }
+    .icon-cyan { background: #cffafe; color: #0891b2; }
+    .icon-blue { background: #dbeafe; color: #1d4ed8; }
+    .icon-purple { background: #f3e8ff; color: #7c3aed; }
+    .icon-orange { background: #ffedd5; color: #c2410c; }
+    .icon-yellow { background: #fef3c7; color: #b45309; }
+    h1 { font-size: 2.5rem; color: #1f2937; }
+    h2 { font-size: 1.75rem; color: #1f2937; }
+    h3 { font-size: 1.25rem; color: #374151; margin-bottom: 0.5rem; }
+    .subtitle { color: #6b7280; font-size: 1.1rem; }
+    .content { flex: 1; display: flex; flex-direction: column; gap: 1rem; }
+    .card { background: #f9fafb; border-radius: 0.75rem; padding: 1.25rem; }
+    .card-highlight { background: #eff6ff; border: 2px solid #93c5fd; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; flex: 1; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; flex: 1; }
+    .title-slide { align-items: center; justify-content: center; text-align: center; }
+    .title-slide .icon { width: 80px; height: 80px; font-size: 1.5rem; margin-bottom: 1.5rem; border-radius: 50%; }
+    .title-slide h1 { margin-bottom: 1rem; }
+    .title-slide .subtitle { margin-bottom: 1.5rem; font-size: 1.25rem; }
+    .badge { background: #dbeafe; color: #1d4ed8; padding: 0.5rem 1rem; border-radius: 2rem; font-size: 0.9rem; }
+    .counter { color: #6b7280; font-size: 0.9rem; }
+    pre { background: #1f2937; color: #f9fafb; padding: 1.25rem; border-radius: 0.5rem; font-size: 0.9rem; overflow-x: auto; font-family: 'Monaco', 'Menlo', monospace; }
+    code { font-family: 'Monaco', 'Menlo', monospace; }
+    .code-inline { background: #f3f4f6; padding: 0.2rem 0.5rem; border-radius: 0.25rem; font-size: 0.9rem; color: #1d4ed8; }
+    .list-card { border-radius: 0.75rem; padding: 1.5rem; }
+    .list-card-blue { background: #eff6ff; border: 1px solid #93c5fd; }
+    .list-card ul { list-style: none; }
+    .list-card li { padding: 0.5rem 0; display: flex; align-items: flex-start; gap: 0.5rem; color: #374151; }
+    .check { color: #1d4ed8; font-weight: bold; }
+    .highlight-box { background: #eff6ff; border: 2px solid #93c5fd; border-radius: 0.75rem; padding: 1.5rem; margin-top: 1rem; }
+    .highlight-box p { color: #1d4ed8; font-weight: 500; font-size: 1.1rem; }
+    .flow-diagram { display: flex; align-items: center; justify-content: center; gap: 1rem; margin: 1rem 0; flex-wrap: wrap; }
+    .flow-box { padding: 1rem 1.5rem; border-radius: 0.5rem; text-align: center; font-weight: 500; }
+    .flow-arrow { font-size: 1.5rem; color: #1d4ed8; }
+  </style>
+</head>
+<body>
+  <main class="slideshow">
+    <div class="slide-container">
+      <!-- Slide 1: Title -->
+      <section class="slide active title-slide">
+        <div class="icon icon-blue">React</div>
+        <h1>Part 3: Introduction to React & JSX</h1>
+        <p class="subtitle">Building UIs with Components</p>
+        <span class="badge">20 Minutes</span>
+      </section>
+
+      <!-- Slide 2: What is React? -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-blue">?</div>
+          <div><h2>What is React?</h2><p class="subtitle">A JavaScript Library for Building UIs</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>React at a Glance</h3>
+              <div class="card" style="margin-bottom: 1rem;">
+                <p style="font-size: 1rem; color: #374151;">React is a <strong>JavaScript library</strong> developed by Facebook (Meta) for building user interfaces.</p>
+              </div>
+              <div class="card" style="background: #dbeafe; border: 1px solid #93c5fd;">
+                <h3 style="color: #1d4ed8; font-size: 1rem;">Core Philosophy</h3>
+                <ul style="font-size: 0.9rem; color: #374151; list-style: none;">
+                  <li>&#8226; <strong>Components:</strong> Break UI into reusable pieces</li>
+                  <li>&#8226; <strong>Declarative:</strong> Describe what you want, not how</li>
+                  <li>&#8226; <strong>Data-driven:</strong> UI updates when data changes</li>
+                </ul>
+              </div>
+            </div>
+            <div>
+              <h3>Why React?</h3>
+              <div class="card" style="margin-bottom: 0.75rem;">
+                <p style="font-size: 0.9rem;"><strong>Component Abstraction</strong><br>Build complex UIs from simple, isolated pieces</p>
+              </div>
+              <div class="card" style="margin-bottom: 0.75rem;">
+                <p style="font-size: 0.9rem;"><strong>Efficient Updates</strong><br>React optimizes DOM changes automatically</p>
+              </div>
+              <div class="card" style="margin-bottom: 0.75rem;">
+                <p style="font-size: 0.9rem;"><strong>Massive Ecosystem</strong><br>Most popular framework; huge community</p>
+              </div>
+              <div class="card" style="background: #dcfce7; border: 1px solid #86efac;">
+                <p style="font-size: 0.9rem;"><strong>Industry Standard</strong><br>Used by Netflix, Airbnb, Instagram, etc.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 3: Components Concept -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-purple">{ }</div>
+          <div><h2>Thinking in Components</h2><p class="subtitle">Breaking Down the UI</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>Traditional Approach</h3>
+              <div class="card" style="background: #fef2f2; border: 1px solid #fca5a5; margin-bottom: 1rem;">
+                <p style="font-size: 0.9rem; color: #374151;">One big HTML file with JavaScript manipulating it</p>
+                <ul style="font-size: 0.85rem; color: #6b7280; list-style: none; margin-top: 0.5rem;">
+                  <li>&#8226; Hard to maintain large pages</li>
+                  <li>&#8226; Difficult to reuse code</li>
+                  <li>&#8226; Mixing concerns</li>
+                </ul>
+              </div>
+              <h3>React Approach</h3>
+              <div class="card" style="background: #dcfce7; border: 1px solid #86efac;">
+                <p style="font-size: 0.9rem; color: #374151;">UI as a tree of independent components</p>
+                <ul style="font-size: 0.85rem; color: #6b7280; list-style: none; margin-top: 0.5rem;">
+                  <li>&#8226; Each component = one concern</li>
+                  <li>&#8226; Easy to reuse and test</li>
+                  <li>&#8226; Clear data flow</li>
+                </ul>
+              </div>
+            </div>
+            <div>
+              <h3>A Page as Components</h3>
+              <div class="card" style="background: #f9fafb; padding: 1rem; font-family: monospace; font-size: 0.8rem;">
+                <div style="border: 2px dashed #1d4ed8; padding: 0.5rem; margin-bottom: 0.5rem;">
+                  <strong style="color: #1d4ed8;">&lt;App&gt;</strong>
+                  <div style="border: 2px dashed #7c3aed; padding: 0.5rem; margin: 0.5rem 0;">
+                    <strong style="color: #7c3aed;">&lt;Header&gt;</strong>
+                    <span style="color: #6b7280;"> Logo, Nav </span>
+                  </div>
+                  <div style="border: 2px dashed #0891b2; padding: 0.5rem; margin: 0.5rem 0;">
+                    <strong style="color: #0891b2;">&lt;Main&gt;</strong>
+                    <div style="border: 2px dashed #15803d; padding: 0.25rem; margin: 0.25rem;">
+                      <strong style="color: #15803d;">&lt;Card&gt;</strong>
+                    </div>
+                    <div style="border: 2px dashed #15803d; padding: 0.25rem; margin: 0.25rem;">
+                      <strong style="color: #15803d;">&lt;Card&gt;</strong>
+                    </div>
+                  </div>
+                  <div style="border: 2px dashed #c2410c; padding: 0.5rem;">
+                    <strong style="color: #c2410c;">&lt;Footer&gt;</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="highlight-box" style="text-align: center;">
+            <p>Components are like <strong>custom HTML elements</strong> that you create!</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 4: What is JSX? -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-orange">JSX</div>
+          <div><h2>What is JSX?</h2><p class="subtitle">JavaScript + XML</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>JSX Looks Like HTML in JS</h3>
+              <pre style="font-size: 0.85rem;"><span style="color:#6b7280">// This is JSX!</span>
+<span style="color:#c4b5fd">const</span> element = (
+  <span style="color:#67e8f9">&lt;div</span> className="card"<span style="color:#67e8f9">&gt;</span>
+    <span style="color:#67e8f9">&lt;h1&gt;</span>Hello World<span style="color:#67e8f9">&lt;/h1&gt;</span>
+    <span style="color:#67e8f9">&lt;p&gt;</span>Welcome to React<span style="color:#67e8f9">&lt;/p&gt;</span>
+  <span style="color:#67e8f9">&lt;/div&gt;</span>
+);
+</pre>
+              <div class="card" style="margin-top: 1rem; background: #fef3c7; border: 1px solid #fcd34d;">
+                <p style="font-size: 0.9rem; color: #92400e;"><strong>Note:</strong> This is NOT HTML! It's JavaScript that <em>looks</em> like HTML.</p>
+              </div>
+            </div>
+            <div>
+              <h3>What JSX Compiles To</h3>
+              <pre style="font-size: 0.8rem;"><span style="color:#6b7280">// Babel transforms JSX to this:</span>
+<span style="color:#c4b5fd">const</span> element = React.<span style="color:#fcd34d">createElement</span>(
+  <span style="color:#a5f3fc">'div'</span>,
+  { className: <span style="color:#a5f3fc">'card'</span> },
+  React.<span style="color:#fcd34d">createElement</span>(
+    <span style="color:#a5f3fc">'h1'</span>, <span style="color:#c4b5fd">null</span>, <span style="color:#a5f3fc">'Hello World'</span>
+  ),
+  React.<span style="color:#fcd34d">createElement</span>(
+    <span style="color:#a5f3fc">'p'</span>, <span style="color:#c4b5fd">null</span>, <span style="color:#a5f3fc">'Welcome to React'</span>
+  )
+);</pre>
+              <div class="highlight-box" style="margin-top: 0.5rem; padding: 1rem;">
+                <p style="font-size: 0.95rem;">JSX is just <strong>syntactic sugar</strong> - makes code easier to write!</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 5: JSX Rules -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-cyan">Rules</div>
+          <div><h2>JSX Rules & Syntax</h2><p class="subtitle">Important Differences from HTML</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-3" style="gap: 1rem;">
+            <div class="card" style="background: #dbeafe; border: 1px solid #93c5fd;">
+              <h3 style="color: #1d4ed8; font-size: 1rem;">className, not class</h3>
+              <pre style="font-size: 0.75rem; padding: 0.75rem;"><span style="color:#6b7280">// HTML:</span>
+<span style="color:#ef4444">&lt;div class="box"&gt;</span>
+
+<span style="color:#6b7280">// JSX:</span>
+<span style="color:#22c55e">&lt;div className="box"&gt;</span></pre>
+              <p style="font-size: 0.8rem; color: #374151; margin-top: 0.5rem;"><code>class</code> is reserved in JS</p>
+            </div>
+            <div class="card" style="background: #dcfce7; border: 1px solid #86efac;">
+              <h3 style="color: #15803d; font-size: 1rem;">Self-Closing Tags</h3>
+              <pre style="font-size: 0.75rem; padding: 0.75rem;"><span style="color:#6b7280">// HTML:</span>
+<span style="color:#ef4444">&lt;img src="..."&gt;</span>
+<span style="color:#ef4444">&lt;br&gt;</span>
+
+<span style="color:#6b7280">// JSX:</span>
+<span style="color:#22c55e">&lt;img src="..." /&gt;</span>
+<span style="color:#22c55e">&lt;br /&gt;</span></pre>
+              <p style="font-size: 0.8rem; color: #374151; margin-top: 0.5rem;">Must close all tags</p>
+            </div>
+            <div class="card" style="background: #f3e8ff; border: 1px solid #c4b5fd;">
+              <h3 style="color: #7c3aed; font-size: 1rem;">camelCase Attributes</h3>
+              <pre style="font-size: 0.75rem; padding: 0.75rem;"><span style="color:#6b7280">// HTML:</span>
+<span style="color:#ef4444">onclick="..."</span>
+<span style="color:#ef4444">tabindex="1"</span>
+
+<span style="color:#6b7280">// JSX:</span>
+<span style="color:#22c55e">onClick={...}</span>
+<span style="color:#22c55e">tabIndex={1}</span></pre>
+              <p style="font-size: 0.8rem; color: #374151; margin-top: 0.5rem;">JS naming convention</p>
+            </div>
+          </div>
+          <div class="card card-highlight" style="margin-top: 1rem;">
+            <h3 style="color: #1d4ed8; font-size: 1rem; margin-bottom: 0.5rem;">Must Return Single Parent Element</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <pre style="font-size: 0.75rem; padding: 0.75rem; background: #fef2f2;"><span style="color:#6b7280">// Error!</span>
+<span style="color:#c4b5fd">return</span> (
+  <span style="color:#ef4444">&lt;h1&gt;Title&lt;/h1&gt;</span>
+  <span style="color:#ef4444">&lt;p&gt;Text&lt;/p&gt;</span>
+);</pre>
+              <pre style="font-size: 0.75rem; padding: 0.75rem; background: #dcfce7;"><span style="color:#6b7280">// Correct!</span>
+<span style="color:#c4b5fd">return</span> (
+  <span style="color:#22c55e">&lt;div&gt;</span>
+    &lt;h1&gt;Title&lt;/h1&gt;
+    &lt;p&gt;Text&lt;/p&gt;
+  <span style="color:#22c55e">&lt;/div&gt;</span>
+);</pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 6: JavaScript in JSX -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-yellow">{ }</div>
+          <div><h2>JavaScript in JSX</h2><p class="subtitle">Embedding Expressions with Curly Braces</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>Curly Braces = JavaScript</h3>
+              <pre style="font-size: 0.85rem;"><span style="color:#c4b5fd">const</span> name = <span style="color:#a5f3fc">"Alice"</span>;
+<span style="color:#c4b5fd">const</span> age = <span style="color:#fcd34d">25</span>;
+<span style="color:#c4b5fd">const</span> imageUrl = <span style="color:#a5f3fc">"photo.jpg"</span>;
+
+<span style="color:#c4b5fd">const</span> element = (
+  <span style="color:#67e8f9">&lt;div&gt;</span>
+    <span style="color:#67e8f9">&lt;h1&gt;</span>Hello, <span style="color:#fcd34d">{</span>name<span style="color:#fcd34d">}</span><span style="color:#67e8f9">&lt;/h1&gt;</span>
+    <span style="color:#67e8f9">&lt;p&gt;</span>Age: <span style="color:#fcd34d">{</span>age<span style="color:#fcd34d">}</span> years<span style="color:#67e8f9">&lt;/p&gt;</span>
+    <span style="color:#67e8f9">&lt;p&gt;</span>Next year: <span style="color:#fcd34d">{</span>age + 1<span style="color:#fcd34d">}</span><span style="color:#67e8f9">&lt;/p&gt;</span>
+    <span style="color:#67e8f9">&lt;img</span> src=<span style="color:#fcd34d">{</span>imageUrl<span style="color:#fcd34d">}</span> <span style="color:#67e8f9">/&gt;</span>
+  <span style="color:#67e8f9">&lt;/div&gt;</span>
+);</pre>
+            </div>
+            <div>
+              <h3>What Can Go in { }?</h3>
+              <div class="card" style="margin-bottom: 0.75rem; background: #dcfce7; border: 1px solid #86efac;">
+                <h3 style="color: #15803d; font-size: 0.95rem;">&#10003; Yes!</h3>
+                <ul style="font-size: 0.85rem; color: #374151; list-style: none;">
+                  <li>&#8226; Variables: <code class="code-inline">{name}</code></li>
+                  <li>&#8226; Expressions: <code class="code-inline">{a + b}</code></li>
+                  <li>&#8226; Function calls: <code class="code-inline">{getName()}</code></li>
+                  <li>&#8226; Ternaries: <code class="code-inline">{x ? 'a' : 'b'}</code></li>
+                </ul>
+              </div>
+              <div class="card" style="background: #fef2f2; border: 1px solid #fca5a5;">
+                <h3 style="color: #dc2626; font-size: 0.95rem;">&#10007; No!</h3>
+                <ul style="font-size: 0.85rem; color: #374151; list-style: none;">
+                  <li>&#8226; Statements: <code class="code-inline">{if(x)...}</code></li>
+                  <li>&#8226; Loops: <code class="code-inline">{for...}</code></li>
+                  <li>&#8226; Objects directly: <code class="code-inline">{{a:1}}</code></li>
+                </ul>
+              </div>
+              <div class="highlight-box" style="margin-top: 0.75rem; padding: 1rem;">
+                <p style="font-size: 0.95rem;">Think: "Would this work in console.log()?"</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 7: Rendering Arrays -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-green">[ ]</div>
+          <div><h2>Rendering Arrays</h2><p class="subtitle">Lists and map()</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>Arrays Render as Siblings</h3>
+              <pre style="font-size: 0.85rem;"><span style="color:#c4b5fd">const</span> fruits = [<span style="color:#a5f3fc">'Apple'</span>, <span style="color:#a5f3fc">'Banana'</span>, <span style="color:#a5f3fc">'Cherry'</span>];
+
+<span style="color:#c4b5fd">const</span> list = (
+  <span style="color:#67e8f9">&lt;ul&gt;</span>
+    <span style="color:#fcd34d">{</span>fruits.<span style="color:#fcd34d">map</span>((fruit) <span style="color:#c4b5fd">=&gt;</span> (
+      <span style="color:#67e8f9">&lt;li&gt;</span>{fruit}<span style="color:#67e8f9">&lt;/li&gt;</span>
+    ))<span style="color:#fcd34d">}</span>
+  <span style="color:#67e8f9">&lt;/ul&gt;</span>
+);
+
+<span style="color:#6b7280">// Renders:</span>
+<span style="color:#6b7280">// &lt;ul&gt;</span>
+<span style="color:#6b7280">//   &lt;li&gt;Apple&lt;/li&gt;</span>
+<span style="color:#6b7280">//   &lt;li&gt;Banana&lt;/li&gt;</span>
+<span style="color:#6b7280">//   &lt;li&gt;Cherry&lt;/li&gt;</span>
+<span style="color:#6b7280">// &lt;/ul&gt;</span></pre>
+            </div>
+            <div>
+              <h3>The Pattern</h3>
+              <div class="card" style="margin-bottom: 1rem;">
+                <p style="font-size: 0.95rem; color: #374151;"><code class="code-inline">array.map()</code> returns a new array of JSX elements</p>
+              </div>
+              <div class="card" style="background: #dbeafe; border: 1px solid #93c5fd;">
+                <h3 style="color: #1d4ed8; font-size: 1rem;">Common Use Cases</h3>
+                <ul style="font-size: 0.9rem; color: #374151; list-style: none;">
+                  <li>&#8226; Todo items</li>
+                  <li>&#8226; Product cards</li>
+                  <li>&#8226; User lists</li>
+                  <li>&#8226; Navigation items</li>
+                  <li>&#8226; Any repeated content!</li>
+                </ul>
+              </div>
+              <div class="highlight-box" style="margin-top: 1rem; padding: 1rem;">
+                <p style="font-size: 0.95rem;"><strong>Coming soon:</strong> We'll learn about the key prop for lists!</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 8: Summary -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-blue">React</div>
+          <div><h2>Part 3 Complete!</h2><p class="subtitle">Introduction to React & JSX</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="list-card list-card-blue">
+            <ul style="font-size: 1.15rem;">
+              <li><span class="check">&#10003;</span> React builds UIs from reusable components</li>
+              <li><span class="check">&#10003;</span> JSX = HTML-like syntax in JavaScript</li>
+              <li><span class="check">&#10003;</span> Use <code class="code-inline">className</code> instead of <code class="code-inline">class</code></li>
+              <li><span class="check">&#10003;</span> Self-close all tags: <code class="code-inline">&lt;img /&gt;</code></li>
+              <li><span class="check">&#10003;</span> Curly braces <code class="code-inline">{}</code> embed JavaScript expressions</li>
+              <li><span class="check">&#10003;</span> Use <code class="code-inline">map()</code> to render arrays of elements</li>
+            </ul>
+          </div>
+          <p style="text-align: center; color: #1d4ed8; font-size: 1.25rem; margin-top: 1.5rem; font-weight: 500;">Next up: Part 4 &#8212; React Components &#8594;</p>
+        </div>
+      </section>
+    </div>
+
+    <nav class="controls">
+      <button class="btn btn-prev" onclick="prevSlide()">&#8592; Previous</button>
+      <div class="dots" id="dots"></div>
+      <div style="display:flex;align-items:center;gap:1rem">
+        <span class="counter" id="counter">1 / 8</span>
+        <button class="btn btn-next" onclick="nextSlide()">Next &#8594;</button>
+      </div>
+    </nav>
+  </main>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const dotsContainer = document.getElementById('dots');
+    const counter = document.getElementById('counter');
+    let current = 0;
+    slides.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.className = 'dot' + (i === 0 ? ' active' : '');
+      dot.onclick = () => goToSlide(i);
+      dotsContainer.appendChild(dot);
+    });
+    function updateSlide() {
+      slides.forEach((s, i) => s.classList.toggle('active', i === current));
+      document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
+      counter.textContent = `${current + 1} / ${slides.length}`;
+      document.querySelector('.btn-prev').disabled = current === 0;
+      document.querySelector('.btn-next').disabled = current === slides.length - 1;
+    }
+    function nextSlide() { if (current < slides.length - 1) { current++; updateSlide(); } }
+    function prevSlide() { if (current > 0) { current--; updateSlide(); } }
+    function goToSlide(i) { current = i; updateSlide(); }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+      if (e.key === 'ArrowLeft') prevSlide();
+    });
+  </script>
+</body>
+</html>

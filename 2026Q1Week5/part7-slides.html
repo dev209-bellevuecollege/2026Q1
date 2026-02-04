@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Part 7: Assignment 5 & Kahoot</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; }
+    .slideshow { height: 100vh; display: flex; flex-direction: column; }
+    .slide-container { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+    .slide { background: white; border-radius: 1rem; box-shadow: 0 10px 40px rgba(0,0,0,0.1); width: 100%; max-width: 1000px; height: 600px; padding: 3rem; display: none; flex-direction: column; }
+    .slide.active { display: flex; }
+    .controls { background: white; border-top: 1px solid #e5e7eb; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+    .btn { padding: 0.5rem 1.5rem; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; }
+    .btn-prev, .btn-next { background: #db2777; color: white; }
+    .btn:disabled { background: #d1d5db; cursor: not-allowed; }
+    .dots { display: flex; gap: 0.5rem; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #d1d5db; border: none; cursor: pointer; }
+    .dot.active { background: #db2777; width: 20px; border-radius: 5px; }
+    .slide-title { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+    .icon { width: 50px; height: 50px; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: bold; }
+    .icon-green { background: #dcfce7; color: #15803d; }
+    .icon-cyan { background: #cffafe; color: #0891b2; }
+    .icon-blue { background: #dbeafe; color: #1d4ed8; }
+    .icon-purple { background: #f3e8ff; color: #7c3aed; }
+    .icon-orange { background: #ffedd5; color: #c2410c; }
+    .icon-yellow { background: #fef3c7; color: #b45309; }
+    .icon-pink { background: #fce7f3; color: #db2777; }
+    h1 { font-size: 2.5rem; color: #1f2937; }
+    h2 { font-size: 1.75rem; color: #1f2937; }
+    h3 { font-size: 1.25rem; color: #374151; margin-bottom: 0.5rem; }
+    .subtitle { color: #6b7280; font-size: 1.1rem; }
+    .content { flex: 1; display: flex; flex-direction: column; gap: 1rem; }
+    .card { background: #f9fafb; border-radius: 0.75rem; padding: 1.25rem; }
+    .card-highlight { background: #fdf2f8; border: 2px solid #f9a8d4; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; flex: 1; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; flex: 1; }
+    .title-slide { align-items: center; justify-content: center; text-align: center; }
+    .title-slide .icon { width: 80px; height: 80px; font-size: 1.5rem; margin-bottom: 1.5rem; border-radius: 50%; }
+    .title-slide h1 { margin-bottom: 1rem; }
+    .title-slide .subtitle { margin-bottom: 1.5rem; font-size: 1.25rem; }
+    .badge { background: #fce7f3; color: #db2777; padding: 0.5rem 1rem; border-radius: 2rem; font-size: 0.9rem; }
+    .counter { color: #6b7280; font-size: 0.9rem; }
+    pre { background: #1f2937; color: #f9fafb; padding: 1.25rem; border-radius: 0.5rem; font-size: 0.9rem; overflow-x: auto; font-family: 'Monaco', 'Menlo', monospace; }
+    code { font-family: 'Monaco', 'Menlo', monospace; }
+    .code-inline { background: #f3f4f6; padding: 0.2rem 0.5rem; border-radius: 0.25rem; font-size: 0.9rem; color: #db2777; }
+    .list-card { border-radius: 0.75rem; padding: 1.5rem; }
+    .list-card-pink { background: #fdf2f8; border: 1px solid #f9a8d4; }
+    .list-card ul { list-style: none; }
+    .list-card li { padding: 0.5rem 0; display: flex; align-items: flex-start; gap: 0.5rem; color: #374151; }
+    .check { color: #db2777; font-weight: bold; }
+    .highlight-box { background: #fdf2f8; border: 2px solid #f9a8d4; border-radius: 0.75rem; padding: 1.5rem; margin-top: 1rem; }
+    .highlight-box p { color: #be185d; font-weight: 500; font-size: 1.1rem; }
+    .flow-diagram { display: flex; align-items: center; justify-content: center; gap: 1rem; margin: 1rem 0; flex-wrap: wrap; }
+    .flow-box { padding: 1rem 1.5rem; border-radius: 0.5rem; text-align: center; font-weight: 500; }
+    .flow-arrow { font-size: 1.5rem; color: #db2777; }
+    .task-box { background: #f9fafb; border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 1rem; margin-bottom: 0.75rem; }
+    .task-box.required { border-color: #f9a8d4; background: #fdf2f8; }
+  </style>
+</head>
+<body>
+  <main class="slideshow">
+    <div class="slide-container">
+      <!-- Slide 1: Title -->
+      <section class="slide active title-slide">
+        <div class="icon icon-pink">HW</div>
+        <h1>Part 7: Assignment 5 & Kahoot</h1>
+        <p class="subtitle">Your First React Application</p>
+        <span class="badge">20 Minutes</span>
+      </section>
+
+      <!-- Slide 2: Assignment Overview -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-pink">5</div>
+          <div><h2>Assignment 5 Overview</h2><p class="subtitle">Building with React Components</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>What You'll Build</h3>
+              <div class="card" style="margin-bottom: 1rem; background: #dbeafe; border: 1px solid #93c5fd;">
+                <h3 style="color: #1d4ed8; font-size: 1rem;">React Component Gallery</h3>
+                <p style="font-size: 0.9rem; color: #374151;">Create a multi-component React application that displays a gallery of cards with data passed through props.</p>
+              </div>
+              <div class="card">
+                <h3 style="font-size: 1rem; color: #374151;">Learning Objectives</h3>
+                <ul style="font-size: 0.9rem; color: #374151; list-style: none;">
+                  <li>&#8226; Set up a React project with Vite</li>
+                  <li>&#8226; Create function components</li>
+                  <li>&#8226; Pass data with props</li>
+                  <li>&#8226; Render lists with map()</li>
+                  <li>&#8226; Use proper key props</li>
+                </ul>
+              </div>
+            </div>
+            <div>
+              <h3>Project Structure</h3>
+              <pre style="font-size: 0.8rem;"><span style="color:#f9a8d4">src/</span>
+&#9500;&#9472;&#9472; <span style="color:#a5f3fc">main.jsx</span>
+&#9500;&#9472;&#9472; <span style="color:#a5f3fc">App.jsx</span>
+&#9500;&#9472;&#9472; <span style="color:#a5f3fc">App.css</span>
+&#9492;&#9472;&#9472; <span style="color:#f9a8d4">components/</span>
+    &#9500;&#9472;&#9472; <span style="color:#a5f3fc">Header.jsx</span>
+    &#9500;&#9472;&#9472; <span style="color:#a5f3fc">CardList.jsx</span>
+    &#9500;&#9472;&#9472; <span style="color:#a5f3fc">Card.jsx</span>
+    &#9492;&#9472;&#9472; <span style="color:#a5f3fc">Footer.jsx</span></pre>
+              <div class="highlight-box" style="margin-top: 1rem; padding: 1rem;">
+                <p style="font-size: 0.95rem;">Component hierarchy: App &#8594; Header, CardList, Footer</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 3: Requirements -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-purple">&#10003;</div>
+          <div><h2>Assignment Requirements</h2><p class="subtitle">What You Need to Implement</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <div class="task-box required">
+                <h3 style="color: #be185d; font-size: 1rem;">1. Project Setup</h3>
+                <ul style="font-size: 0.85rem; color: #374151; list-style: none;">
+                  <li>&#8226; Create project with Vite</li>
+                  <li>&#8226; Clean up default files</li>
+                  <li>&#8226; Set up components folder</li>
+                </ul>
+              </div>
+              <div class="task-box required">
+                <h3 style="color: #be185d; font-size: 1rem;">2. Create Components</h3>
+                <ul style="font-size: 0.85rem; color: #374151; list-style: none;">
+                  <li>&#8226; Header with title prop</li>
+                  <li>&#8226; Footer with year prop</li>
+                  <li>&#8226; Card with image, title, description props</li>
+                  <li>&#8226; CardList that maps over data array</li>
+                </ul>
+              </div>
+            </div>
+            <div>
+              <div class="task-box required">
+                <h3 style="color: #be185d; font-size: 1rem;">3. Data & Props</h3>
+                <ul style="font-size: 0.85rem; color: #374151; list-style: none;">
+                  <li>&#8226; Create array of card data (5+ items)</li>
+                  <li>&#8226; Pass data from App to CardList</li>
+                  <li>&#8226; CardList maps data to Card components</li>
+                  <li>&#8226; Each Card receives props and renders them</li>
+                </ul>
+              </div>
+              <div class="task-box required">
+                <h3 style="color: #be185d; font-size: 1rem;">4. Proper Keys</h3>
+                <ul style="font-size: 0.85rem; color: #374151; list-style: none;">
+                  <li>&#8226; Each item in data array needs unique id</li>
+                  <li>&#8226; Use id as key prop when mapping</li>
+                  <li>&#8226; No console warnings about keys!</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 4: Example Code -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-cyan">&lt;/&gt;</div>
+          <div><h2>Code Examples</h2><p class="subtitle">Getting Started</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>Card Component</h3>
+              <pre style="font-size: 0.75rem;"><span style="color:#c4b5fd">function</span> <span style="color:#fcd34d">Card</span>({ title, image, description }) {
+  <span style="color:#c4b5fd">return</span> (
+    <span style="color:#67e8f9">&lt;div</span> className="card"<span style="color:#67e8f9">&gt;</span>
+      <span style="color:#67e8f9">&lt;img</span> src={image} alt={title} <span style="color:#67e8f9">/&gt;</span>
+      <span style="color:#67e8f9">&lt;h3&gt;</span>{title}<span style="color:#67e8f9">&lt;/h3&gt;</span>
+      <span style="color:#67e8f9">&lt;p&gt;</span>{description}<span style="color:#67e8f9">&lt;/p&gt;</span>
+    <span style="color:#67e8f9">&lt;/div&gt;</span>
+  );
+}
+
+<span style="color:#c4b5fd">export default</span> Card;</pre>
+            </div>
+            <div>
+              <h3>CardList with map()</h3>
+              <pre style="font-size: 0.75rem;"><span style="color:#c4b5fd">import</span> Card <span style="color:#c4b5fd">from</span> <span style="color:#a5f3fc">'./Card'</span>;
+
+<span style="color:#c4b5fd">function</span> <span style="color:#fcd34d">CardList</span>({ items }) {
+  <span style="color:#c4b5fd">return</span> (
+    <span style="color:#67e8f9">&lt;div</span> className="card-list"<span style="color:#67e8f9">&gt;</span>
+      {items.<span style="color:#fcd34d">map</span>((item) <span style="color:#c4b5fd">=&gt;</span> (
+        <span style="color:#67e8f9">&lt;Card</span>
+          <span style="color:#86efac">key={item.id}</span>
+          title={item.title}
+          image={item.image}
+          description={item.description}
+        <span style="color:#67e8f9">/&gt;</span>
+      ))}
+    <span style="color:#67e8f9">&lt;/div&gt;</span>
+  );
+}
+
+<span style="color:#c4b5fd">export default</span> CardList;</pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 5: Grading -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-green">A+</div>
+          <div><h2>Grading Criteria</h2><p class="subtitle">How Your Work Will Be Evaluated</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-3" style="gap: 1rem;">
+            <div class="card" style="background: #dcfce7; border: 1px solid #86efac;">
+              <h3 style="color: #15803d; font-size: 1rem;">Components (40%)</h3>
+              <ul style="font-size: 0.85rem; color: #374151; list-style: none;">
+                <li>&#8226; All required components created</li>
+                <li>&#8226; Proper naming (PascalCase)</li>
+                <li>&#8226; One component per file</li>
+                <li>&#8226; Correct imports/exports</li>
+              </ul>
+            </div>
+            <div class="card" style="background: #dbeafe; border: 1px solid #93c5fd;">
+              <h3 style="color: #1d4ed8; font-size: 1rem;">Props & Data (40%)</h3>
+              <ul style="font-size: 0.85rem; color: #374151; list-style: none;">
+                <li>&#8226; Props passed correctly</li>
+                <li>&#8226; Props destructured in components</li>
+                <li>&#8226; Data array with 5+ items</li>
+                <li>&#8226; Proper key props (no warnings)</li>
+              </ul>
+            </div>
+            <div class="card" style="background: #f3e8ff; border: 1px solid #c4b5fd;">
+              <h3 style="color: #7c3aed; font-size: 1rem;">Code Quality (20%)</h3>
+              <ul style="font-size: 0.85rem; color: #374151; list-style: none;">
+                <li>&#8226; Clean, readable code</li>
+                <li>&#8226; No console errors</li>
+                <li>&#8226; Basic CSS styling</li>
+                <li>&#8226; Proper file organization</li>
+              </ul>
+            </div>
+          </div>
+          <div class="highlight-box" style="text-align: center;">
+            <p><strong>Bonus:</strong> Add additional features like filtering, sorting, or extra components!</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 6: Tips -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-yellow">&#128161;</div>
+          <div><h2>Tips for Success</h2><p class="subtitle">Avoid Common Mistakes</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>Do This</h3>
+              <div class="card" style="background: #dcfce7; border: 1px solid #86efac; margin-bottom: 0.75rem;">
+                <ul style="font-size: 0.9rem; color: #374151; list-style: none;">
+                  <li>&#10003; Start with <code class="code-inline">npm create vite@latest</code></li>
+                  <li>&#10003; Build one component at a time</li>
+                  <li>&#10003; Test in browser frequently</li>
+                  <li>&#10003; Check console for errors</li>
+                  <li>&#10003; Use React DevTools extension</li>
+                  <li>&#10003; Commit often to GitHub</li>
+                </ul>
+              </div>
+            </div>
+            <div>
+              <h3>Avoid This</h3>
+              <div class="card" style="background: #fef2f2; border: 1px solid #fca5a5; margin-bottom: 0.75rem;">
+                <ul style="font-size: 0.9rem; color: #374151; list-style: none;">
+                  <li>&#10007; Don't use array index as key</li>
+                  <li>&#10007; Don't call components as functions</li>
+                  <li>&#10007; Don't forget to export components</li>
+                  <li>&#10007; Don't modify props</li>
+                  <li>&#10007; Don't mix class and function components</li>
+                  <li>&#10007; Don't forget className (not class)</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="card card-highlight" style="text-align: center;">
+            <p style="font-size: 1.1rem; color: #be185d;"><strong>Questions?</strong> Check the Chapter 15 reading, ask in Discord, or come to office hours!</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 7: Kahoot -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-purple">&#127918;</div>
+          <div><h2>Kahoot Time!</h2><p class="subtitle">Test Your React Knowledge</p></div>
+        </header>
+        <div class="content" style="justify-content: center; align-items: center;">
+          <div style="text-align: center;">
+            <h3 style="font-size: 2rem; color: #7c3aed; margin-bottom: 2rem;">Get Ready to Play!</h3>
+            <div class="card" style="display: inline-block; padding: 2rem 4rem; background: #f3e8ff; border: 2px solid #c4b5fd;">
+              <p style="font-size: 1.25rem; color: #374151; margin-bottom: 1rem;">Join at <strong>kahoot.it</strong></p>
+              <p style="font-size: 3rem; color: #7c3aed; font-weight: bold; letter-spacing: 0.2rem;">_ _ _ _ _ _</p>
+              <p style="font-size: 0.9rem; color: #6b7280; margin-top: 1rem;">(Game PIN will be displayed)</p>
+            </div>
+          </div>
+          <div class="highlight-box" style="text-align: center; margin-top: 2rem;">
+            <p>Topics: Node.js, React basics, JSX, Components, Props, Build process</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 8: Week 5 Recap -->
+      <section class="slide">
+        <header class="slide-title">
+          <div class="icon icon-pink">5</div>
+          <div><h2>Week 5 Complete!</h2><p class="subtitle">Introduction to React</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="list-card list-card-pink">
+            <ul style="font-size: 1.1rem;">
+              <li><span class="check">&#10003;</span> Node.js runs JavaScript outside the browser</li>
+              <li><span class="check">&#10003;</span> Vite provides the React development environment</li>
+              <li><span class="check">&#10003;</span> React builds UIs from reusable components</li>
+              <li><span class="check">&#10003;</span> JSX is HTML-like syntax that transpiles to JavaScript</li>
+              <li><span class="check">&#10003;</span> Props pass data from parent to child components</li>
+              <li><span class="check">&#10003;</span> Development builds serve files; production builds bundle them</li>
+            </ul>
+          </div>
+          <div style="text-align: center; margin-top: 1.5rem;">
+            <p style="color: #6b7280; font-size: 1rem;">Next Week: State, Events, and Interactive React Apps!</p>
+            <p style="color: #db2777; font-size: 1.25rem; font-weight: 500; margin-top: 1rem;">See you next time! Good luck with Assignment 5!</p>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <nav class="controls">
+      <button class="btn btn-prev" onclick="prevSlide()">&#8592; Previous</button>
+      <div class="dots" id="dots"></div>
+      <div style="display:flex;align-items:center;gap:1rem">
+        <span class="counter" id="counter">1 / 8</span>
+        <button class="btn btn-next" onclick="nextSlide()">Next &#8594;</button>
+      </div>
+    </nav>
+  </main>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const dotsContainer = document.getElementById('dots');
+    const counter = document.getElementById('counter');
+    let current = 0;
+    slides.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.className = 'dot' + (i === 0 ? ' active' : '');
+      dot.onclick = () => goToSlide(i);
+      dotsContainer.appendChild(dot);
+    });
+    function updateSlide() {
+      slides.forEach((s, i) => s.classList.toggle('active', i === current));
+      document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
+      counter.textContent = `${current + 1} / ${slides.length}`;
+      document.querySelector('.btn-prev').disabled = current === 0;
+      document.querySelector('.btn-next').disabled = current === slides.length - 1;
+    }
+    function nextSlide() { if (current < slides.length - 1) { current++; updateSlide(); } }
+    function prevSlide() { if (current > 0) { current--; updateSlide(); } }
+    function goToSlide(i) { current = i; updateSlide(); }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+      if (e.key === 'ArrowLeft') prevSlide();
+    });
+  </script>
+</body>
+</html>
