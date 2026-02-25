@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Part 5: Final Project Hosting Strategy</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; }
+    .slideshow { height: 100vh; display: flex; flex-direction: column; }
+    .slide-container { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+    .slide { background: white; border-radius: 1rem; box-shadow: 0 10px 40px rgba(0,0,0,0.1); width: 100%; max-width: 1000px; height: 600px; padding: 3rem; display: none; flex-direction: column; }
+    .slide.active { display: flex; }
+    .controls { background: white; border-top: 1px solid #e5e7eb; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+    .btn { padding: 0.5rem 1.5rem; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; }
+    .btn-prev, .btn-next { background: #c2410c; color: white; }
+    .btn:disabled { background: #d1d5db; cursor: not-allowed; }
+    .dots { display: flex; gap: 0.5rem; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #d1d5db; border: none; cursor: pointer; }
+    .dot.active { background: #c2410c; width: 20px; border-radius: 5px; }
+    .slide-title { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+    .icon { width: 50px; height: 50px; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: bold; }
+    .icon-green { background: #dcfce7; color: #15803d; }
+    .icon-cyan { background: #cffafe; color: #0891b2; }
+    .icon-blue { background: #dbeafe; color: #1d4ed8; }
+    .icon-purple { background: #f3e8ff; color: #7c3aed; }
+    .icon-orange { background: #ffedd5; color: #c2410c; }
+    .icon-yellow { background: #fef3c7; color: #b45309; }
+    h1 { font-size: 2.5rem; color: #1f2937; }
+    h2 { font-size: 1.75rem; color: #1f2937; }
+    h3 { font-size: 1.25rem; color: #374151; margin-bottom: 0.5rem; }
+    .subtitle { color: #6b7280; font-size: 1.1rem; }
+    .content { flex: 1; display: flex; flex-direction: column; gap: 1rem; }
+    .card { background: #f9fafb; border-radius: 0.75rem; padding: 1.25rem; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; flex: 1; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; flex: 1; }
+    .title-slide { align-items: center; justify-content: center; text-align: center; }
+    .title-slide .icon { width: 80px; height: 80px; font-size: 1.5rem; margin-bottom: 1.5rem; border-radius: 50%; }
+    .title-slide h1 { margin-bottom: 1rem; }
+    .title-slide .subtitle { margin-bottom: 1.5rem; font-size: 1.25rem; }
+    .badge { background: #ffedd5; color: #c2410c; padding: 0.5rem 1rem; border-radius: 2rem; font-size: 0.9rem; }
+    .counter { color: #6b7280; font-size: 0.9rem; }
+    pre { background: #1f2937; color: #f9fafb; padding: 1.25rem; border-radius: 0.5rem; font-size: 0.9rem; overflow-x: auto; font-family: 'Monaco', 'Menlo', monospace; }
+    code { font-family: 'Monaco', 'Menlo', monospace; }
+    .code-inline { background: #f3f4f6; padding: 0.2rem 0.5rem; border-radius: 0.25rem; font-size: 0.9rem; color: #c2410c; }
+    .list-card { border-radius: 0.75rem; padding: 1.5rem; }
+    .list-card-orange { background: #fff7ed; border: 1px solid #fdba74; }
+    .list-card ul { list-style: none; }
+    .list-card li { padding: 0.5rem 0; display: flex; align-items: flex-start; gap: 0.5rem; color: #374151; }
+    .check { color: #c2410c; font-weight: bold; }
+    .highlight-box { background: #fff7ed; border: 2px solid #fdba74; border-radius: 0.75rem; padding: 1.5rem; margin-top: 1rem; }
+    .highlight-box p { color: #c2410c; font-weight: 500; font-size: 1.1rem; }
+    .flow-diagram { display: flex; align-items: center; justify-content: center; gap: 1rem; margin: 1rem 0; flex-wrap: wrap; }
+    .flow-box { padding: 1rem 1.5rem; border-radius: 0.5rem; text-align: center; font-weight: 500; }
+    .flow-arrow { font-size: 1.5rem; color: #c2410c; }
+    .comparison-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    .comparison-table th, .comparison-table td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #e5e7eb; }
+    .comparison-table th { background: #f9fafb; color: #374151; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <main class="slideshow">
+    <div class="slide-container" role="region" aria-label="Slide presentation">
+      <!-- Slide 1: Title -->
+      <section class="slide active title-slide" aria-label="Title slide">
+        <div class="icon icon-orange" aria-hidden="true">Ship</div>
+        <h1>Part 5: Final Project Hosting Strategy</h1>
+        <p class="subtitle">Getting Your Project Live This Week</p>
+        <span class="badge">5 Minutes</span>
+      </section>
+
+      <!-- Slide 2: Recommended Stack -->
+      <section class="slide" aria-label="Recommended hosting stack">
+        <header class="slide-title">
+          <div class="icon icon-orange" aria-hidden="true">&#9733;</div>
+          <div><h2>Recommended Hosting Stack</h2><p class="subtitle">Pick Based on Your Project Architecture</p></div>
+        </header>
+        <div class="content">
+          <table class="comparison-table">
+            <thead>
+              <tr>
+                <th>Your Project Uses</th>
+                <th>Frontend Host</th>
+                <th>Backend Host</th>
+                <th>Cost</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>React + Firebase</strong></td>
+                <td style="color: #7c3aed;">Vercel or Netlify</td>
+                <td style="color: #15803d;">Firebase handles it</td>
+                <td style="color: #15803d;">Free</td>
+              </tr>
+              <tr>
+                <td><strong>React + simple API</strong></td>
+                <td style="color: #7c3aed;">Vercel</td>
+                <td style="color: #7c3aed;">Vercel Serverless Functions</td>
+                <td style="color: #15803d;">Free</td>
+              </tr>
+              <tr>
+                <td><strong>React + Express API</strong></td>
+                <td style="color: #7c3aed;">Vercel or Netlify</td>
+                <td style="color: #0891b2;">Render.com</td>
+                <td style="color: #15803d;">Free</td>
+              </tr>
+              <tr>
+                <td><strong>React + Express + DB</strong></td>
+                <td style="color: #7c3aed;">Vercel or Netlify</td>
+                <td style="color: #0891b2;">Render.com + Firebase/Render PG</td>
+                <td style="color: #15803d;">Free</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="grid-2" style="margin-top: 0.5rem;">
+            <div class="card" style="background: #dcfce7; border: 1px solid #86efac;">
+              <h3 style="color: #15803d; font-size: 1rem;">Simplest Path</h3>
+              <p style="font-size: 0.9rem; color: #374151;">If you're using <strong>Firebase</strong> for your backend (auth, Firestore, etc.), you just need to deploy the React frontend to Vercel. Firebase is already hosted for you.</p>
+            </div>
+            <div class="card" style="background: #dbeafe; border: 1px solid #93c5fd;">
+              <h3 style="color: #1d4ed8; font-size: 1rem;">Custom API Path</h3>
+              <p style="font-size: 0.9rem; color: #374151;">If you're building a custom Express API, deploy the frontend to <strong>Vercel</strong> and the API to <strong>Render</strong>. Remember to configure CORS!</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 3: Action Items & Deployment Checklist -->
+      <section class="slide" aria-label="Action items and deployment checklist">
+        <header class="slide-title">
+          <div class="icon icon-green" aria-hidden="true">&#10003;</div>
+          <div><h2>Action Items for This Week</h2><p class="subtitle">Deploy Early, Deploy Often</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <article>
+              <h3>Deployment Checklist</h3>
+              <div class="card" style="background: #fff7ed; border: 1px solid #fdba74;">
+                <ul style="font-size: 0.9rem; color: #374151; list-style: none;">
+                  <li style="padding: 0.4rem 0;">&#9744; Pick your hosting platform today</li>
+                  <li style="padding: 0.4rem 0;">&#9744; Create a free account on Vercel or Netlify</li>
+                  <li style="padding: 0.4rem 0;">&#9744; Deploy a "hello world" version of your project</li>
+                  <li style="padding: 0.4rem 0;">&#9744; Verify auto-deploy works on <code class="code-inline">git push</code></li>
+                  <li style="padding: 0.4rem 0;">&#9744; If using a custom API, deploy a test endpoint to Render</li>
+                  <li style="padding: 0.4rem 0;">&#9744; Test that frontend can <code class="code-inline">fetch()</code> from your API</li>
+                  <li style="padding: 0.4rem 0;">&#9744; Share your live URL with your team</li>
+                </ul>
+              </div>
+            </article>
+            <article>
+              <h3>Common Mistakes to Avoid</h3>
+              <div class="card" style="background: #fef2f2; border: 1px solid #fca5a5; margin-bottom: 0.75rem;">
+                <ul style="font-size: 0.85rem; color: #374151; list-style: none;">
+                  <li style="padding: 0.3rem 0;"><strong style="color: #dc2626;">&#10007;</strong> Waiting until the last week to deploy</li>
+                  <li style="padding: 0.3rem 0;"><strong style="color: #dc2626;">&#10007;</strong> Forgetting to set environment variables</li>
+                  <li style="padding: 0.3rem 0;"><strong style="color: #dc2626;">&#10007;</strong> Hardcoding <code class="code-inline">localhost</code> API URLs</li>
+                  <li style="padding: 0.3rem 0;"><strong style="color: #dc2626;">&#10007;</strong> Not configuring CORS on your API</li>
+                  <li style="padding: 0.3rem 0;"><strong style="color: #dc2626;">&#10007;</strong> Committing API keys to GitHub</li>
+                </ul>
+              </div>
+              <div class="card" style="background: #dcfce7; border: 1px solid #86efac;">
+                <h3 style="color: #15803d; font-size: 1rem;">Pro Tip: Environment Variables</h3>
+                <p style="font-size: 0.85rem; color: #374151;">Use <code class="code-inline">.env</code> files locally and set environment variables in your hosting platform's dashboard for production API URLs and secrets.</p>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 4: Lecture Recap -->
+      <section class="slide" aria-label="Full lecture recap">
+        <header class="slide-title">
+          <div class="icon icon-orange" aria-hidden="true">&#9733;</div>
+          <div><h2>Week 8 Recap</h2><p class="subtitle">HTTPS, DNS &amp; Hosting Web Applications</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="list-card list-card-orange">
+            <ul style="font-size: 1.1rem;">
+              <li><span class="check">&#10003;</span> <strong>HTTPS</strong> encrypts all web traffic using TLS certificates and a chain of trust</li>
+              <li><span class="check">&#10003;</span> <strong>DNS</strong> translates domain names to IP addresses using A and CNAME records</li>
+              <li><span class="check">&#10003;</span> <strong>Frontend SPAs</strong> are static files hosted on CDNs (Vercel, Netlify)</li>
+              <li><span class="check">&#10003;</span> <strong>Backend APIs</strong> run on servers (Render) or as serverless functions (Vercel)</li>
+              <li><span class="check">&#10003;</span> <strong>All modern platforms</strong> provide auto HTTPS, GitHub integration, and free tiers</li>
+              <li><span class="check">&#10003;</span> <strong>Deploy early</strong> &mdash; don't wait until the final week!</li>
+            </ul>
+          </div>
+          <div class="highlight-box" style="text-align: center;">
+            <p>Final project proposals are due this week. Let's review them with each group!</p>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <nav class="controls" aria-label="Slide navigation">
+      <button class="btn btn-prev" onclick="prevSlide()" aria-label="Previous slide">&#8592; Previous</button>
+      <div class="dots" id="dots" role="tablist" aria-label="Slide indicators"></div>
+      <div style="display:flex;align-items:center;gap:1rem">
+        <span class="counter" id="counter" aria-live="polite">1 / 4</span>
+        <button class="btn btn-next" onclick="nextSlide()" aria-label="Next slide">Next &#8594;</button>
+      </div>
+    </nav>
+  </main>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const dotsContainer = document.getElementById('dots');
+    const counter = document.getElementById('counter');
+    let current = 0;
+    slides.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.className = 'dot' + (i === 0 ? ' active' : '');
+      dot.onclick = () => goToSlide(i);
+      dot.setAttribute('aria-label', 'Go to slide ' + (i + 1));
+      dotsContainer.appendChild(dot);
+    });
+    function updateSlide() {
+      slides.forEach((s, i) => s.classList.toggle('active', i === current));
+      document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
+      counter.textContent = `${current + 1} / ${slides.length}`;
+      document.querySelector('.btn-prev').disabled = current === 0;
+      document.querySelector('.btn-next').disabled = current === slides.length - 1;
+    }
+    function nextSlide() { if (current < slides.length - 1) { current++; updateSlide(); } }
+    function prevSlide() { if (current > 0) { current--; updateSlide(); } }
+    function goToSlide(i) { current = i; updateSlide(); }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+      if (e.key === 'ArrowLeft') prevSlide();
+    });
+  </script>
+</body>
+</html>

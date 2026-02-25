@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Part 4: Hosting Platforms Deep Dive</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; }
+    .slideshow { height: 100vh; display: flex; flex-direction: column; }
+    .slide-container { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+    .slide { background: white; border-radius: 1rem; box-shadow: 0 10px 40px rgba(0,0,0,0.1); width: 100%; max-width: 1000px; height: 600px; padding: 3rem; display: none; flex-direction: column; }
+    .slide.active { display: flex; }
+    .controls { background: white; border-top: 1px solid #e5e7eb; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+    .btn { padding: 0.5rem 1.5rem; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; }
+    .btn-prev, .btn-next { background: #7c3aed; color: white; }
+    .btn:disabled { background: #d1d5db; cursor: not-allowed; }
+    .dots { display: flex; gap: 0.5rem; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #d1d5db; border: none; cursor: pointer; }
+    .dot.active { background: #7c3aed; width: 20px; border-radius: 5px; }
+    .slide-title { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+    .icon { width: 50px; height: 50px; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: bold; }
+    .icon-green { background: #dcfce7; color: #15803d; }
+    .icon-cyan { background: #cffafe; color: #0891b2; }
+    .icon-blue { background: #dbeafe; color: #1d4ed8; }
+    .icon-purple { background: #f3e8ff; color: #7c3aed; }
+    .icon-orange { background: #ffedd5; color: #c2410c; }
+    .icon-yellow { background: #fef3c7; color: #b45309; }
+    .icon-red { background: #fef2f2; color: #dc2626; }
+    h1 { font-size: 2.5rem; color: #1f2937; }
+    h2 { font-size: 1.75rem; color: #1f2937; }
+    h3 { font-size: 1.25rem; color: #374151; margin-bottom: 0.5rem; }
+    .subtitle { color: #6b7280; font-size: 1.1rem; }
+    .content { flex: 1; display: flex; flex-direction: column; gap: 1rem; }
+    .card { background: #f9fafb; border-radius: 0.75rem; padding: 1.25rem; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; flex: 1; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; flex: 1; }
+    .title-slide { align-items: center; justify-content: center; text-align: center; }
+    .title-slide .icon { width: 80px; height: 80px; font-size: 1.5rem; margin-bottom: 1.5rem; border-radius: 50%; }
+    .title-slide h1 { margin-bottom: 1rem; }
+    .title-slide .subtitle { margin-bottom: 1.5rem; font-size: 1.25rem; }
+    .badge { background: #f3e8ff; color: #7c3aed; padding: 0.5rem 1rem; border-radius: 2rem; font-size: 0.9rem; }
+    .counter { color: #6b7280; font-size: 0.9rem; }
+    pre { background: #1f2937; color: #f9fafb; padding: 1.25rem; border-radius: 0.5rem; font-size: 0.9rem; overflow-x: auto; font-family: 'Monaco', 'Menlo', monospace; }
+    code { font-family: 'Monaco', 'Menlo', monospace; }
+    .code-inline { background: #f3f4f6; padding: 0.2rem 0.5rem; border-radius: 0.25rem; font-size: 0.9rem; color: #7c3aed; }
+    .list-card { border-radius: 0.75rem; padding: 1.5rem; }
+    .list-card-purple { background: #faf5ff; border: 1px solid #c4b5fd; }
+    .list-card ul { list-style: none; }
+    .list-card li { padding: 0.5rem 0; display: flex; align-items: flex-start; gap: 0.5rem; color: #374151; }
+    .check { color: #7c3aed; font-weight: bold; }
+    .highlight-box { background: #faf5ff; border: 2px solid #c4b5fd; border-radius: 0.75rem; padding: 1.5rem; margin-top: 1rem; }
+    .highlight-box p { color: #7c3aed; font-weight: 500; font-size: 1.1rem; }
+    .flow-diagram { display: flex; align-items: center; justify-content: center; gap: 1rem; margin: 1rem 0; flex-wrap: wrap; }
+    .flow-box { padding: 1rem 1.5rem; border-radius: 0.5rem; text-align: center; font-weight: 500; }
+    .flow-arrow { font-size: 1.5rem; color: #7c3aed; }
+    .comparison-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    .comparison-table th, .comparison-table td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #e5e7eb; }
+    .comparison-table th { background: #f9fafb; color: #374151; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <main class="slideshow">
+    <div class="slide-container" role="region" aria-label="Slide presentation">
+      <!-- Slide 1: Title -->
+      <section class="slide active title-slide" aria-label="Title slide">
+        <div class="icon icon-purple" aria-hidden="true">Host</div>
+        <h1>Part 4: Hosting Platforms Deep Dive</h1>
+        <p class="subtitle">Where to Deploy Your React Apps and APIs</p>
+        <span class="badge">20 Minutes</span>
+      </section>
+
+      <!-- Slide 2: Vercel -->
+      <section class="slide" aria-label="Vercel overview">
+        <header class="slide-title">
+          <div class="icon icon-purple" aria-hidden="true">&#9650;</div>
+          <div><h2>Vercel</h2><p class="subtitle">The Recommended Frontend Platform</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>What is Vercel?</h3>
+              <div class="card" style="margin-bottom: 1rem;">
+                <p style="font-size: 0.95rem; color: #374151;">Built by the creators of Next.js. Optimized for frontend frameworks including React + Vite.</p>
+              </div>
+              <h3>Deploy Workflow</h3>
+              <div class="card" style="background: #f3e8ff; border: 1px solid #c4b5fd;">
+                <ol style="font-size: 0.9rem; color: #374151; list-style: none;">
+                  <li style="padding: 0.3rem 0;"><strong>1.</strong> Push React project to GitHub</li>
+                  <li style="padding: 0.3rem 0;"><strong>2.</strong> Go to vercel.com &#8594; Import Project</li>
+                  <li style="padding: 0.3rem 0;"><strong>3.</strong> Select your repo</li>
+                  <li style="padding: 0.3rem 0;"><strong>4.</strong> Vercel auto-detects Vite, runs build</li>
+                  <li style="padding: 0.3rem 0;"><strong>5.</strong> Live URL in ~60 seconds</li>
+                </ol>
+              </div>
+            </div>
+            <div>
+              <h3>Free Tier (Hobby Plan)</h3>
+              <div class="card" style="background: #dcfce7; border: 1px solid #86efac; margin-bottom: 1rem;">
+                <ul style="font-size: 0.9rem; color: #374151; list-style: none;">
+                  <li style="padding: 0.25rem 0;">&#10003; 100 GB bandwidth/month</li>
+                  <li style="padding: 0.25rem 0;">&#10003; 6,000 build minutes/month</li>
+                  <li style="padding: 0.25rem 0;">&#10003; Serverless functions included</li>
+                  <li style="padding: 0.25rem 0;">&#10003; Auto HTTPS on all deployments</li>
+                  <li style="padding: 0.25rem 0;">&#10003; No credit card required</li>
+                </ul>
+              </div>
+              <h3>GitHub Integration</h3>
+              <div class="card" style="background: #dbeafe; border: 1px solid #93c5fd;">
+                <ul style="font-size: 0.85rem; color: #374151; list-style: none;">
+                  <li>&#8226; Every <code class="code-inline">git push</code> triggers auto-deploy</li>
+                  <li>&#8226; PRs get preview deployment URLs</li>
+                  <li>&#8226; Merge to main = production deploy</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 3: Vercel Serverless Functions -->
+      <section class="slide" aria-label="Vercel serverless functions">
+        <header class="slide-title">
+          <div class="icon icon-purple" aria-hidden="true">fn()</div>
+          <div><h2>Vercel Serverless Functions</h2><p class="subtitle">Backend API Without a Server</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>How It Works</h3>
+              <div class="card" style="margin-bottom: 1rem;">
+                <p style="font-size: 0.9rem; color: #374151;">Create files in an <code class="code-inline">/api</code> directory. Each file becomes an HTTP endpoint automatically.</p>
+              </div>
+              <h3>Example: /api/hello.js</h3>
+              <pre style="font-size: 0.8rem;"><span style="color:#c4b5fd">export default</span> <span style="color:#fcd34d">function</span> handler(req, res) {
+  res.status(<span style="color:#a5f3fc">200</span>).json({
+    message: <span style="color:#a5f3fc">'Hello from API!'</span>,
+    time: <span style="color:#c4b5fd">new</span> Date().toISOString()
+  });
+}</pre>
+              <p style="font-size: 0.85rem; color: #6b7280; margin-top: 0.5rem;">Accessible at: <code class="code-inline">yoursite.vercel.app/api/hello</code></p>
+            </div>
+            <div>
+              <h3>When to Use This</h3>
+              <div class="card" style="background: #dcfce7; border: 1px solid #86efac; margin-bottom: 1rem;">
+                <h3 style="color: #15803d; font-size: 1rem;">Good For</h3>
+                <ul style="font-size: 0.85rem; color: #374151; list-style: none;">
+                  <li>&#10003; Simple CRUD API endpoints</li>
+                  <li>&#10003; Form handling</li>
+                  <li>&#10003; Proxying third-party APIs</li>
+                  <li>&#10003; Hiding API keys from the frontend</li>
+                </ul>
+              </div>
+              <div class="card" style="background: #fef2f2; border: 1px solid #fca5a5;">
+                <h3 style="color: #dc2626; font-size: 1rem;">Limitations</h3>
+                <ul style="font-size: 0.85rem; color: #374151; list-style: none;">
+                  <li>&#10007; 10-second timeout on free tier</li>
+                  <li>&#10007; No WebSocket support</li>
+                  <li>&#10007; Stateless between requests</li>
+                  <li>&#10007; Not a full Express server</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 4: Netlify -->
+      <section class="slide" aria-label="Netlify overview">
+        <header class="slide-title">
+          <div class="icon icon-cyan" aria-hidden="true">N</div>
+          <div><h2>Netlify</h2><p class="subtitle">Vercel's Closest Competitor</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>Key Features</h3>
+              <div class="card" style="background: #ecfeff; border: 1px solid #67e8f9; margin-bottom: 1rem;">
+                <ul style="font-size: 0.9rem; color: #374151; list-style: none;">
+                  <li style="padding: 0.25rem 0;">&#10003; Same GitHub auto-deploy workflow as Vercel</li>
+                  <li style="padding: 0.25rem 0;">&#10003; Native SPA support (client-side routing works)</li>
+                  <li style="padding: 0.25rem 0;">&#10003; Drag-and-drop deployment option</li>
+                  <li style="padding: 0.25rem 0;">&#10003; Netlify Functions (serverless, like Vercel)</li>
+                  <li style="padding: 0.25rem 0;">&#10003; Auto HTTPS on all deployments</li>
+                </ul>
+              </div>
+              <h3>Free Tier</h3>
+              <div class="card">
+                <ul style="font-size: 0.85rem; color: #374151; list-style: none;">
+                  <li>&#8226; 100 GB bandwidth/month</li>
+                  <li>&#8226; 300 build minutes/month</li>
+                  <li>&#8226; Serverless functions included</li>
+                  <li>&#8226; No credit card required</li>
+                </ul>
+              </div>
+            </div>
+            <div>
+              <h3>Netlify Functions</h3>
+              <div class="card" style="margin-bottom: 1rem;">
+                <p style="font-size: 0.9rem; color: #374151;">Place function files in <code class="code-inline">netlify/functions/</code> directory. AWS Lambda under the hood.</p>
+              </div>
+              <h3>Example: netlify/functions/hello.js</h3>
+              <pre style="font-size: 0.8rem;"><span style="color:#c4b5fd">export</span> <span style="color:#c4b5fd">const</span> handler = <span style="color:#c4b5fd">async</span> (event) => {
+  <span style="color:#c4b5fd">return</span> {
+    statusCode: <span style="color:#a5f3fc">200</span>,
+    body: JSON.stringify({
+      message: <span style="color:#a5f3fc">"Hello from Netlify!"</span>
+    })
+  };
+};</pre>
+              <div class="card" style="margin-top: 0.75rem; background: #fef3c7; border: 1px solid #fcd34d;">
+                <h3 style="color: #b45309; font-size: 1rem;">Vercel vs. Netlify</h3>
+                <p style="font-size: 0.85rem; color: #374151;">Both are excellent. Pick whichever you prefer &mdash; the experience is nearly identical.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 5: Render.com -->
+      <section class="slide" aria-label="Render.com for backend APIs">
+        <header class="slide-title">
+          <div class="icon icon-green" aria-hidden="true">R</div>
+          <div><h2>Render.com</h2><p class="subtitle">When You Need a Real Backend Server</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>Why Render?</h3>
+              <div class="card" style="margin-bottom: 1rem;">
+                <p style="font-size: 0.95rem; color: #374151;">Unlike Vercel/Netlify, Render hosts <strong>actual persistent servers</strong> &mdash; not just serverless functions.</p>
+              </div>
+              <div class="card" style="background: #dcfce7; border: 1px solid #86efac; margin-bottom: 1rem;">
+                <h3 style="color: #15803d; font-size: 1rem;">Good For</h3>
+                <ul style="font-size: 0.9rem; color: #374151; list-style: none;">
+                  <li>&#10003; Full Express.js APIs</li>
+                  <li>&#10003; WebSocket connections</li>
+                  <li>&#10003; Background jobs</li>
+                  <li>&#10003; Traditional server architecture</li>
+                </ul>
+              </div>
+              <h3>Free Tier</h3>
+              <div class="card">
+                <ul style="font-size: 0.85rem; color: #374151; list-style: none;">
+                  <li>&#8226; Free web services (Node.js, Python, etc.)</li>
+                  <li>&#8226; Free static site hosting</li>
+                  <li>&#8226; Free PostgreSQL database (90-day limit)</li>
+                  <li>&#8226; GitHub auto-deploy</li>
+                  <li>&#8226; No credit card required</li>
+                </ul>
+              </div>
+            </div>
+            <div>
+              <h3>The Free Tier Caveat</h3>
+              <div class="card" style="background: #fef3c7; border: 2px solid #fcd34d; margin-bottom: 1rem;">
+                <h3 style="color: #b45309; font-size: 1rem;">Services Sleep After 15 Minutes</h3>
+                <p style="font-size: 0.85rem; color: #374151; margin-top: 0.5rem;">Free-tier services <strong>spin down after 15 minutes of no traffic</strong>. The first request after sleeping takes 30&ndash;60 seconds to cold-start.</p>
+                <p style="font-size: 0.85rem; color: #374151; margin-top: 0.5rem;"><strong>Workaround:</strong> Use a free cron service to ping your API every 10 minutes to keep it awake.</p>
+              </div>
+              <h3>Deploy Workflow</h3>
+              <div class="card" style="background: #f3e8ff; border: 1px solid #c4b5fd;">
+                <ol style="font-size: 0.85rem; color: #374151; list-style: none;">
+                  <li style="padding: 0.2rem 0;"><strong>1.</strong> Push Express project to GitHub</li>
+                  <li style="padding: 0.2rem 0;"><strong>2.</strong> Go to render.com &#8594; New Web Service</li>
+                  <li style="padding: 0.2rem 0;"><strong>3.</strong> Connect your GitHub repo</li>
+                  <li style="padding: 0.2rem 0;"><strong>4.</strong> Set build command: <code class="code-inline">npm install</code></li>
+                  <li style="padding: 0.2rem 0;"><strong>5.</strong> Set start command: <code class="code-inline">node server.js</code></li>
+                  <li style="padding: 0.2rem 0;"><strong>6.</strong> Choose Free tier &#8594; Deploy</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 6: Other Options & Platforms to Avoid -->
+      <section class="slide" aria-label="Other hosting options">
+        <header class="slide-title">
+          <div class="icon icon-orange" aria-hidden="true">+</div>
+          <div><h2>Other Options &amp; What to Avoid</h2><p class="subtitle">The Full Landscape</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>Worth Knowing About</h3>
+              <div class="card" style="background: #dbeafe; border: 1px solid #93c5fd; margin-bottom: 1rem;">
+                <h3 style="color: #1d4ed8; font-size: 1rem;">Cloudflare Pages</h3>
+                <p style="font-size: 0.85rem; color: #374151;"><strong>Most generous free tier</strong> &mdash; unlimited bandwidth and requests. Great for static sites. Workers for serverless APIs. Slightly steeper learning curve.</p>
+              </div>
+              <div class="card" style="background: #fef3c7; border: 1px solid #fcd34d;">
+                <h3 style="color: #b45309; font-size: 1rem;">GitHub Pages</h3>
+                <p style="font-size: 0.85rem; color: #374151;">Free for public repos. Good for simple static sites. <strong>SPA routing is broken</strong> &mdash; requires <code class="code-inline">HashRouter</code> or <code class="code-inline">404.html</code> workaround. No backend support at all.</p>
+              </div>
+            </div>
+            <div>
+              <h3>Avoid for Student Projects</h3>
+              <div class="card" style="background: #fef2f2; border: 1px solid #fca5a5; margin-bottom: 1rem;">
+                <h3 style="color: #dc2626; font-size: 1rem;">Railway</h3>
+                <p style="font-size: 0.85rem; color: #374151;">Removed meaningful free tier. Only $1/month in credits after a 30-day trial. Requires payment for real use.</p>
+              </div>
+              <div class="card" style="background: #fef2f2; border: 1px solid #fca5a5;">
+                <h3 style="color: #dc2626; font-size: 1rem;">Fly.io</h3>
+                <p style="font-size: 0.85rem; color: #374151;">Requires a credit card to sign up. No meaningful free tier for new users. Steeper learning curve (Docker/containers).</p>
+              </div>
+              <div class="highlight-box" style="background: #faf5ff; border-color: #c4b5fd; margin-top: 1rem;">
+                <p style="color: #7c3aed;">Both Railway and Fly.io are excellent platforms &mdash; just not free enough for coursework.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 7: Platform Comparison Table -->
+      <section class="slide" aria-label="Platform comparison table">
+        <header class="slide-title">
+          <div class="icon icon-purple" aria-hidden="true">VS</div>
+          <div><h2>Platform Comparison</h2><p class="subtitle">Choosing the Right Tool for the Job</p></div>
+        </header>
+        <div class="content">
+          <table class="comparison-table">
+            <thead>
+              <tr>
+                <th>Platform</th>
+                <th>React SPA</th>
+                <th>Backend API</th>
+                <th>GitHub Deploy</th>
+                <th>Free Tier</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Vercel</strong></td>
+                <td style="color: #22c55e;">&#10003; Excellent</td>
+                <td style="color: #22c55e;">&#10003; Serverless</td>
+                <td style="color: #22c55e;">&#10003; Auto</td>
+                <td style="color: #22c55e;">&#10003; Generous</td>
+              </tr>
+              <tr>
+                <td><strong>Netlify</strong></td>
+                <td style="color: #22c55e;">&#10003; Excellent</td>
+                <td style="color: #22c55e;">&#10003; Serverless</td>
+                <td style="color: #22c55e;">&#10003; Auto</td>
+                <td style="color: #22c55e;">&#10003; Generous</td>
+              </tr>
+              <tr>
+                <td><strong>Render</strong></td>
+                <td style="color: #22c55e;">&#10003; Static sites</td>
+                <td style="color: #22c55e;">&#10003; Full server</td>
+                <td style="color: #22c55e;">&#10003; Auto</td>
+                <td style="color: #eab308;">&#9888; Sleeps</td>
+              </tr>
+              <tr>
+                <td><strong>Cloudflare</strong></td>
+                <td style="color: #22c55e;">&#10003; Unlimited BW</td>
+                <td style="color: #22c55e;">&#10003; Workers</td>
+                <td style="color: #22c55e;">&#10003; Auto</td>
+                <td style="color: #22c55e;">&#10003; Most generous</td>
+              </tr>
+              <tr>
+                <td><strong>GitHub Pages</strong></td>
+                <td style="color: #eab308;">&#9888; SPA routing issues</td>
+                <td style="color: #ef4444;">&#10007; None</td>
+                <td style="color: #22c55e;">&#10003; Native</td>
+                <td style="color: #22c55e;">&#10003; Free</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="highlight-box" style="text-align: center;">
+            <p><strong>Recommendation:</strong> Use <strong>Vercel</strong> or <strong>Netlify</strong> for your React frontend. Use <strong>Render</strong> if you need a full Express API. Use <strong>Vercel Functions</strong> for simple API endpoints.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 8: Summary -->
+      <section class="slide" aria-label="Part 4 summary">
+        <header class="slide-title">
+          <div class="icon icon-purple" aria-hidden="true">Host</div>
+          <div><h2>Part 4 Complete!</h2><p class="subtitle">Hosting Platforms Deep Dive</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="list-card list-card-purple">
+            <ul style="font-size: 1.15rem;">
+              <li><span class="check">&#10003;</span> Vercel &amp; Netlify: best-in-class for React SPA hosting with GitHub auto-deploy</li>
+              <li><span class="check">&#10003;</span> Both offer serverless functions for simple backend needs</li>
+              <li><span class="check">&#10003;</span> Render.com: best free option for full Express server hosting</li>
+              <li><span class="check">&#10003;</span> Cloudflare Pages: most generous bandwidth but steeper learning curve</li>
+              <li><span class="check">&#10003;</span> All platforms provide automatic HTTPS &mdash; no manual cert setup</li>
+            </ul>
+          </div>
+          <p style="text-align: center; color: #7c3aed; font-size: 1.25rem; margin-top: 1.5rem; font-weight: 500;">Next up: Part 5 &mdash; Final Project Hosting Strategy &#8594;</p>
+        </div>
+      </section>
+    </div>
+
+    <nav class="controls" aria-label="Slide navigation">
+      <button class="btn btn-prev" onclick="prevSlide()" aria-label="Previous slide">&#8592; Previous</button>
+      <div class="dots" id="dots" role="tablist" aria-label="Slide indicators"></div>
+      <div style="display:flex;align-items:center;gap:1rem">
+        <span class="counter" id="counter" aria-live="polite">1 / 8</span>
+        <button class="btn btn-next" onclick="nextSlide()" aria-label="Next slide">Next &#8594;</button>
+      </div>
+    </nav>
+  </main>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const dotsContainer = document.getElementById('dots');
+    const counter = document.getElementById('counter');
+    let current = 0;
+    slides.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.className = 'dot' + (i === 0 ? ' active' : '');
+      dot.onclick = () => goToSlide(i);
+      dot.setAttribute('aria-label', 'Go to slide ' + (i + 1));
+      dotsContainer.appendChild(dot);
+    });
+    function updateSlide() {
+      slides.forEach((s, i) => s.classList.toggle('active', i === current));
+      document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
+      counter.textContent = `${current + 1} / ${slides.length}`;
+      document.querySelector('.btn-prev').disabled = current === 0;
+      document.querySelector('.btn-next').disabled = current === slides.length - 1;
+    }
+    function nextSlide() { if (current < slides.length - 1) { current++; updateSlide(); } }
+    function prevSlide() { if (current > 0) { current--; updateSlide(); } }
+    function goToSlide(i) { current = i; updateSlide(); }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+      if (e.key === 'ArrowLeft') prevSlide();
+    });
+  </script>
+</body>
+</html>

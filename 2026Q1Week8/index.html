@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Client-Side Web Programming - Lesson 8</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f3f4f6;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+    .container {
+      background: white;
+      border-radius: 1rem;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+      max-width: 800px;
+      width: 100%;
+      padding: 3rem;
+    }
+    h1 {
+      font-size: 2.5rem;
+      color: #1f2937;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+    .subtitle {
+      color: #6b7280;
+      text-align: center;
+      margin-bottom: 3rem;
+      font-size: 1.1rem;
+    }
+    .parts-grid {
+      display: grid;
+      gap: 1.5rem;
+    }
+    .part-link {
+      display: block;
+      padding: 1.5rem;
+      background: #f9fafb;
+      border: 2px solid #e5e7eb;
+      border-radius: 0.75rem;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+    .part-link:hover {
+      border-color: #60a5fa;
+      background: #eff6ff;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .part-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 0.5rem;
+    }
+    .part-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      font-weight: bold;
+    }
+    .icon-green { background: #dcfce7; color: #15803d; }
+    .icon-cyan { background: #cffafe; color: #0891b2; }
+    .icon-blue { background: #dbeafe; color: #1d4ed8; }
+    .icon-purple { background: #f3e8ff; color: #7c3aed; }
+    .icon-orange { background: #ffedd5; color: #c2410c; }
+    .icon-yellow { background: #fef3c7; color: #b45309; }
+    .icon-pink { background: #fce7f3; color: #db2777; }
+    .part-title {
+      font-size: 1.25rem;
+      color: #1f2937;
+      font-weight: 600;
+    }
+    .part-description {
+      color: #6b7280;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+    .duration {
+      display: inline-block;
+      background: #e5e7eb;
+      color: #4b5563;
+      padding: 0.25rem 0.75rem;
+      border-radius: 1rem;
+      font-size: 0.85rem;
+      margin-top: 0.75rem;
+    }
+    footer {
+      margin-top: 3rem;
+      padding-top: 2rem;
+      border-top: 1px solid #e5e7eb;
+      text-align: center;
+      color: #6b7280;
+      font-size: 0.9rem;
+    }
+    @media (max-width: 640px) {
+      body { padding: 1rem; }
+      .container { padding: 2rem; }
+      h1 { font-size: 2rem; }
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <header>
+      <h1>Client-Side Web Programming</h1>
+      <p class="subtitle">Lesson 8: HTTPS, DNS & Hosting Web Applications</p>
+    </header>
+
+    <nav class="parts-grid">
+      <a href="part1-slides.html" class="part-link" aria-label="Part 1: HTTPS &amp; Certificates">
+        <article class="part-header">
+          <div class="part-icon icon-green" aria-hidden="true">TLS</div>
+          <h2 class="part-title">Part 1: HTTPS & Certificates</h2>
+        </article>
+        <p class="part-description">Understand how HTTPS secures web traffic, how TLS certificates work, the chain of trust, and how Let's Encrypt automated certificate management.</p>
+        <time class="duration">15 minutes</time>
+      </a>
+
+      <a href="part2-slides.html" class="part-link" aria-label="Part 2: DNS &mdash; How Domains Work">
+        <article class="part-header">
+          <div class="part-icon icon-cyan" aria-hidden="true">DNS</div>
+          <h2 class="part-title">Part 2: DNS &mdash; How Domains Work</h2>
+        </article>
+        <p class="part-description">Learn how the Domain Name System translates human-readable domains to IP addresses, and understand A records, CNAMEs, and custom domain setup.</p>
+        <time class="duration">10 minutes</time>
+      </a>
+
+      <a href="part3-slides.html" class="part-link" aria-label="Part 3: Web Application Architecture">
+        <article class="part-header">
+          <div class="part-icon icon-blue" aria-hidden="true">Arch</div>
+          <h2 class="part-title">Part 3: Web Application Architecture</h2>
+        </article>
+        <p class="part-description">Understand the three-tier model: frontend on a CDN, middle-tier API on a server or serverless platform, and database services.</p>
+        <time class="duration">10 minutes</time>
+      </a>
+
+      <a href="part4-slides.html" class="part-link" aria-label="Part 4: Hosting Platforms Deep Dive">
+        <article class="part-header">
+          <div class="part-icon icon-purple" aria-hidden="true">Host</div>
+          <h2 class="part-title">Part 4: Hosting Platforms Deep Dive</h2>
+        </article>
+        <p class="part-description">Compare Vercel, Netlify, Render, Cloudflare Pages, and GitHub Pages. Learn which platforms to use for frontend SPAs and backend APIs.</p>
+        <time class="duration">20 minutes</time>
+      </a>
+
+      <a href="part5-slides.html" class="part-link" aria-label="Part 5: Final Project Hosting Strategy">
+        <article class="part-header">
+          <div class="part-icon icon-orange" aria-hidden="true">Ship</div>
+          <h2 class="part-title">Part 5: Final Project Hosting Strategy</h2>
+        </article>
+        <p class="part-description">Recommended hosting stack for your final projects, deployment checklist, and action items for getting your project live.</p>
+        <time class="duration">5 minutes</time>
+      </a>
+    </nav>
+  </main>
+
+  <footer>
+    <p>Use arrow keys or click to navigate within each presentation</p>
+  </footer>
+</body>
+</html>
