@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Part 2: Cross-Site Scripting (XSS)</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; }
+    .slideshow { height: 100vh; display: flex; flex-direction: column; }
+    .slide-container { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+    .slide { background: white; border-radius: 1rem; box-shadow: 0 10px 40px rgba(0,0,0,0.1); width: 100%; max-width: 1000px; height: 600px; padding: 3rem; display: none; flex-direction: column; }
+    .slide.active { display: flex; }
+    .controls { background: white; border-top: 1px solid #e5e7eb; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+    .btn { padding: 0.5rem 1.5rem; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; }
+    .btn-prev, .btn-next { background: #c2410c; color: white; }
+    .btn:disabled { background: #d1d5db; cursor: not-allowed; }
+    .dots { display: flex; gap: 0.5rem; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #d1d5db; border: none; cursor: pointer; }
+    .dot.active { background: #c2410c; width: 20px; border-radius: 5px; }
+    .slide-title { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+    .icon { width: 50px; height: 50px; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: bold; }
+    .icon-red { background: #fef2f2; color: #dc2626; }
+    .icon-orange { background: #ffedd5; color: #c2410c; }
+    .icon-blue { background: #dbeafe; color: #1d4ed8; }
+    .icon-green { background: #dcfce7; color: #15803d; }
+    .icon-yellow { background: #fef3c7; color: #b45309; }
+    .icon-purple { background: #f3e8ff; color: #7c3aed; }
+    .icon-cyan { background: #cffafe; color: #0891b2; }
+    h1 { font-size: 2.5rem; color: #1f2937; }
+    h2 { font-size: 1.75rem; color: #1f2937; }
+    h3 { font-size: 1.25rem; color: #374151; margin-bottom: 0.5rem; }
+    .subtitle { color: #6b7280; font-size: 1.1rem; }
+    .content { flex: 1; display: flex; flex-direction: column; gap: 1rem; }
+    .card { background: #f9fafb; border-radius: 0.75rem; padding: 1.25rem; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; flex: 1; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; flex: 1; }
+    .title-slide { align-items: center; justify-content: center; text-align: center; }
+    .title-slide .icon { width: 80px; height: 80px; font-size: 1.5rem; margin-bottom: 1.5rem; border-radius: 50%; }
+    .title-slide h1 { margin-bottom: 1rem; }
+    .title-slide .subtitle { margin-bottom: 1.5rem; font-size: 1.25rem; }
+    .badge { background: #ffedd5; color: #c2410c; padding: 0.5rem 1rem; border-radius: 2rem; font-size: 0.9rem; }
+    .counter { color: #6b7280; font-size: 0.9rem; }
+    pre { background: #1f2937; color: #f9fafb; padding: 1.25rem; border-radius: 0.5rem; font-size: 0.85rem; overflow-x: auto; font-family: 'Monaco', 'Menlo', monospace; line-height: 1.5; }
+    code { font-family: 'Monaco', 'Menlo', monospace; }
+    .code-inline { background: #f3f4f6; padding: 0.2rem 0.5rem; border-radius: 0.25rem; font-size: 0.9rem; color: #c2410c; font-family: 'Monaco', 'Menlo', monospace; }
+    .list-card { border-radius: 0.75rem; padding: 1.5rem; }
+    .list-card-orange { background: #ffedd5; border: 1px solid #fdba74; }
+    .list-card ul { list-style: none; }
+    .list-card li { padding: 0.5rem 0; display: flex; align-items: flex-start; gap: 0.5rem; color: #374151; }
+    .check { color: #c2410c; font-weight: bold; }
+    .highlight-box { background: #ffedd5; border: 2px solid #fdba74; border-radius: 0.75rem; padding: 1.5rem; margin-top: 1rem; }
+    .highlight-box p { color: #c2410c; font-weight: 500; font-size: 1.1rem; }
+    .flow-diagram { display: flex; align-items: center; justify-content: center; gap: 0.75rem; margin: 1rem 0; flex-wrap: wrap; }
+    .flow-box { padding: 0.75rem 1.25rem; border-radius: 0.5rem; text-align: center; font-weight: 500; font-size: 0.9rem; }
+    .flow-arrow { font-size: 1.5rem; color: #c2410c; }
+    .notes { display: none; }
+    .notes-panel { display: none; background: #1f2937; color: #f9fafb; padding: 1.5rem 2rem; font-size: 0.95rem; line-height: 1.6; border-top: 3px solid #c2410c; max-height: 200px; overflow-y: auto; }
+    .notes-panel.visible { display: block; }
+    .notes-panel strong { color: #fdba74; }
+  </style>
+</head>
+<body>
+  <main class="slideshow">
+    <div class="slide-container" role="region" aria-label="Slide presentation">
+
+      <!-- Slide 1: Title -->
+      <section class="slide active title-slide" aria-label="Title slide">
+        <div class="icon icon-orange" aria-hidden="true">XSS</div>
+        <h1>Part 2: Cross-Site Scripting (XSS)</h1>
+        <p class="subtitle">The Most Common Client-Side Attack</p>
+        <span class="badge">20 Minutes</span>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> XSS is #7 on OWASP but it's the single most important attack for frontend developers to understand. It's been on the list since the very first edition. It dropped from #3 to #7 because frameworks like React help prevent it &mdash; but it's still everywhere. "This section will change how you think about user input forever."
+        </div>
+      </section>
+
+      <!-- Slide 2: What is XSS? -->
+      <section class="slide" aria-label="What is XSS">
+        <header class="slide-title">
+          <div class="icon icon-orange" aria-hidden="true">XSS</div>
+          <div><h2>What is XSS?</h2><p class="subtitle">Injecting Malicious Scripts Into Trusted Websites</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <div class="card" style="margin-bottom: 1rem;">
+                <h3>The Attack</h3>
+                <p style="font-size: 0.95rem; color: #374151;">An attacker injects <strong>malicious JavaScript</strong> into a web page that other users visit. The victim's browser runs the script because it trusts the website.</p>
+              </div>
+              <div class="card" style="background: #fef2f2; border: 1px solid #fca5a5;">
+                <h3 style="color: #dc2626; font-size: 1rem;">What Attackers Can Do</h3>
+                <ul style="font-size: 0.85rem; color: #374151; list-style: none;">
+                  <li style="padding: 0.3rem 0;">&#10007; Steal session cookies &amp; auth tokens</li>
+                  <li style="padding: 0.3rem 0;">&#10007; Redirect users to phishing sites</li>
+                  <li style="padding: 0.3rem 0;">&#10007; Log keystrokes (capture passwords)</li>
+                  <li style="padding: 0.3rem 0;">&#10007; Modify the page content (fake forms)</li>
+                  <li style="padding: 0.3rem 0;">&#10007; Make API requests as the victim</li>
+                </ul>
+              </div>
+            </div>
+            <div>
+              <h3>How It Works</h3>
+              <div class="flow-diagram" style="flex-direction: column; gap: 0.5rem; align-items: stretch;">
+                <div class="flow-box" style="background: #fef2f2; color: #dc2626;">1. Attacker finds input that renders on page</div>
+                <span class="flow-arrow" style="text-align: center;">&#8595;</span>
+                <div class="flow-box" style="background: #ffedd5; color: #c2410c;">2. Injects &lt;script&gt; tag or JS event handler</div>
+                <span class="flow-arrow" style="text-align: center;">&#8595;</span>
+                <div class="flow-box" style="background: #fef3c7; color: #b45309;">3. Victim visits the page normally</div>
+                <span class="flow-arrow" style="text-align: center;">&#8595;</span>
+                <div class="flow-box" style="background: #fef2f2; color: #dc2626;">4. Browser executes the malicious script</div>
+                <span class="flow-arrow" style="text-align: center;">&#8595;</span>
+                <div class="flow-box" style="background: #1f2937; color: #fca5a5;">5. Attacker gets cookies, data, or control</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> Key concept: the browser TRUSTS the website. So if evil.com can get its JavaScript to run on yourbank.com, the browser gives that script full access to yourbank.com's cookies, DOM, and APIs. Ask students: "Remember innerHTML from Week 3? That's exactly how XSS works." Emphasize that the attacker doesn't hack the server &mdash; they hack the PAGE that other users see.
+        </div>
+      </section>
+
+      <!-- Slide 3: Three Types of XSS -->
+      <section class="slide" aria-label="Three types of XSS">
+        <header class="slide-title">
+          <div class="icon icon-orange" aria-hidden="true">3</div>
+          <div><h2>Three Types of XSS</h2><p class="subtitle">Stored, Reflected, and DOM-Based</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-3">
+            <div class="card" style="background: #fef2f2; border: 1px solid #fca5a5;">
+              <h3 style="color: #dc2626; font-size: 1.1rem;">Stored XSS</h3>
+              <p style="font-size: 0.85rem; color: #374151; margin-bottom: 0.75rem;">Malicious script is <strong>saved in the database</strong> (e.g., a comment, profile name).</p>
+              <p style="font-size: 0.8rem; color: #6b7280; margin-bottom: 0.5rem;">Every user who views the page gets hit.</p>
+              <div style="background: #1f2937; color: #fca5a5; padding: 0.75rem; border-radius: 0.25rem; font-family: monospace; font-size: 0.75rem;">
+                Comment: "Nice post!<br>&lt;script&gt;steal(cookies)&lt;/script&gt;"
+              </div>
+              <p style="font-size: 0.8rem; color: #dc2626; margin-top: 0.5rem; font-weight: 600;">Most dangerous type</p>
+            </div>
+            <div class="card" style="background: #ffedd5; border: 1px solid #fdba74;">
+              <h3 style="color: #c2410c; font-size: 1.1rem;">Reflected XSS</h3>
+              <p style="font-size: 0.85rem; color: #374151; margin-bottom: 0.75rem;">Malicious script is in the <strong>URL</strong> and reflected back by the server.</p>
+              <p style="font-size: 0.8rem; color: #6b7280; margin-bottom: 0.5rem;">Victim must click a crafted link.</p>
+              <div style="background: #1f2937; color: #fdba74; padding: 0.75rem; border-radius: 0.25rem; font-family: monospace; font-size: 0.7rem; word-break: break-all;">
+                site.com/search?q=<br>&lt;script&gt;steal(cookies)&lt;/script&gt;
+              </div>
+              <p style="font-size: 0.8rem; color: #c2410c; margin-top: 0.5rem; font-weight: 600;">Requires social engineering</p>
+            </div>
+            <div class="card" style="background: #fef3c7; border: 1px solid #fcd34d;">
+              <h3 style="color: #b45309; font-size: 1.1rem;">DOM-Based XSS</h3>
+              <p style="font-size: 0.85rem; color: #374151; margin-bottom: 0.75rem;">Script executes via <strong>client-side JavaScript</strong> manipulating the DOM.</p>
+              <p style="font-size: 0.8rem; color: #6b7280; margin-bottom: 0.5rem;">Never touches the server.</p>
+              <div style="background: #1f2937; color: #fcd34d; padding: 0.75rem; border-radius: 0.25rem; font-family: monospace; font-size: 0.7rem; word-break: break-all;">
+                el.innerHTML =<br>location.hash.slice(1)
+              </div>
+              <p style="font-size: 0.8rem; color: #b45309; margin-top: 0.5rem; font-weight: 600;">Frontend developer's problem</p>
+            </div>
+          </div>
+          <div class="highlight-box" style="background: #ffedd5; border-color: #fdba74;">
+            <p style="color: #c2410c; text-align: center;">DOM-based XSS is 100% a frontend bug &mdash; it happens entirely in YOUR JavaScript code.</p>
+          </div>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> Walk through each type. Stored: "Imagine a forum where someone posts a comment containing a script tag. Now everyone who views that thread runs the attacker's code." Reflected: "The attacker emails you a link like site.com/search?q=&lt;script&gt;... &mdash; you click it, the server echoes your search term back, and the script runs." DOM-based: "This is the one that's YOUR problem as a frontend dev. Remember innerHTML? If you set innerHTML to something from the URL hash or user input, you've created a DOM-based XSS vulnerability." Emphasize that DOM-based XSS never hits the server &mdash; a WAF (Web Application Firewall) can't protect against it.
+        </div>
+      </section>
+
+      <!-- Slide 4: Live Demo - DOM XSS -->
+      <section class="slide" aria-label="Live demo DOM-based XSS">
+        <header class="slide-title">
+          <div class="icon icon-red" aria-hidden="true">DEMO</div>
+          <div><h2>Live Demo: DOM-Based XSS</h2><p class="subtitle">Building on What We Learned in Week 3</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3 style="color: #dc2626;">The Vulnerable Code</h3>
+              <pre style="font-size: 0.8rem;">
+<span style="color:#6b7280">// A "search results" page</span>
+<span style="color:#f472b6">const</span> query = <span style="color:#a5f3fc">new</span> URLSearchParams(
+  window.location.search
+).get(<span style="color:#a5f3fc">'q'</span>);
+
+<span style="color:#6b7280">// DANGER: innerHTML with user input!</span>
+document.getElementById(<span style="color:#a5f3fc">'results'</span>)
+  .innerHTML = <span style="color:#a5f3fc">`Showing results for:
+  &lt;strong&gt;${query}&lt;/strong&gt;`</span>;
+
+<span style="color:#6b7280">// Attacker crafts URL:</span>
+<span style="color:#fca5a5">// ?q=&lt;img src=x onerror="alert(
+//   document.cookie)"&gt;</span></pre>
+            </div>
+            <div>
+              <h3 style="color: #15803d;">The Safe Version</h3>
+              <pre style="font-size: 0.8rem;">
+<span style="color:#6b7280">// Same page, done safely</span>
+<span style="color:#f472b6">const</span> query = <span style="color:#a5f3fc">new</span> URLSearchParams(
+  window.location.search
+).get(<span style="color:#a5f3fc">'q'</span>);
+
+<span style="color:#6b7280">// SAFE: textContent escapes HTML</span>
+<span style="color:#f472b6">const</span> el = document.getElementById(
+  <span style="color:#a5f3fc">'results'</span>
+);
+el.textContent =
+  <span style="color:#a5f3fc">`Showing results for: ${query}`</span>;
+
+<span style="color:#6b7280">// &lt;img&gt; tag is displayed as text,</span>
+<span style="color:#6b7280">// NOT executed as HTML!</span></pre>
+            </div>
+          </div>
+          <div class="highlight-box" style="background: #dcfce7; border-color: #86efac;">
+            <p style="color: #15803d; text-align: center; font-size: 1rem;"><strong>Demo:</strong> Open DevTools console &rarr; Create a div &rarr; Set innerHTML vs textContent with <span style="font-family: monospace;">&lt;img src=x onerror="alert(1)"&gt;</span></p>
+          </div>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> <strong>LIVE DEMO INSTRUCTIONS:</strong> Open any webpage. Open DevTools console. Type: <code>let div = document.createElement('div'); document.body.appendChild(div);</code> Then show the dangerous version: <code>div.innerHTML = '&lt;img src=x onerror="alert(document.cookie)"&gt;'</code> &mdash; the alert fires! Now show the safe version: <code>div.textContent = '&lt;img src=x onerror="alert(document.cookie)"&gt;'</code> &mdash; it just displays as text. Ask students: "Which one did we learn about in Week 3?" (innerHTML). "Now you know WHY textContent is safer." Point out the onerror trick &mdash; attackers don't even need a script tag. Image tags, SVGs, event handlers all work.
+        </div>
+      </section>
+
+      <!-- Slide 5: Stored XSS Example -->
+      <section class="slide" aria-label="Stored XSS the most dangerous">
+        <header class="slide-title">
+          <div class="icon icon-red" aria-hidden="true">!</div>
+          <div><h2>Stored XSS: The Most Dangerous</h2><p class="subtitle">One Malicious Input, Thousands of Victims</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>The Attack Scenario</h3>
+              <div class="flow-diagram" style="flex-direction: column; gap: 0.4rem; align-items: stretch;">
+                <div class="flow-box" style="background: #fef2f2; color: #dc2626; font-size: 0.85rem;">1. Attacker submits comment with script</div>
+                <span class="flow-arrow" style="text-align: center;">&#8595;</span>
+                <div class="flow-box" style="background: #f3f4f6; color: #374151; font-size: 0.85rem;">2. Server saves comment to database</div>
+                <span class="flow-arrow" style="text-align: center;">&#8595;</span>
+                <div class="flow-box" style="background: #f3f4f6; color: #374151; font-size: 0.85rem;">3. Other users load the page</div>
+                <span class="flow-arrow" style="text-align: center;">&#8595;</span>
+                <div class="flow-box" style="background: #f3f4f6; color: #374151; font-size: 0.85rem;">4. Server sends comment (with script) to all</div>
+                <span class="flow-arrow" style="text-align: center;">&#8595;</span>
+                <div class="flow-box" style="background: #fef2f2; color: #dc2626; font-size: 0.85rem;">5. Script runs in every victim's browser</div>
+              </div>
+            </div>
+            <div>
+              <h3>Real World Examples</h3>
+              <div class="card" style="background: #fef2f2; border: 1px solid #fca5a5; margin-bottom: 0.75rem;">
+                <h3 style="color: #dc2626; font-size: 0.95rem;">MySpace Worm (2005)</h3>
+                <p style="font-size: 0.8rem; color: #374151;">Samy Kamkar's XSS worm spread via profile pages. Added "Samy is my hero" to 1 million profiles in 20 hours.</p>
+              </div>
+              <div class="card" style="background: #fef2f2; border: 1px solid #fca5a5; margin-bottom: 0.75rem;">
+                <h3 style="color: #dc2626; font-size: 0.95rem;">British Airways (2018)</h3>
+                <p style="font-size: 0.8rem; color: #374151;">Injected script on payment page skimmed credit card details of 380,000 customers. $230M fine.</p>
+              </div>
+              <div class="card" style="background: #fef2f2; border: 1px solid #fca5a5;">
+                <h3 style="color: #dc2626; font-size: 0.95rem;">eBay (2015-2016)</h3>
+                <p style="font-size: 0.8rem; color: #374151;">XSS in listing descriptions redirected buyers to phishing pages.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> Stored XSS is the worst because the attacker only needs to inject once, and it hits EVERY user. Tell the Samy worm story &mdash; it's entertaining and educational. A teenager wrote a worm that exploited XSS in MySpace profiles. Within 20 hours it had infected over 1 million profiles. The British Airways example shows the financial stakes: $230M fine for a single XSS-enabled breach. Ask: "Where in YOUR apps do users submit content that gets displayed to others? Comments? Usernames? Profile bios? Those are all potential Stored XSS vectors."
+        </div>
+      </section>
+
+      <!-- Slide 6: XSS in React -->
+      <section class="slide" aria-label="XSS in React">
+        <header class="slide-title">
+          <div class="icon icon-blue" aria-hidden="true">React</div>
+          <div><h2>XSS in React</h2><p class="subtitle">How React Protects You (Mostly)</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3 style="color: #15803d;">React Auto-Escapes JSX</h3>
+              <pre style="font-size: 0.8rem; margin-bottom: 1rem;">
+<span style="color:#6b7280">// React AUTOMATICALLY escapes this</span>
+<span style="color:#f472b6">function</span> Comment({ text }) {
+  <span style="color:#6b7280">// Even if text contains &lt;script&gt;...</span>
+  <span style="color:#6b7280">// React renders it as plain text!</span>
+  <span style="color:#f472b6">return</span> &lt;p&gt;{text}&lt;/p&gt;;
+}
+
+<span style="color:#6b7280">// text = "&lt;script&gt;alert('xss')&lt;/script&gt;"</span>
+<span style="color:#6b7280">// Renders as: &amp;lt;script&amp;gt;alert...</span>
+<span style="color:#86efac">// SAFE! The script is shown as text.</span></pre>
+              <div class="card" style="background: #dcfce7; border: 1px solid #86efac;">
+                <p style="font-size: 0.85rem; color: #15803d;"><strong>This is why XSS dropped from #3 to #7 in the OWASP list.</strong> Modern frameworks escape by default.</p>
+              </div>
+            </div>
+            <div>
+              <h3 style="color: #dc2626;">The Escape Hatch</h3>
+              <pre style="font-size: 0.8rem; margin-bottom: 1rem;">
+<span style="color:#6b7280">// dangerouslySetInnerHTML</span>
+<span style="color:#6b7280">// The name is a WARNING!</span>
+<span style="color:#f472b6">function</span> RichContent({ html }) {
+  <span style="color:#f472b6">return</span> (
+    &lt;div
+      <span style="color:#fca5a5">dangerouslySetInnerHTML</span>={
+        { __html: html }
+      }
+    /&gt;
+  );
+}
+
+<span style="color:#6b7280">// If html comes from user input...</span>
+<span style="color:#fca5a5">// YOU JUST CREATED AN XSS VULN!</span></pre>
+              <div class="card" style="background: #fef2f2; border: 1px solid #fca5a5;">
+                <p style="font-size: 0.85rem; color: #dc2626;"><strong>Rule:</strong> Never use dangerouslySetInnerHTML with user-supplied data without sanitizing first.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> "Good news &mdash; React protects you by default!" Show the left side: any value in JSX curly braces is automatically escaped. Even if someone enters a script tag as their username, React shows it as text, not HTML. "But React gives you an escape hatch &mdash; and they literally named it dangerouslySetInnerHTML to WARN you." The name has 'dangerous' in it for a reason. Ask students: "When might you actually need this?" (Rich text editors, rendering markdown, CMS content). Those cases need sanitization first. Mention that Vue has a similar escape hatch: v-html.
+        </div>
+      </section>
+
+      <!-- Slide 7: Prevention Toolkit -->
+      <section class="slide" aria-label="XSS prevention toolkit">
+        <header class="slide-title">
+          <div class="icon icon-green" aria-hidden="true">DEF</div>
+          <div><h2>XSS Prevention Toolkit</h2><p class="subtitle">Your Defense-in-Depth Strategy</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <div class="card" style="background: #dcfce7; border: 1px solid #86efac; margin-bottom: 0.75rem;">
+                <h3 style="color: #15803d; font-size: 1rem;">1. Use textContent, Not innerHTML</h3>
+                <p style="font-size: 0.85rem; color: #374151;">For plain text, always use <span class="code-inline" style="color: #15803d;">textContent</span>. It automatically escapes HTML.</p>
+              </div>
+              <div class="card" style="background: #dcfce7; border: 1px solid #86efac; margin-bottom: 0.75rem;">
+                <h3 style="color: #15803d; font-size: 1rem;">2. Trust Your Framework</h3>
+                <p style="font-size: 0.85rem; color: #374151;">React, Vue, Angular all auto-escape by default. <strong>Don't bypass their protections</strong> unless absolutely necessary.</p>
+              </div>
+              <div class="card" style="background: #dcfce7; border: 1px solid #86efac;">
+                <h3 style="color: #15803d; font-size: 1rem;">3. Sanitize When You Must Render HTML</h3>
+                <pre style="font-size: 0.75rem; margin-top: 0.5rem; padding: 0.75rem;">
+<span style="color:#f472b6">import</span> DOMPurify <span style="color:#f472b6">from</span> <span style="color:#a5f3fc">'dompurify'</span>;
+
+<span style="color:#6b7280">// Strips dangerous tags &amp; attributes</span>
+<span style="color:#f472b6">const</span> clean = DOMPurify.sanitize(
+  userHTML
+);</pre>
+              </div>
+            </div>
+            <div>
+              <div class="card" style="background: #dbeafe; border: 1px solid #93c5fd; margin-bottom: 0.75rem;">
+                <h3 style="color: #1d4ed8; font-size: 1rem;">4. Content Security Policy (CSP)</h3>
+                <p style="font-size: 0.85rem; color: #374151;">HTTP header that blocks inline scripts entirely. <strong>Our next topic!</strong></p>
+              </div>
+              <div class="card" style="background: #dbeafe; border: 1px solid #93c5fd; margin-bottom: 0.75rem;">
+                <h3 style="color: #1d4ed8; font-size: 1rem;">5. Validate &amp; Encode Input</h3>
+                <p style="font-size: 0.85rem; color: #374151;">Validate on the client for UX. <strong>Always validate on the server for security.</strong> Encode special characters on output.</p>
+              </div>
+              <div class="card" style="background: #dbeafe; border: 1px solid #93c5fd;">
+                <h3 style="color: #1d4ed8; font-size: 1rem;">6. HttpOnly Cookies</h3>
+                <p style="font-size: 0.85rem; color: #374151;">Even if XSS happens, HttpOnly cookies can't be read by JavaScript. We'll cover this in Part 6.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> This is the "defense in depth" approach. No single defense is perfect, so you layer them. Walk through each: (1) You already know this from Week 3. (2) Let React do its job &mdash; don't use dangerouslySetInnerHTML. (3) When you MUST render HTML (rich text editor, markdown), use DOMPurify to strip dangerous elements. It's the industry standard library. (4) CSP is next &mdash; it's like a firewall for the browser. (5) Client-side validation is for UX (showing "invalid email" immediately). Server-side validation is for security. (6) HttpOnly cookies are a last line of defense &mdash; even if XSS succeeds, the attacker can't steal the session cookie.
+        </div>
+      </section>
+
+      <!-- Slide 8: Summary -->
+      <section class="slide" aria-label="Part 2 summary">
+        <header class="slide-title">
+          <div class="icon icon-orange" aria-hidden="true">XSS</div>
+          <div><h2>Part 2 Complete!</h2><p class="subtitle">Cross-Site Scripting (XSS)</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="list-card list-card-orange">
+            <ul style="font-size: 1.1rem;">
+              <li><span class="check">&#10003;</span> XSS injects malicious scripts into trusted websites</li>
+              <li><span class="check">&#10003;</span> Three types: Stored (worst), Reflected (URL), DOM-based (your code)</li>
+              <li><span class="check">&#10003;</span> innerHTML is the classic frontend XSS vector</li>
+              <li><span class="check">&#10003;</span> React auto-escapes JSX &mdash; don't bypass it</li>
+              <li><span class="check">&#10003;</span> Use DOMPurify when you must render user HTML</li>
+              <li><span class="check">&#10003;</span> Defense in depth: escape + sanitize + CSP + HttpOnly</li>
+            </ul>
+          </div>
+          <p style="text-align: center; color: #c2410c; font-size: 1.25rem; margin-top: 1.5rem; font-weight: 500;">Next up: Part 3 &mdash; Content Security Policy (CSP) &#8594;</p>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> Quick recap of key takeaways. Ask the class: "What's the difference between Stored and DOM-based XSS?" and "Why is React safer than vanilla JS for rendering user input?" Make sure they understand the defense-in-depth concept &mdash; no single measure is enough. CSP is next and it builds directly on what we just learned.
+        </div>
+      </section>
+
+    </div>
+
+    <div class="notes-panel" id="notesPanel"></div>
+
+    <nav class="controls" aria-label="Slide navigation">
+      <button class="btn btn-prev" onclick="prevSlide()" aria-label="Previous slide">&#8592; Previous</button>
+      <div class="dots" id="dots" role="tablist" aria-label="Slide indicators"></div>
+      <div style="display:flex;align-items:center;gap:1rem">
+        <span class="counter" id="counter" aria-live="polite">1 / 8</span>
+        <button class="btn btn-next" onclick="nextSlide()" aria-label="Next slide">Next &#8594;</button>
+      </div>
+    </nav>
+  </main>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const dotsContainer = document.getElementById('dots');
+    const counter = document.getElementById('counter');
+    const notesPanel = document.getElementById('notesPanel');
+    let current = 0;
+    let notesVisible = false;
+    slides.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.className = 'dot' + (i === 0 ? ' active' : '');
+      dot.onclick = () => goToSlide(i);
+      dot.setAttribute('aria-label', 'Go to slide ' + (i + 1));
+      dotsContainer.appendChild(dot);
+    });
+    function updateNotes() {
+      const currentSlide = slides[current];
+      const notes = currentSlide.querySelector('.notes');
+      if (notes) {
+        notesPanel.innerHTML = notes.innerHTML;
+      } else {
+        notesPanel.innerHTML = '<strong>No notes for this slide.</strong>';
+      }
+    }
+    function updateSlide() {
+      slides.forEach((s, i) => s.classList.toggle('active', i === current));
+      document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
+      counter.textContent = `${current + 1} / ${slides.length}`;
+      document.querySelector('.btn-prev').disabled = current === 0;
+      document.querySelector('.btn-next').disabled = current === slides.length - 1;
+      if (notesVisible) updateNotes();
+    }
+    function nextSlide() { if (current < slides.length - 1) { current++; updateSlide(); } }
+    function prevSlide() { if (current > 0) { current--; updateSlide(); } }
+    function goToSlide(i) { current = i; updateSlide(); }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+      if (e.key === 'ArrowLeft') prevSlide();
+      if (e.key === 'n' || e.key === 'N') {
+        notesVisible = !notesVisible;
+        notesPanel.classList.toggle('visible', notesVisible);
+        if (notesVisible) updateNotes();
+      }
+    });
+  </script>
+</body>
+</html>

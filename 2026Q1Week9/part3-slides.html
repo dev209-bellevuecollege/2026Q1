@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Part 3: Content Security Policy (CSP)</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; }
+    .slideshow { height: 100vh; display: flex; flex-direction: column; }
+    .slide-container { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+    .slide { background: white; border-radius: 1rem; box-shadow: 0 10px 40px rgba(0,0,0,0.1); width: 100%; max-width: 1000px; height: 600px; padding: 3rem; display: none; flex-direction: column; }
+    .slide.active { display: flex; }
+    .controls { background: white; border-top: 1px solid #e5e7eb; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+    .btn { padding: 0.5rem 1.5rem; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; }
+    .btn-prev, .btn-next { background: #1d4ed8; color: white; }
+    .btn:disabled { background: #d1d5db; cursor: not-allowed; }
+    .dots { display: flex; gap: 0.5rem; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #d1d5db; border: none; cursor: pointer; }
+    .dot.active { background: #1d4ed8; width: 20px; border-radius: 5px; }
+    .slide-title { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+    .icon { width: 50px; height: 50px; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: bold; }
+    .icon-red { background: #fef2f2; color: #dc2626; }
+    .icon-orange { background: #ffedd5; color: #c2410c; }
+    .icon-blue { background: #dbeafe; color: #1d4ed8; }
+    .icon-green { background: #dcfce7; color: #15803d; }
+    .icon-yellow { background: #fef3c7; color: #b45309; }
+    .icon-purple { background: #f3e8ff; color: #7c3aed; }
+    .icon-cyan { background: #cffafe; color: #0891b2; }
+    h1 { font-size: 2.5rem; color: #1f2937; }
+    h2 { font-size: 1.75rem; color: #1f2937; }
+    h3 { font-size: 1.25rem; color: #374151; margin-bottom: 0.5rem; }
+    .subtitle { color: #6b7280; font-size: 1.1rem; }
+    .content { flex: 1; display: flex; flex-direction: column; gap: 1rem; }
+    .card { background: #f9fafb; border-radius: 0.75rem; padding: 1.25rem; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; flex: 1; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; flex: 1; }
+    .title-slide { align-items: center; justify-content: center; text-align: center; }
+    .title-slide .icon { width: 80px; height: 80px; font-size: 1.5rem; margin-bottom: 1.5rem; border-radius: 50%; }
+    .title-slide h1 { margin-bottom: 1rem; }
+    .title-slide .subtitle { margin-bottom: 1.5rem; font-size: 1.25rem; }
+    .badge { background: #dbeafe; color: #1d4ed8; padding: 0.5rem 1rem; border-radius: 2rem; font-size: 0.9rem; }
+    .counter { color: #6b7280; font-size: 0.9rem; }
+    pre { background: #1f2937; color: #f9fafb; padding: 1.25rem; border-radius: 0.5rem; font-size: 0.85rem; overflow-x: auto; font-family: 'Monaco', 'Menlo', monospace; line-height: 1.5; }
+    code { font-family: 'Monaco', 'Menlo', monospace; }
+    .code-inline { background: #f3f4f6; padding: 0.2rem 0.5rem; border-radius: 0.25rem; font-size: 0.9rem; color: #1d4ed8; font-family: 'Monaco', 'Menlo', monospace; }
+    .list-card { border-radius: 0.75rem; padding: 1.5rem; }
+    .list-card-blue { background: #dbeafe; border: 1px solid #93c5fd; }
+    .list-card ul { list-style: none; }
+    .list-card li { padding: 0.5rem 0; display: flex; align-items: flex-start; gap: 0.5rem; color: #374151; }
+    .check { color: #1d4ed8; font-weight: bold; }
+    .highlight-box { background: #dbeafe; border: 2px solid #93c5fd; border-radius: 0.75rem; padding: 1.5rem; margin-top: 1rem; }
+    .highlight-box p { color: #1d4ed8; font-weight: 500; font-size: 1.1rem; }
+    .flow-diagram { display: flex; align-items: center; justify-content: center; gap: 0.75rem; margin: 1rem 0; flex-wrap: wrap; }
+    .flow-box { padding: 0.75rem 1.25rem; border-radius: 0.5rem; text-align: center; font-weight: 500; font-size: 0.9rem; }
+    .flow-arrow { font-size: 1.5rem; color: #1d4ed8; }
+    .comparison-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .comparison-table th, .comparison-table td { padding: 0.6rem 0.75rem; text-align: left; border-bottom: 1px solid #e5e7eb; }
+    .comparison-table th { background: #f9fafb; color: #374151; font-weight: 600; }
+    .notes { display: none; }
+    .notes-panel { display: none; background: #1f2937; color: #f9fafb; padding: 1.5rem 2rem; font-size: 0.95rem; line-height: 1.6; border-top: 3px solid #1d4ed8; max-height: 200px; overflow-y: auto; }
+    .notes-panel.visible { display: block; }
+    .notes-panel strong { color: #93c5fd; }
+  </style>
+</head>
+<body>
+  <main class="slideshow">
+    <div class="slide-container" role="region" aria-label="Slide presentation">
+
+      <!-- Slide 1: Title -->
+      <section class="slide active title-slide" aria-label="Title slide">
+        <div class="icon icon-blue" aria-hidden="true">CSP</div>
+        <h1>Part 3: Content Security Policy</h1>
+        <p class="subtitle">A Firewall for Your Browser</p>
+        <span class="badge">12 Minutes</span>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> Transition from XSS: "We just learned how XSS works. Now let's learn the single most powerful defense against it." CSP is an HTTP header that tells the browser exactly what's allowed to run. Think of it as a security guard at the door of your web page.
+        </div>
+      </section>
+
+      <!-- Slide 2: What is CSP? -->
+      <section class="slide" aria-label="What is CSP">
+        <header class="slide-title">
+          <div class="icon icon-blue" aria-hidden="true">CSP</div>
+          <div><h2>What is CSP?</h2><p class="subtitle">An HTTP Header That Controls What Browsers Allow</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <div class="card" style="margin-bottom: 1rem;">
+                <h3>The Concept</h3>
+                <p style="font-size: 0.95rem; color: #374151;">CSP is an HTTP response header that tells the browser: <strong>"Only load resources from these approved sources."</strong></p>
+                <p style="font-size: 0.85rem; color: #6b7280; margin-top: 0.5rem;">If an XSS attack injects a script, the browser blocks it because it's not on the approved list.</p>
+              </div>
+              <div class="card" style="background: #fef2f2; border: 1px solid #fca5a5;">
+                <h3 style="color: #dc2626; font-size: 1rem;">Without CSP</h3>
+                <p style="font-size: 0.85rem; color: #374151;">Browser loads and runs <strong>anything</strong> on the page &mdash; including injected scripts.</p>
+              </div>
+            </div>
+            <div>
+              <h3>How It Works</h3>
+              <div class="flow-diagram" style="flex-direction: column; gap: 0.5rem; align-items: stretch;">
+                <div class="flow-box" style="background: #dbeafe; color: #1d4ed8;">Server sends CSP header with response</div>
+                <span class="flow-arrow" style="text-align: center;">&#8595;</span>
+                <div class="flow-box" style="background: #f3e8ff; color: #7c3aed;">Browser reads the policy rules</div>
+                <span class="flow-arrow" style="text-align: center;">&#8595;</span>
+                <div class="flow-box" style="background: #dcfce7; color: #15803d;">Approved resources load normally</div>
+                <span class="flow-arrow" style="text-align: center;">&#8595;</span>
+                <div class="flow-box" style="background: #fef2f2; color: #dc2626;">Unapproved resources are BLOCKED</div>
+              </div>
+              <div class="card" style="background: #dcfce7; border: 1px solid #86efac; margin-top: 0.75rem;">
+                <p style="font-size: 0.85rem; color: #15803d;"><strong>Blocked resources appear as errors in the DevTools console</strong> &mdash; you'll see exactly what was stopped.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> Analogy: "Imagine a bouncer at a club with a guest list. CSP is that guest list. The server says 'only let in scripts from my domain and Google Analytics.' Everything else gets turned away at the door." Key point: CSP doesn't prevent the XSS injection from happening &mdash; it prevents the injected code from EXECUTING. It's a safety net. Show in DevTools: if you visit a site with CSP and open the console, you'll see blocked resource warnings.
+        </div>
+      </section>
+
+      <!-- Slide 3: Key Directives -->
+      <section class="slide" aria-label="CSP key directives">
+        <header class="slide-title">
+          <div class="icon icon-blue" aria-hidden="true">DIR</div>
+          <div><h2>Key CSP Directives</h2><p class="subtitle">Controlling Each Type of Resource</p></div>
+        </header>
+        <div class="content">
+          <table class="comparison-table">
+            <thead>
+              <tr>
+                <th>Directive</th>
+                <th>Controls</th>
+                <th>Example</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="code-inline">default-src</span></td>
+                <td>Fallback for all resource types</td>
+                <td><code style="font-size:0.8rem;">default-src 'self'</code></td>
+              </tr>
+              <tr>
+                <td><span class="code-inline">script-src</span></td>
+                <td>JavaScript files &amp; inline scripts</td>
+                <td><code style="font-size:0.8rem;">script-src 'self' cdn.example.com</code></td>
+              </tr>
+              <tr>
+                <td><span class="code-inline">style-src</span></td>
+                <td>CSS files &amp; inline styles</td>
+                <td><code style="font-size:0.8rem;">style-src 'self' 'unsafe-inline'</code></td>
+              </tr>
+              <tr>
+                <td><span class="code-inline">img-src</span></td>
+                <td>Images</td>
+                <td><code style="font-size:0.8rem;">img-src 'self' images.unsplash.com</code></td>
+              </tr>
+              <tr>
+                <td><span class="code-inline">connect-src</span></td>
+                <td>fetch(), XHR, WebSocket connections</td>
+                <td><code style="font-size:0.8rem;">connect-src 'self' api.example.com</code></td>
+              </tr>
+              <tr>
+                <td><span class="code-inline">font-src</span></td>
+                <td>Web fonts</td>
+                <td><code style="font-size:0.8rem;">font-src 'self' fonts.gstatic.com</code></td>
+              </tr>
+              <tr>
+                <td><span class="code-inline">frame-src</span></td>
+                <td>iframes</td>
+                <td><code style="font-size:0.8rem;">frame-src youtube.com</code></td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="highlight-box">
+            <p style="font-size: 1rem;"><strong>Pro tip:</strong> Start with <span class="code-inline">default-src 'self'</span> (block everything external), then add exceptions as needed.</p>
+          </div>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> Walk through the table. "default-src is your baseline &mdash; set it to 'self' meaning only your own domain. Then override specific types as needed." For script-src: "This is the most important one for XSS prevention. If you set script-src 'self', no inline scripts or external scripts can run unless they're from your domain." For connect-src: "This controls where your fetch() calls can go &mdash; it's related to CORS which we'll cover next." Ask students: "What would happen if you set img-src 'self' but your app loads images from Unsplash?" (They'd be blocked!)
+        </div>
+      </section>
+
+      <!-- Slide 4: CSP Values -->
+      <section class="slide" aria-label="CSP values and keywords">
+        <header class="slide-title">
+          <div class="icon icon-purple" aria-hidden="true">VAL</div>
+          <div><h2>CSP Values &amp; Keywords</h2><p class="subtitle">The Building Blocks of Your Policy</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <div class="card" style="margin-bottom: 0.75rem; background: #dcfce7; border: 1px solid #86efac;">
+                <h3 style="color: #15803d; font-size: 1rem;">'self'</h3>
+                <p style="font-size: 0.85rem; color: #374151;">Only allow resources from the same origin (protocol + domain + port).</p>
+              </div>
+              <div class="card" style="margin-bottom: 0.75rem; background: #fef2f2; border: 1px solid #fca5a5;">
+                <h3 style="color: #dc2626; font-size: 1rem;">'unsafe-inline'</h3>
+                <p style="font-size: 0.85rem; color: #374151;">Allow inline &lt;script&gt; and &lt;style&gt; tags. <strong>Defeats most XSS protection!</strong> Avoid if possible.</p>
+              </div>
+              <div class="card" style="margin-bottom: 0.75rem; background: #fef2f2; border: 1px solid #fca5a5;">
+                <h3 style="color: #dc2626; font-size: 1rem;">'unsafe-eval'</h3>
+                <p style="font-size: 0.85rem; color: #374151;">Allow eval(), new Function(), etc. Very dangerous &mdash; rarely needed.</p>
+              </div>
+              <div class="card" style="background: #fef2f2; border: 1px solid #fca5a5;">
+                <h3 style="color: #dc2626; font-size: 1rem;">'none'</h3>
+                <p style="font-size: 0.85rem; color: #374151;">Block this resource type entirely. E.g., <code style="font-size:0.8rem;">frame-src 'none'</code> blocks all iframes.</p>
+              </div>
+            </div>
+            <div>
+              <div class="card" style="margin-bottom: 0.75rem; background: #dbeafe; border: 1px solid #93c5fd;">
+                <h3 style="color: #1d4ed8; font-size: 1rem;">Domain Allowlisting</h3>
+                <p style="font-size: 0.85rem; color: #374151;">Specify exact domains to allow:</p>
+                <pre style="font-size: 0.75rem; margin-top: 0.5rem; padding: 0.75rem;">script-src 'self'
+  cdn.jsdelivr.net
+  *.google-analytics.com</pre>
+              </div>
+              <div class="card" style="background: #f3e8ff; border: 1px solid #c4b5fd;">
+                <h3 style="color: #7c3aed; font-size: 1rem;">'nonce-{random}' (Best Practice)</h3>
+                <p style="font-size: 0.85rem; color: #374151;">Allow specific inline scripts with a one-time token:</p>
+                <pre style="font-size: 0.75rem; margin-top: 0.5rem; padding: 0.75rem;">
+<span style="color:#6b7280">// Header</span>
+script-src 'nonce-abc123'
+
+<span style="color:#6b7280">// HTML - only THIS script runs</span>
+&lt;script <span style="color:#c4b5fd">nonce="abc123"</span>&gt;
+  <span style="color:#6b7280">// This is allowed</span>
+&lt;/script&gt;
+
+<span style="color:#6b7280">// Injected scripts have no nonce</span>
+<span style="color:#fca5a5">&lt;script&gt;evil()&lt;/script&gt;</span>
+<span style="color:#6b7280">// BLOCKED!</span></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> Key insight: 'unsafe-inline' has "unsafe" in the name for a reason! If you allow inline scripts, you've basically turned off XSS protection for scripts. "But wait &mdash; don't many apps use inline scripts?" Yes, and that's what nonces are for. A nonce is a random value generated on each page load. The server puts the nonce in the CSP header AND on the script tag. Only scripts with the matching nonce run. Injected scripts won't have the nonce, so they're blocked. For students: "In practice, React apps serve from a bundled JS file, not inline scripts, so 'self' is usually enough."
+        </div>
+      </section>
+
+      <!-- Slide 5: CSP in Practice -->
+      <section class="slide" aria-label="CSP in practice">
+        <header class="slide-title">
+          <div class="icon icon-green" aria-hidden="true">USE</div>
+          <div><h2>CSP in Practice</h2><p class="subtitle">Adding CSP to Your Projects</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>Method 1: HTTP Header (Best)</h3>
+              <pre style="font-size: 0.75rem; margin-bottom: 1rem;">
+<span style="color:#6b7280">// Server sets this header:</span>
+Content-Security-Policy:
+  default-src 'self';
+  script-src 'self';
+  style-src 'self' 'unsafe-inline';
+  img-src 'self' data: https:;
+  connect-src 'self' api.example.com;
+  font-src 'self' fonts.gstatic.com</pre>
+              <h3>Method 2: Meta Tag</h3>
+              <pre style="font-size: 0.75rem;">
+<span style="color:#6b7280">&lt;!-- In your HTML &lt;head&gt; --&gt;</span>
+&lt;meta
+  http-equiv="Content-Security-Policy"
+  content="default-src 'self';
+    script-src 'self';
+    style-src 'self' 'unsafe-inline'"
+&gt;</pre>
+            </div>
+            <div>
+              <h3>A Starter Policy for React Apps</h3>
+              <pre style="font-size: 0.75rem; margin-bottom: 1rem;">
+<span style="color:#86efac">// Good starting point:</span>
+Content-Security-Policy:
+  default-src 'self';
+  script-src 'self';
+  style-src 'self' 'unsafe-inline';
+  img-src 'self' data: blob:;
+  connect-src 'self'
+    https://your-api.com;
+  font-src 'self';</pre>
+              <div class="card" style="background: #fef3c7; border: 1px solid #fcd34d; margin-bottom: 0.75rem;">
+                <h3 style="color: #b45309; font-size: 0.95rem;">Report-Only Mode (Testing)</h3>
+                <p style="font-size: 0.8rem; color: #374151;">Use <span class="code-inline" style="color: #b45309;">Content-Security-Policy-Report-Only</span> to log violations without blocking. Great for testing before enforcing.</p>
+              </div>
+              <div class="card" style="background: #dcfce7; border: 1px solid #86efac;">
+                <h3 style="color: #15803d; font-size: 0.95rem;">Demo</h3>
+                <p style="font-size: 0.8rem; color: #374151;">Open DevTools &rarr; Console &rarr; Look for CSP violation warnings on any major website (GitHub, Twitter).</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> <strong>DEMO INSTRUCTIONS:</strong> Open GitHub.com in Chrome. Open DevTools &rarr; Network tab. Click on the main document request and show the Content-Security-Policy header in the response headers. It's massive! Point out the script-src, style-src directives. Then go to another site and try: open console, type document.write('&lt;script src="https://evil.com/bad.js"&gt;&lt;/script&gt;') and show the CSP violation in the console. For students deploying on Vercel/Netlify: you can set these headers in vercel.json or netlify.toml. Show the meta tag approach as a simpler alternative for their projects.
+        </div>
+      </section>
+
+      <!-- Slide 6: Summary -->
+      <section class="slide" aria-label="Part 3 summary">
+        <header class="slide-title">
+          <div class="icon icon-blue" aria-hidden="true">CSP</div>
+          <div><h2>Part 3 Complete!</h2><p class="subtitle">Content Security Policy</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="list-card list-card-blue">
+            <ul style="font-size: 1.1rem;">
+              <li><span class="check">&#10003;</span> CSP is an HTTP header that controls what resources can load</li>
+              <li><span class="check">&#10003;</span> default-src 'self' blocks everything external by default</li>
+              <li><span class="check">&#10003;</span> script-src is your primary XSS defense</li>
+              <li><span class="check">&#10003;</span> Nonces allow specific inline scripts while blocking injected ones</li>
+              <li><span class="check">&#10003;</span> Use Report-Only mode to test before enforcing</li>
+              <li><span class="check">&#10003;</span> Add via HTTP header (best) or &lt;meta&gt; tag</li>
+            </ul>
+          </div>
+          <p style="text-align: center; color: #1d4ed8; font-size: 1.25rem; margin-top: 1.5rem; font-weight: 500;">Next up: Part 4 &mdash; CORS Deep Dive &#8594;</p>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> Quick recap. CSP is one of the most powerful security features available to web developers, and it's underused. For their final projects, challenge students to add a CSP meta tag to their index.html. "Even a basic default-src 'self' is better than nothing." Transition: "CSP controls what your page loads. CORS controls what other pages can request FROM your server. Let's look at that next."
+        </div>
+      </section>
+
+    </div>
+
+    <div class="notes-panel" id="notesPanel"></div>
+
+    <nav class="controls" aria-label="Slide navigation">
+      <button class="btn btn-prev" onclick="prevSlide()" aria-label="Previous slide">&#8592; Previous</button>
+      <div class="dots" id="dots" role="tablist" aria-label="Slide indicators"></div>
+      <div style="display:flex;align-items:center;gap:1rem">
+        <span class="counter" id="counter" aria-live="polite">1 / 6</span>
+        <button class="btn btn-next" onclick="nextSlide()" aria-label="Next slide">Next &#8594;</button>
+      </div>
+    </nav>
+  </main>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const dotsContainer = document.getElementById('dots');
+    const counter = document.getElementById('counter');
+    const notesPanel = document.getElementById('notesPanel');
+    let current = 0;
+    let notesVisible = false;
+    slides.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.className = 'dot' + (i === 0 ? ' active' : '');
+      dot.onclick = () => goToSlide(i);
+      dot.setAttribute('aria-label', 'Go to slide ' + (i + 1));
+      dotsContainer.appendChild(dot);
+    });
+    function updateNotes() {
+      const currentSlide = slides[current];
+      const notes = currentSlide.querySelector('.notes');
+      if (notes) {
+        notesPanel.innerHTML = notes.innerHTML;
+      } else {
+        notesPanel.innerHTML = '<strong>No notes for this slide.</strong>';
+      }
+    }
+    function updateSlide() {
+      slides.forEach((s, i) => s.classList.toggle('active', i === current));
+      document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
+      counter.textContent = `${current + 1} / ${slides.length}`;
+      document.querySelector('.btn-prev').disabled = current === 0;
+      document.querySelector('.btn-next').disabled = current === slides.length - 1;
+      if (notesVisible) updateNotes();
+    }
+    function nextSlide() { if (current < slides.length - 1) { current++; updateSlide(); } }
+    function prevSlide() { if (current > 0) { current--; updateSlide(); } }
+    function goToSlide(i) { current = i; updateSlide(); }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+      if (e.key === 'ArrowLeft') prevSlide();
+      if (e.key === 'n' || e.key === 'N') {
+        notesVisible = !notesVisible;
+        notesPanel.classList.toggle('visible', notesVisible);
+        if (notesVisible) updateNotes();
+      }
+    });
+  </script>
+</body>
+</html>

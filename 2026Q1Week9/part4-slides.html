@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Part 4: CORS Deep Dive</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; }
+    .slideshow { height: 100vh; display: flex; flex-direction: column; }
+    .slide-container { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+    .slide { background: white; border-radius: 1rem; box-shadow: 0 10px 40px rgba(0,0,0,0.1); width: 100%; max-width: 1000px; height: 600px; padding: 3rem; display: none; flex-direction: column; }
+    .slide.active { display: flex; }
+    .controls { background: white; border-top: 1px solid #e5e7eb; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+    .btn { padding: 0.5rem 1.5rem; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; }
+    .btn-prev, .btn-next { background: #7c3aed; color: white; }
+    .btn:disabled { background: #d1d5db; cursor: not-allowed; }
+    .dots { display: flex; gap: 0.5rem; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #d1d5db; border: none; cursor: pointer; }
+    .dot.active { background: #7c3aed; width: 20px; border-radius: 5px; }
+    .slide-title { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+    .icon { width: 50px; height: 50px; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: bold; }
+    .icon-red { background: #fef2f2; color: #dc2626; }
+    .icon-orange { background: #ffedd5; color: #c2410c; }
+    .icon-blue { background: #dbeafe; color: #1d4ed8; }
+    .icon-green { background: #dcfce7; color: #15803d; }
+    .icon-yellow { background: #fef3c7; color: #b45309; }
+    .icon-purple { background: #f3e8ff; color: #7c3aed; }
+    .icon-cyan { background: #cffafe; color: #0891b2; }
+    h1 { font-size: 2.5rem; color: #1f2937; }
+    h2 { font-size: 1.75rem; color: #1f2937; }
+    h3 { font-size: 1.25rem; color: #374151; margin-bottom: 0.5rem; }
+    .subtitle { color: #6b7280; font-size: 1.1rem; }
+    .content { flex: 1; display: flex; flex-direction: column; gap: 1rem; }
+    .card { background: #f9fafb; border-radius: 0.75rem; padding: 1.25rem; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; flex: 1; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; flex: 1; }
+    .title-slide { align-items: center; justify-content: center; text-align: center; }
+    .title-slide .icon { width: 80px; height: 80px; font-size: 1.5rem; margin-bottom: 1.5rem; border-radius: 50%; }
+    .title-slide h1 { margin-bottom: 1rem; }
+    .title-slide .subtitle { margin-bottom: 1.5rem; font-size: 1.25rem; }
+    .badge { background: #f3e8ff; color: #7c3aed; padding: 0.5rem 1rem; border-radius: 2rem; font-size: 0.9rem; }
+    .counter { color: #6b7280; font-size: 0.9rem; }
+    pre { background: #1f2937; color: #f9fafb; padding: 1.25rem; border-radius: 0.5rem; font-size: 0.85rem; overflow-x: auto; font-family: 'Monaco', 'Menlo', monospace; line-height: 1.5; }
+    code { font-family: 'Monaco', 'Menlo', monospace; }
+    .code-inline { background: #f3f4f6; padding: 0.2rem 0.5rem; border-radius: 0.25rem; font-size: 0.85rem; color: #7c3aed; font-family: 'Monaco', 'Menlo', monospace; }
+    .list-card { border-radius: 0.75rem; padding: 1.5rem; }
+    .list-card-purple { background: #f3e8ff; border: 1px solid #c4b5fd; }
+    .list-card ul { list-style: none; }
+    .list-card li { padding: 0.5rem 0; display: flex; align-items: flex-start; gap: 0.5rem; color: #374151; }
+    .check { color: #7c3aed; font-weight: bold; }
+    .highlight-box { background: #f3e8ff; border: 2px solid #c4b5fd; border-radius: 0.75rem; padding: 1.5rem; margin-top: 1rem; }
+    .highlight-box p { color: #7c3aed; font-weight: 500; font-size: 1.1rem; }
+    .flow-diagram { display: flex; align-items: center; justify-content: center; gap: 0.75rem; margin: 1rem 0; flex-wrap: wrap; }
+    .flow-box { padding: 0.75rem 1.25rem; border-radius: 0.5rem; text-align: center; font-weight: 500; font-size: 0.9rem; }
+    .flow-arrow { font-size: 1.5rem; color: #7c3aed; }
+    .comparison-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .comparison-table th, .comparison-table td { padding: 0.6rem 0.75rem; text-align: left; border-bottom: 1px solid #e5e7eb; }
+    .comparison-table th { background: #f9fafb; color: #374151; font-weight: 600; }
+    .notes { display: none; }
+    .notes-panel { display: none; background: #1f2937; color: #f9fafb; padding: 1.5rem 2rem; font-size: 0.95rem; line-height: 1.6; border-top: 3px solid #7c3aed; max-height: 200px; overflow-y: auto; }
+    .notes-panel.visible { display: block; }
+    .notes-panel strong { color: #c4b5fd; }
+  </style>
+</head>
+<body>
+  <main class="slideshow">
+    <div class="slide-container" role="region" aria-label="Slide presentation">
+
+      <!-- Slide 1: Title -->
+      <section class="slide active title-slide" aria-label="Title slide">
+        <div class="icon icon-purple" aria-hidden="true">CORS</div>
+        <h1>Part 4: CORS Deep Dive</h1>
+        <p class="subtitle">Demystifying the Error You've Definitely Seen</p>
+        <span class="badge">15 Minutes</span>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> Ask the class: "How many of you have seen a CORS error in DevTools?" (Almost everyone should raise their hand.) "Great. By the end of this section, you'll actually understand what it means and how to fix it." CORS is one of the most confusing topics for frontend developers, but it's actually logical once you understand the Same-Origin Policy.
+        </div>
+      </section>
+
+      <!-- Slide 2: Same-Origin Policy -->
+      <section class="slide" aria-label="Same-Origin Policy">
+        <header class="slide-title">
+          <div class="icon icon-purple" aria-hidden="true">SOP</div>
+          <div><h2>The Same-Origin Policy</h2><p class="subtitle">The Foundation of Web Security</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <div class="card" style="margin-bottom: 1rem;">
+                <h3>What is an "Origin"?</h3>
+                <p style="font-size: 0.9rem; color: #374151; margin-bottom: 0.5rem;">An origin is the combination of:</p>
+                <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
+                  <span style="background: #dbeafe; color: #1d4ed8; padding: 0.25rem 0.75rem; border-radius: 0.25rem; font-weight: 600; font-size: 0.9rem;">Protocol</span>
+                  <span style="color: #6b7280;">+</span>
+                  <span style="background: #dcfce7; color: #15803d; padding: 0.25rem 0.75rem; border-radius: 0.25rem; font-weight: 600; font-size: 0.9rem;">Domain</span>
+                  <span style="color: #6b7280;">+</span>
+                  <span style="background: #f3e8ff; color: #7c3aed; padding: 0.25rem 0.75rem; border-radius: 0.25rem; font-weight: 600; font-size: 0.9rem;">Port</span>
+                </div>
+                <pre style="font-size: 0.75rem; padding: 0.75rem;">
+<span style="color:#93c5fd">https</span>://<span style="color:#86efac">example.com</span>:<span style="color:#c4b5fd">443</span>/page</pre>
+              </div>
+              <div class="card" style="margin-bottom: 1rem;">
+                <h3 style="font-size: 1rem;">Same or Different Origin?</h3>
+                <table style="width: 100%; font-size: 0.8rem;">
+                  <tr><td style="padding:0.3rem 0;">https://a.com vs https://a.com/page</td><td style="color:#15803d;">&#10003; Same</td></tr>
+                  <tr><td style="padding:0.3rem 0;"><strong>http</strong>://a.com vs <strong>https</strong>://a.com</td><td style="color:#dc2626;">&#10007; Different</td></tr>
+                  <tr><td style="padding:0.3rem 0;">a.com vs <strong>api</strong>.a.com</td><td style="color:#dc2626;">&#10007; Different</td></tr>
+                  <tr><td style="padding:0.3rem 0;">a.com:<strong>3000</strong> vs a.com:<strong>5000</strong></td><td style="color:#dc2626;">&#10007; Different</td></tr>
+                </table>
+              </div>
+            </div>
+            <div>
+              <div class="card" style="background: #f3e8ff; border: 1px solid #c4b5fd; margin-bottom: 1rem;">
+                <h3 style="color: #7c3aed;">The Same-Origin Policy Says:</h3>
+                <p style="font-size: 0.9rem; color: #374151;">"JavaScript on one origin <strong>cannot read data</strong> from a different origin."</p>
+                <p style="font-size: 0.85rem; color: #6b7280; margin-top: 0.5rem;">This prevents evil.com from reading your bank data at bank.com using fetch().</p>
+              </div>
+              <div class="card" style="background: #fef3c7; border: 1px solid #fcd34d;">
+                <h3 style="color: #b45309; font-size: 1rem;">Why Does This Exist?</h3>
+                <p style="font-size: 0.85rem; color: #374151;">Without it, any website could:</p>
+                <ul style="font-size: 0.8rem; color: #374151; list-style: none; margin-top: 0.5rem;">
+                  <li style="padding: 0.2rem 0;">&#10007; Read your Gmail inbox</li>
+                  <li style="padding: 0.2rem 0;">&#10007; Check your bank balance</li>
+                  <li style="padding: 0.2rem 0;">&#10007; Access your social media DMs</li>
+                  <li style="padding: 0.2rem 0;">&#10007; Fetch data from internal company APIs</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> This is foundational. Spend a moment on the origin definition. "Protocol + domain + port. ALL THREE must match." Walk through the examples table &mdash; subdomains are different origins, different ports are different origins. "Why does this matter? Imagine you're logged into your bank. You visit evil.com. Without the Same-Origin Policy, evil.com's JavaScript could do fetch('https://mybank.com/api/balance') and read the response &mdash; because your browser would send your bank cookies with the request." The SOP prevents evil.com from READING the response. The request still goes through (important for CORS understanding).
+        </div>
+      </section>
+
+      <!-- Slide 3: What CORS Does -->
+      <section class="slide" aria-label="What CORS does">
+        <header class="slide-title">
+          <div class="icon icon-purple" aria-hidden="true">CORS</div>
+          <div><h2>What CORS Actually Does</h2><p class="subtitle">Controlled Exceptions to the Same-Origin Policy</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <div class="card" style="background: #f3e8ff; border: 1px solid #c4b5fd; margin-bottom: 1rem;">
+                <h3 style="color: #7c3aed; font-size: 1rem;">CORS = Cross-Origin Resource Sharing</h3>
+                <p style="font-size: 0.9rem; color: #374151;">A system that lets <strong>servers explicitly allow</strong> certain cross-origin requests.</p>
+                <p style="font-size: 0.85rem; color: #6b7280; margin-top: 0.5rem;">The server decides who's allowed in, not the browser.</p>
+              </div>
+              <div class="card" style="margin-bottom: 1rem;">
+                <h3>The Key Idea</h3>
+                <p style="font-size: 0.9rem; color: #374151;">When your frontend (localhost:3000) fetches from your API (localhost:5000), that's <strong>cross-origin</strong>. The API must explicitly allow it.</p>
+              </div>
+            </div>
+            <div>
+              <h3>The CORS Flow</h3>
+              <div class="flow-diagram" style="flex-direction: column; gap: 0.4rem; align-items: stretch;">
+                <div class="flow-box" style="background: #dbeafe; color: #1d4ed8; font-size: 0.85rem;">Browser: fetch('https://api.example.com/data')</div>
+                <span class="flow-arrow" style="text-align: center;">&#8595;</span>
+                <div class="flow-box" style="background: #f3e8ff; color: #7c3aed; font-size: 0.85rem;">Browser adds Origin: https://myapp.com header</div>
+                <span class="flow-arrow" style="text-align: center;">&#8595;</span>
+                <div class="flow-box" style="background: #dcfce7; color: #15803d; font-size: 0.85rem;">Server responds with Access-Control-Allow-Origin</div>
+                <span class="flow-arrow" style="text-align: center;">&#8595;</span>
+                <div class="flow-box" style="background: #f9fafb; color: #374151; font-size: 0.85rem;">Browser checks: does the header match my origin?</div>
+                <span class="flow-arrow" style="text-align: center;">&#8595;</span>
+                <div style="display: flex; gap: 0.5rem;">
+                  <div class="flow-box" style="background: #dcfce7; color: #15803d; font-size: 0.8rem; flex: 1;">Yes &#8594; JS gets the data</div>
+                  <div class="flow-box" style="background: #fef2f2; color: #dc2626; font-size: 0.8rem; flex: 1;">No &#8594; CORS Error!</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="highlight-box">
+            <p style="font-size: 1rem;"><strong>Key insight:</strong> CORS errors happen in the <em>browser</em>, not the server. The request actually reaches the server &mdash; the browser just refuses to show you the response.</p>
+          </div>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> This is the #1 misconception. "The server didn't block your request! The request went through, the server processed it, and sent a response. But the BROWSER looked at the response headers and said 'nope, the server didn't say you're allowed to read this.'" Draw the parallel to CSP: "CSP is the server telling the browser what to LOAD. CORS is the server telling the browser what other origins can READ its responses." Key example for students: "Remember when you ran React on localhost:3000 and your API on localhost:5000? That's cross-origin! Different ports = different origins."
+        </div>
+      </section>
+
+      <!-- Slide 4: Simple vs Preflight -->
+      <section class="slide" aria-label="Simple vs preflight requests">
+        <header class="slide-title">
+          <div class="icon icon-yellow" aria-hidden="true">PRE</div>
+          <div><h2>Simple vs. Preflight Requests</h2><p class="subtitle">Why Some Requests Need Permission First</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <div class="card" style="background: #dcfce7; border: 1px solid #86efac; margin-bottom: 1rem;">
+                <h3 style="color: #15803d;">Simple Request</h3>
+                <p style="font-size: 0.85rem; color: #374151; margin-bottom: 0.5rem;">Goes directly &mdash; no preflight needed.</p>
+                <ul style="font-size: 0.8rem; color: #374151; list-style: none;">
+                  <li style="padding: 0.2rem 0;">&#10003; Method: <strong>GET</strong>, <strong>HEAD</strong>, or <strong>POST</strong></li>
+                  <li style="padding: 0.2rem 0;">&#10003; Only simple headers (Accept, Content-Type*)</li>
+                  <li style="padding: 0.2rem 0;">&#10003; Content-Type: text/plain, multipart/form-data, or application/x-www-form-urlencoded</li>
+                </ul>
+              </div>
+              <pre style="font-size: 0.8rem;">
+<span style="color:#6b7280">// This is a "simple" request</span>
+fetch(<span style="color:#a5f3fc">'https://api.example.com/data'</span>)
+
+<span style="color:#6b7280">// So is this</span>
+fetch(<span style="color:#a5f3fc">'https://api.example.com/data'</span>, {
+  method: <span style="color:#a5f3fc">'POST'</span>,
+  headers: {
+    <span style="color:#a5f3fc">'Content-Type'</span>: <span style="color:#a5f3fc">'text/plain'</span>
+  }
+})</pre>
+            </div>
+            <div>
+              <div class="card" style="background: #fef3c7; border: 1px solid #fcd34d; margin-bottom: 1rem;">
+                <h3 style="color: #b45309;">Preflight Request (OPTIONS)</h3>
+                <p style="font-size: 0.85rem; color: #374151; margin-bottom: 0.5rem;">Browser sends an OPTIONS request first to ask permission.</p>
+                <p style="font-size: 0.85rem; color: #374151;">Triggered when you use:</p>
+                <ul style="font-size: 0.8rem; color: #374151; list-style: none;">
+                  <li style="padding: 0.2rem 0;">&#10007; Methods: <strong>PUT</strong>, <strong>DELETE</strong>, <strong>PATCH</strong></li>
+                  <li style="padding: 0.2rem 0;">&#10007; Custom headers (Authorization, X-*)</li>
+                  <li style="padding: 0.2rem 0;">&#10007; Content-Type: <strong>application/json</strong></li>
+                </ul>
+              </div>
+              <pre style="font-size: 0.8rem;">
+<span style="color:#6b7280">// This triggers a PREFLIGHT</span>
+fetch(<span style="color:#a5f3fc">'https://api.example.com/data'</span>, {
+  method: <span style="color:#a5f3fc">'POST'</span>,
+  headers: {
+    <span style="color:#fcd34d">'Content-Type'</span>: <span style="color:#fcd34d">'application/json'</span>,
+    <span style="color:#fcd34d">'Authorization'</span>: <span style="color:#fcd34d">'Bearer token'</span>
+  }
+})</pre>
+            </div>
+          </div>
+          <div class="highlight-box" style="background: #fef3c7; border-color: #fcd34d;">
+            <p style="color: #b45309; font-size: 1rem;"><strong>Surprise:</strong> application/json triggers a preflight! This catches almost every modern API call.</p>
+          </div>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> "Here's why this matters: almost every API call you make with React sends Content-Type: application/json and an Authorization header. Both of those trigger a preflight." Show in DevTools Network tab: when making a cross-origin fetch with JSON, you'll see TWO requests &mdash; first an OPTIONS request, then the actual request. "The OPTIONS request is the browser asking 'hey server, is this origin allowed to send this kind of request?' If the server says yes, the real request goes through." Common gotcha: "If your server doesn't handle OPTIONS requests, every API call with JSON will fail with a CORS error."
+        </div>
+      </section>
+
+      <!-- Slide 5: CORS Headers -->
+      <section class="slide" aria-label="CORS headers explained">
+        <header class="slide-title">
+          <div class="icon icon-purple" aria-hidden="true">HDR</div>
+          <div><h2>CORS Headers Explained</h2><p class="subtitle">What the Server Sends Back</p></div>
+        </header>
+        <div class="content">
+          <table class="comparison-table">
+            <thead>
+              <tr>
+                <th style="width: 35%;">Response Header</th>
+                <th style="width: 35%;">Purpose</th>
+                <th style="width: 30%;">Example</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="code-inline">Access-Control-Allow-Origin</span></td>
+                <td>Which origins can read responses</td>
+                <td><code style="font-size:0.8rem;">https://myapp.com</code></td>
+              </tr>
+              <tr>
+                <td><span class="code-inline">Access-Control-Allow-Methods</span></td>
+                <td>Which HTTP methods are allowed</td>
+                <td><code style="font-size:0.8rem;">GET, POST, PUT, DELETE</code></td>
+              </tr>
+              <tr>
+                <td><span class="code-inline">Access-Control-Allow-Headers</span></td>
+                <td>Which request headers are allowed</td>
+                <td><code style="font-size:0.8rem;">Content-Type, Authorization</code></td>
+              </tr>
+              <tr>
+                <td><span class="code-inline">Access-Control-Allow-Credentials</span></td>
+                <td>Allow cookies/auth headers</td>
+                <td><code style="font-size:0.8rem;">true</code></td>
+              </tr>
+              <tr>
+                <td><span class="code-inline">Access-Control-Max-Age</span></td>
+                <td>Cache preflight result (seconds)</td>
+                <td><code style="font-size:0.8rem;">86400</code></td>
+              </tr>
+            </tbody>
+          </table>
+          <div style="margin-top: 1rem;">
+            <h3 style="margin-bottom: 0.5rem;">Example Server Response Headers</h3>
+            <pre style="font-size: 0.8rem;">
+Access-Control-Allow-Origin: https://myapp.com
+Access-Control-Allow-Methods: GET, POST, PUT, DELETE
+Access-Control-Allow-Headers: Content-Type, Authorization
+Access-Control-Allow-Credentials: true
+Access-Control-Max-Age: 86400</pre>
+          </div>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> Walk through each header. Allow-Origin is the most important &mdash; it must match the requesting origin exactly (or be *). Allow-Methods lists what HTTP methods are allowed. Allow-Headers lists what custom headers the client can send. Allow-Credentials is needed if you're sending cookies &mdash; but if this is true, Allow-Origin CANNOT be * (we'll cover this next). Max-Age caches the preflight response so the browser doesn't send OPTIONS every single time. "86400 = 24 hours. This is a nice performance optimization."
+        </div>
+      </section>
+
+      <!-- Slide 6: The CORS Error -->
+      <section class="slide" aria-label="The CORS error you've seen">
+        <header class="slide-title">
+          <div class="icon icon-red" aria-hidden="true">ERR</div>
+          <div><h2>The CORS Error You've Seen</h2><p class="subtitle">And How to Actually Fix It</p></div>
+        </header>
+        <div class="content">
+          <pre style="font-size: 0.75rem; background: #451a03; color: #fca5a5; margin-bottom: 1rem; padding: 1rem;">
+Access to fetch at 'https://api.example.com/data' from origin
+'http://localhost:3000' has been blocked by CORS policy:
+No 'Access-Control-Allow-Origin' header is present on the
+requested resource.</pre>
+          <div class="grid-2">
+            <div>
+              <div class="card" style="background: #dcfce7; border: 1px solid #86efac; margin-bottom: 0.75rem;">
+                <h3 style="color: #15803d; font-size: 1rem;">Fix 1: Configure Your Server</h3>
+                <pre style="font-size: 0.75rem; padding: 0.75rem;">
+<span style="color:#6b7280">// Express.js with cors package</span>
+<span style="color:#f472b6">const</span> cors = require(<span style="color:#a5f3fc">'cors'</span>);
+app.use(cors({
+  origin: <span style="color:#a5f3fc">'http://localhost:3000'</span>,
+  credentials: <span style="color:#fcd34d">true</span>
+}));</pre>
+              </div>
+              <div class="card" style="background: #dcfce7; border: 1px solid #86efac;">
+                <h3 style="color: #15803d; font-size: 1rem;">Fix 2: Dev Proxy (React/Vite)</h3>
+                <pre style="font-size: 0.75rem; padding: 0.75rem;">
+<span style="color:#6b7280">// vite.config.js</span>
+server: {
+  proxy: {
+    <span style="color:#a5f3fc">'/api'</span>: <span style="color:#a5f3fc">'http://localhost:5000'</span>
+  }
+}</pre>
+              </div>
+            </div>
+            <div>
+              <div class="card" style="background: #fef2f2; border: 1px solid #fca5a5; margin-bottom: 0.75rem;">
+                <h3 style="color: #dc2626; font-size: 1rem;">Wrong Fix: Allow All Origins</h3>
+                <pre style="font-size: 0.75rem; padding: 0.75rem;">
+<span style="color:#fca5a5">// DON'T do this in production!</span>
+Access-Control-Allow-Origin: *
+Access-Control-Allow-Credentials: true
+<span style="color:#fca5a5">// Browsers block this combo!</span></pre>
+                <p style="font-size: 0.8rem; color: #dc2626; margin-top: 0.5rem;">Wildcard + credentials is forbidden by the spec. And even without credentials, * opens your API to the entire internet.</p>
+              </div>
+              <div class="card" style="background: #fef3c7; border: 1px solid #fcd34d;">
+                <h3 style="color: #b45309; font-size: 0.95rem;">Wrong Fix: Disable CORS Extension</h3>
+                <p style="font-size: 0.8rem; color: #374151;">Browser extensions that "disable CORS" only work on YOUR machine. Your users won't have them. Fix the server instead.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> <strong>DEMO:</strong> Show the actual CORS error in DevTools. Open a blank page, open console, type: <code>fetch('https://api.github.com/users/octocat')</code> &mdash; this works because GitHub allows it! Now try <code>fetch('https://www.google.com')</code> &mdash; CORS error! Show the error message. "See how the error says 'No Access-Control-Allow-Origin header'? That means Google's server didn't send a CORS header allowing your origin." Walk through the fixes: (1) cors npm package is the standard for Express. (2) Dev proxy is great during development &mdash; the proxy runs on the same origin so there's no CORS. (3) The wrong fixes: "I've seen students install a Chrome extension to disable CORS. That only works on your machine. Your deployed app will still be broken."
+        </div>
+      </section>
+
+      <!-- Slide 7: Wildcard Danger -->
+      <section class="slide" aria-label="Why wildcard with credentials is dangerous">
+        <header class="slide-title">
+          <div class="icon icon-red" aria-hidden="true">!</div>
+          <div><h2>Why * With Credentials is Dangerous</h2><p class="subtitle">The Security Reason Behind the Restriction</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>The Attack Scenario</h3>
+              <div class="flow-diagram" style="flex-direction: column; gap: 0.4rem; align-items: stretch;">
+                <div class="flow-box" style="background: #fef2f2; color: #dc2626; font-size: 0.85rem;">1. User is logged into bank.com (has session cookie)</div>
+                <span class="flow-arrow" style="text-align: center;">&#8595;</span>
+                <div class="flow-box" style="background: #fef2f2; color: #dc2626; font-size: 0.85rem;">2. User visits evil.com</div>
+                <span class="flow-arrow" style="text-align: center;">&#8595;</span>
+                <div class="flow-box" style="background: #ffedd5; color: #c2410c; font-size: 0.85rem;">3. evil.com runs: fetch('bank.com/api/balance', { credentials: 'include' })</div>
+                <span class="flow-arrow" style="text-align: center;">&#8595;</span>
+                <div class="flow-box" style="background: #fef3c7; color: #b45309; font-size: 0.85rem;">4. If bank allows * with credentials...</div>
+                <span class="flow-arrow" style="text-align: center;">&#8595;</span>
+                <div class="flow-box" style="background: #fef2f2; color: #dc2626; font-size: 0.85rem;">5. evil.com reads your bank balance!</div>
+              </div>
+            </div>
+            <div>
+              <div class="card" style="background: #dcfce7; border: 1px solid #86efac; margin-bottom: 1rem;">
+                <h3 style="color: #15803d;">The Browser's Protection</h3>
+                <p style="font-size: 0.9rem; color: #374151;">Browsers <strong>refuse</strong> to honor <code style="font-size: 0.85rem;">Access-Control-Allow-Origin: *</code> when credentials are included.</p>
+                <p style="font-size: 0.85rem; color: #374151; margin-top: 0.5rem;">The server must explicitly name the allowed origin:</p>
+                <pre style="font-size: 0.75rem; margin-top: 0.5rem; padding: 0.75rem;">
+<span style="color:#86efac">// Correct</span>
+Access-Control-Allow-Origin: https://myapp.com
+Access-Control-Allow-Credentials: true
+
+<span style="color:#fca5a5">// Blocked by browser</span>
+Access-Control-Allow-Origin: *
+Access-Control-Allow-Credentials: true</pre>
+              </div>
+              <div class="card" style="background: #f3e8ff; border: 1px solid #c4b5fd;">
+                <h3 style="color: #7c3aed; font-size: 1rem;">Best Practice</h3>
+                <p style="font-size: 0.85rem; color: #374151;">Keep an allowlist of origins on your server. Only return the origin in the header if it's on the list.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> This connects everything together. "If a bank's API said 'allow any origin to read responses with credentials included,' then any website could read your bank data while you're logged in." The browser prevents this by spec. The lesson: "In production, always set the exact origin(s) you expect. Never use * when credentials are involved." For students' final projects: if your React app is on vercel-app.com and your API is on render.com, set Allow-Origin to your exact Vercel URL.
+        </div>
+      </section>
+
+      <!-- Slide 8: Summary -->
+      <section class="slide" aria-label="Part 4 summary">
+        <header class="slide-title">
+          <div class="icon icon-purple" aria-hidden="true">CORS</div>
+          <div><h2>Part 4 Complete!</h2><p class="subtitle">CORS Deep Dive</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="list-card list-card-purple">
+            <ul style="font-size: 1.05rem;">
+              <li><span class="check">&#10003;</span> Origin = protocol + domain + port &mdash; all three must match</li>
+              <li><span class="check">&#10003;</span> Same-Origin Policy blocks cross-origin reads by default</li>
+              <li><span class="check">&#10003;</span> CORS lets servers explicitly allow specific origins</li>
+              <li><span class="check">&#10003;</span> application/json triggers a preflight (OPTIONS) request</li>
+              <li><span class="check">&#10003;</span> Never use Access-Control-Allow-Origin: * with credentials</li>
+              <li><span class="check">&#10003;</span> Fix CORS on the server, not with browser extensions</li>
+            </ul>
+          </div>
+          <p style="text-align: center; color: #7c3aed; font-size: 1.25rem; margin-top: 1.5rem; font-weight: 500;">Next up: Part 5 &mdash; Secrets &amp; Supply Chain Security &#8594;</p>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> Recap the key points. Ask: "Next time you see a CORS error, what's the first thing you should check?" (Whether the server is sending the right Access-Control-Allow-Origin header.) "And where do you fix it?" (On the server, not the client.) Good transition: "We've talked about how browsers protect you from other sites. But what about threats that come from INSIDE your own code? That's what we'll cover next."
+        </div>
+      </section>
+
+    </div>
+
+    <div class="notes-panel" id="notesPanel"></div>
+
+    <nav class="controls" aria-label="Slide navigation">
+      <button class="btn btn-prev" onclick="prevSlide()" aria-label="Previous slide">&#8592; Previous</button>
+      <div class="dots" id="dots" role="tablist" aria-label="Slide indicators"></div>
+      <div style="display:flex;align-items:center;gap:1rem">
+        <span class="counter" id="counter" aria-live="polite">1 / 8</span>
+        <button class="btn btn-next" onclick="nextSlide()" aria-label="Next slide">Next &#8594;</button>
+      </div>
+    </nav>
+  </main>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const dotsContainer = document.getElementById('dots');
+    const counter = document.getElementById('counter');
+    const notesPanel = document.getElementById('notesPanel');
+    let current = 0;
+    let notesVisible = false;
+    slides.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.className = 'dot' + (i === 0 ? ' active' : '');
+      dot.onclick = () => goToSlide(i);
+      dot.setAttribute('aria-label', 'Go to slide ' + (i + 1));
+      dotsContainer.appendChild(dot);
+    });
+    function updateNotes() {
+      const currentSlide = slides[current];
+      const notes = currentSlide.querySelector('.notes');
+      if (notes) {
+        notesPanel.innerHTML = notes.innerHTML;
+      } else {
+        notesPanel.innerHTML = '<strong>No notes for this slide.</strong>';
+      }
+    }
+    function updateSlide() {
+      slides.forEach((s, i) => s.classList.toggle('active', i === current));
+      document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
+      counter.textContent = `${current + 1} / ${slides.length}`;
+      document.querySelector('.btn-prev').disabled = current === 0;
+      document.querySelector('.btn-next').disabled = current === slides.length - 1;
+      if (notesVisible) updateNotes();
+    }
+    function nextSlide() { if (current < slides.length - 1) { current++; updateSlide(); } }
+    function prevSlide() { if (current > 0) { current--; updateSlide(); } }
+    function goToSlide(i) { current = i; updateSlide(); }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+      if (e.key === 'ArrowLeft') prevSlide();
+      if (e.key === 'n' || e.key === 'N') {
+        notesVisible = !notesVisible;
+        notesPanel.classList.toggle('visible', notesVisible);
+        if (notesVisible) updateNotes();
+      }
+    });
+  </script>
+</body>
+</html>

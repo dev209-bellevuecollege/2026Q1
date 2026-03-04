@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Part 5: Secrets &amp; Supply Chain Security</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; }
+    .slideshow { height: 100vh; display: flex; flex-direction: column; }
+    .slide-container { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+    .slide { background: white; border-radius: 1rem; box-shadow: 0 10px 40px rgba(0,0,0,0.1); width: 100%; max-width: 1000px; height: 600px; padding: 3rem; display: none; flex-direction: column; }
+    .slide.active { display: flex; }
+    .controls { background: white; border-top: 1px solid #e5e7eb; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+    .btn { padding: 0.5rem 1.5rem; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; }
+    .btn-prev, .btn-next { background: #b45309; color: white; }
+    .btn:disabled { background: #d1d5db; cursor: not-allowed; }
+    .dots { display: flex; gap: 0.5rem; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #d1d5db; border: none; cursor: pointer; }
+    .dot.active { background: #b45309; width: 20px; border-radius: 5px; }
+    .slide-title { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+    .icon { width: 50px; height: 50px; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: bold; }
+    .icon-red { background: #fef2f2; color: #dc2626; }
+    .icon-orange { background: #ffedd5; color: #c2410c; }
+    .icon-blue { background: #dbeafe; color: #1d4ed8; }
+    .icon-green { background: #dcfce7; color: #15803d; }
+    .icon-yellow { background: #fef3c7; color: #b45309; }
+    .icon-purple { background: #f3e8ff; color: #7c3aed; }
+    .icon-cyan { background: #cffafe; color: #0891b2; }
+    h1 { font-size: 2.5rem; color: #1f2937; }
+    h2 { font-size: 1.75rem; color: #1f2937; }
+    h3 { font-size: 1.25rem; color: #374151; margin-bottom: 0.5rem; }
+    .subtitle { color: #6b7280; font-size: 1.1rem; }
+    .content { flex: 1; display: flex; flex-direction: column; gap: 1rem; }
+    .card { background: #f9fafb; border-radius: 0.75rem; padding: 1.25rem; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; flex: 1; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; flex: 1; }
+    .title-slide { align-items: center; justify-content: center; text-align: center; }
+    .title-slide .icon { width: 80px; height: 80px; font-size: 1.5rem; margin-bottom: 1.5rem; border-radius: 50%; }
+    .title-slide h1 { margin-bottom: 1rem; }
+    .title-slide .subtitle { margin-bottom: 1.5rem; font-size: 1.25rem; }
+    .badge { background: #fef3c7; color: #b45309; padding: 0.5rem 1rem; border-radius: 2rem; font-size: 0.9rem; }
+    .counter { color: #6b7280; font-size: 0.9rem; }
+    pre { background: #1f2937; color: #f9fafb; padding: 1.25rem; border-radius: 0.5rem; font-size: 0.85rem; overflow-x: auto; font-family: 'Monaco', 'Menlo', monospace; line-height: 1.5; }
+    code { font-family: 'Monaco', 'Menlo', monospace; }
+    .code-inline { background: #f3f4f6; padding: 0.2rem 0.5rem; border-radius: 0.25rem; font-size: 0.85rem; color: #b45309; font-family: 'Monaco', 'Menlo', monospace; }
+    .list-card { border-radius: 0.75rem; padding: 1.5rem; }
+    .list-card-yellow { background: #fef3c7; border: 1px solid #fcd34d; }
+    .list-card ul { list-style: none; }
+    .list-card li { padding: 0.5rem 0; display: flex; align-items: flex-start; gap: 0.5rem; color: #374151; }
+    .check { color: #b45309; font-weight: bold; }
+    .highlight-box { background: #fef3c7; border: 2px solid #fcd34d; border-radius: 0.75rem; padding: 1.5rem; margin-top: 1rem; }
+    .highlight-box p { color: #b45309; font-weight: 500; font-size: 1.1rem; }
+    .flow-diagram { display: flex; align-items: center; justify-content: center; gap: 0.75rem; margin: 1rem 0; flex-wrap: wrap; }
+    .flow-box { padding: 0.75rem 1.25rem; border-radius: 0.5rem; text-align: center; font-weight: 500; font-size: 0.9rem; }
+    .flow-arrow { font-size: 1.5rem; color: #b45309; }
+    .notes { display: none; }
+    .notes-panel { display: none; background: #1f2937; color: #f9fafb; padding: 1.5rem 2rem; font-size: 0.95rem; line-height: 1.6; border-top: 3px solid #b45309; max-height: 200px; overflow-y: auto; }
+    .notes-panel.visible { display: block; }
+    .notes-panel strong { color: #fcd34d; }
+  </style>
+</head>
+<body>
+  <main class="slideshow">
+    <div class="slide-container" role="region" aria-label="Slide presentation">
+
+      <!-- Slide 1: Title -->
+      <section class="slide active title-slide" aria-label="Title slide">
+        <div class="icon icon-yellow" aria-hidden="true">NPM</div>
+        <h1>Part 5: Secrets &amp; Supply Chain</h1>
+        <p class="subtitle">Threats From Inside Your Own Code</p>
+        <span class="badge">10 Minutes</span>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> Transition: "So far we've talked about external attacks &mdash; XSS, CORS, CSP. But what about threats that come from YOUR OWN codebase? Two big ones: accidentally exposing secrets in your frontend code, and malicious npm packages that sneak into your project." This section is super practical &mdash; it affects every student using npm and React.
+        </div>
+      </section>
+
+      <!-- Slide 2: Frontend Code is Public -->
+      <section class="slide" aria-label="Your frontend code is public">
+        <header class="slide-title">
+          <div class="icon icon-red" aria-hidden="true">!</div>
+          <div><h2>Your Frontend Code is Public</h2><p class="subtitle">Everything Ships to the Browser</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <div class="card" style="background: #fef2f2; border: 1px solid #fca5a5; margin-bottom: 1rem;">
+                <h3 style="color: #dc2626;">The Reality</h3>
+                <p style="font-size: 0.9rem; color: #374151;">Your JavaScript, HTML, and CSS are <strong>downloaded to every user's browser</strong>. Anyone can:</p>
+                <ul style="font-size: 0.85rem; color: #374151; list-style: none; margin-top: 0.5rem;">
+                  <li style="padding: 0.3rem 0;">&#8226; View Source (right-click any page)</li>
+                  <li style="padding: 0.3rem 0;">&#8226; Read all JS in DevTools Sources tab</li>
+                  <li style="padding: 0.3rem 0;">&#8226; Search for strings like "API_KEY"</li>
+                  <li style="padding: 0.3rem 0;">&#8226; Inspect network requests for tokens</li>
+                </ul>
+              </div>
+              <div class="card" style="background: #fef3c7; border: 1px solid #fcd34d;">
+                <h3 style="color: #b45309; font-size: 1rem;">Minification is NOT Security</h3>
+                <p style="font-size: 0.85rem; color: #374151;">Minified code is harder to read but trivial to reverse. Build tools like Source Map Explorer can reconstruct your original code.</p>
+              </div>
+            </div>
+            <div>
+              <h3 style="color: #dc2626;">Things You Should NEVER Put in Frontend Code</h3>
+              <div class="card" style="background: #fef2f2; border: 1px solid #fca5a5; margin-bottom: 0.75rem;">
+                <pre style="font-size: 0.75rem; padding: 0.75rem;">
+<span style="color:#fca5a5">// NEVER do any of these!</span>
+
+<span style="color:#6b7280">// API secret keys</span>
+<span style="color:#f472b6">const</span> STRIPE_SECRET = <span style="color:#fca5a5">'sk_live_...'</span>;
+
+<span style="color:#6b7280">// Database connection strings</span>
+<span style="color:#f472b6">const</span> DB_URL = <span style="color:#fca5a5">'postgres://user:pass@...'</span>;
+
+<span style="color:#6b7280">// Private API tokens</span>
+<span style="color:#f472b6">const</span> ADMIN_TOKEN = <span style="color:#fca5a5">'eyJhbG...'</span>;
+
+<span style="color:#6b7280">// Third-party secret keys</span>
+<span style="color:#f472b6">const</span> AWS_SECRET = <span style="color:#fca5a5">'wJalrXU...'</span>;</pre>
+              </div>
+              <div class="card" style="background: #dcfce7; border: 1px solid #86efac;">
+                <h3 style="color: #15803d; font-size: 1rem;">OK in Frontend</h3>
+                <p style="font-size: 0.85rem; color: #374151;"><strong>Public</strong> keys (Stripe publishable key, Google Maps API key with domain restrictions) are fine &mdash; they're designed to be public.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> <strong>DEMO:</strong> Open any popular website. Open DevTools &rarr; Sources tab. Show students how you can see all the JavaScript files. Search for "api" or "key" in the source files. "Everything here was sent to your browser. If a secret is in this code, it's not secret anymore." Students often think minification = security. Show them: "This is minified code. But look &mdash; I can still search for strings. And with a source map, I can see the original code." The distinction between public and secret keys is important. Stripe's publishable key (pk_) is designed to be in frontend code. The secret key (sk_) must NEVER be.
+        </div>
+      </section>
+
+      <!-- Slide 3: .env Files in React -->
+      <section class="slide" aria-label="Env files in React are not secret">
+        <header class="slide-title">
+          <div class="icon icon-yellow" aria-hidden="true">.env</div>
+          <div><h2>.env Files in React Are NOT Secret</h2><p class="subtitle">A Common and Dangerous Misconception</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <div class="card" style="background: #fef2f2; border: 1px solid #fca5a5; margin-bottom: 1rem;">
+                <h3 style="color: #dc2626; font-size: 1rem;">The Misconception</h3>
+                <p style="font-size: 0.85rem; color: #374151;">"I put my API key in .env so it's safe."</p>
+                <pre style="font-size: 0.75rem; margin-top: 0.5rem; padding: 0.75rem;">
+<span style="color:#6b7280"># .env file</span>
+VITE_API_KEY=super_secret_key_123
+VITE_API_URL=https://api.example.com</pre>
+              </div>
+              <div class="card" style="background: #fef2f2; border: 1px solid #fca5a5;">
+                <h3 style="color: #dc2626; font-size: 1rem;">What Actually Happens</h3>
+                <p style="font-size: 0.85rem; color: #374151;">The build tool <strong>copies the value directly into your JavaScript bundle</strong>:</p>
+                <pre style="font-size: 0.75rem; margin-top: 0.5rem; padding: 0.75rem;">
+<span style="color:#6b7280">// Your code:</span>
+fetch(import.meta.env.VITE_API_KEY)
+
+<span style="color:#6b7280">// After build, your bundle contains:</span>
+fetch(<span style="color:#fca5a5">"super_secret_key_123"</span>)
+
+<span style="color:#6b7280">// The value is literally in the file!</span></pre>
+              </div>
+            </div>
+            <div>
+              <div class="card" style="background: #dcfce7; border: 1px solid #86efac; margin-bottom: 1rem;">
+                <h3 style="color: #15803d; font-size: 1rem;">The Right Way: Backend Proxy</h3>
+                <p style="font-size: 0.85rem; color: #374151;">Keep secrets on your server. Frontend calls YOUR server, which adds the secret key:</p>
+                <div class="flow-diagram" style="flex-direction: column; gap: 0.4rem; align-items: stretch; margin: 0.5rem 0;">
+                  <div class="flow-box" style="background: #dbeafe; color: #1d4ed8; font-size: 0.8rem;">React: fetch('/api/weather?city=NYC')</div>
+                  <span class="flow-arrow" style="text-align: center;">&#8595;</span>
+                  <div class="flow-box" style="background: #dcfce7; color: #15803d; font-size: 0.8rem;">Your Server: adds SECRET_KEY to request</div>
+                  <span class="flow-arrow" style="text-align: center;">&#8595;</span>
+                  <div class="flow-box" style="background: #f3e8ff; color: #7c3aed; font-size: 0.8rem;">Server: calls weather API with key</div>
+                  <span class="flow-arrow" style="text-align: center;">&#8595;</span>
+                  <div class="flow-box" style="background: #dbeafe; color: #1d4ed8; font-size: 0.8rem;">Returns data to React (no key exposed)</div>
+                </div>
+              </div>
+              <div class="card" style="background: #fef3c7; border: 1px solid #fcd34d;">
+                <h3 style="color: #b45309; font-size: 1rem;">What .env IS Good For</h3>
+                <p style="font-size: 0.85rem; color: #374151;">Keeping values <strong>out of git</strong> (.gitignore) and varying between environments (dev vs production URLs). Not for actual secrets in frontend code.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> This is one of THE most common mistakes students make. "Raise your hand if you've put an API key in a .env file in a React project." (Many will.) "That .env file keeps the key out of your git repository &mdash; great! But at BUILD TIME, Vite (or Create React App) literally copies the string into your JavaScript bundle. Anyone can see it." <strong>DEMO:</strong> Build a Vite/React project that uses an env variable. Then open the built JS file in dist/ and search for the env value &mdash; it's right there in plain text. Show the proxy pattern: "Your frontend calls YOUR backend. Your backend has the real secret and calls the third-party API."
+        </div>
+      </section>
+
+      <!-- Slide 4: npm Supply Chain Attacks -->
+      <section class="slide" aria-label="npm supply chain attacks">
+        <header class="slide-title">
+          <div class="icon icon-red" aria-hidden="true">npm</div>
+          <div><h2>npm Supply Chain Attacks</h2><p class="subtitle">When Your Dependencies Turn Against You</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <div class="card" style="margin-bottom: 0.75rem;">
+                <h3>The Problem</h3>
+                <p style="font-size: 0.9rem; color: #374151;">A typical React project has <strong>hundreds</strong> of npm dependencies. Each one is code written by strangers that runs with full access to your project.</p>
+              </div>
+              <div class="card" style="background: #fef2f2; border: 1px solid #fca5a5; margin-bottom: 0.75rem;">
+                <h3 style="color: #dc2626; font-size: 1rem;">Attack Type: Typosquatting</h3>
+                <p style="font-size: 0.85rem; color: #374151;">Attacker publishes packages with names similar to popular ones:</p>
+                <ul style="font-size: 0.8rem; color: #374151; list-style: none; margin-top: 0.25rem;">
+                  <li style="padding: 0.2rem 0;"><span class="code-inline" style="color: #15803d;">lodash</span> &#8594; <span class="code-inline" style="color: #dc2626;">1odash</span></li>
+                  <li style="padding: 0.2rem 0;"><span class="code-inline" style="color: #15803d;">express</span> &#8594; <span class="code-inline" style="color: #dc2626;">expresss</span></li>
+                  <li style="padding: 0.2rem 0;"><span class="code-inline" style="color: #15803d;">react-router</span> &#8594; <span class="code-inline" style="color: #dc2626;">react-rounter</span></li>
+                </ul>
+              </div>
+              <div class="card" style="background: #fef2f2; border: 1px solid #fca5a5;">
+                <h3 style="color: #dc2626; font-size: 1rem;">Attack Type: Account Takeover</h3>
+                <p style="font-size: 0.85rem; color: #374151;">Attacker gains control of a legitimate package maintainer's account and pushes malicious code.</p>
+              </div>
+            </div>
+            <div>
+              <div class="card" style="background: #fef3c7; border: 1px solid #fcd34d; margin-bottom: 0.75rem;">
+                <h3 style="color: #b45309;">Case Study: event-stream (2018)</h3>
+                <p style="font-size: 0.85rem; color: #374151; margin-bottom: 0.5rem;">A popular npm package (2M weekly downloads) was handed to a new maintainer who added code that stole Bitcoin wallet keys.</p>
+                <ul style="font-size: 0.8rem; color: #374151; list-style: none;">
+                  <li style="padding: 0.2rem 0;">&#8226; Affected thousands of projects</li>
+                  <li style="padding: 0.2rem 0;">&#8226; Malicious code was hidden in a dependency</li>
+                  <li style="padding: 0.2rem 0;">&#8226; Went undetected for 2 months</li>
+                </ul>
+              </div>
+              <div class="card" style="background: #dcfce7; border: 1px solid #86efac;">
+                <h3 style="color: #15803d; font-size: 1rem;">How to Protect Yourself</h3>
+                <ul style="font-size: 0.85rem; color: #374151; list-style: none;">
+                  <li style="padding: 0.3rem 0;">&#10003; Run <span class="code-inline" style="color: #15803d;">npm audit</span> regularly</li>
+                  <li style="padding: 0.3rem 0;">&#10003; Check package download counts &amp; age</li>
+                  <li style="padding: 0.3rem 0;">&#10003; Use <span class="code-inline" style="color: #15803d;">package-lock.json</span> (locks versions)</li>
+                  <li style="padding: 0.3rem 0;">&#10003; Read the package's GitHub repo before installing</li>
+                  <li style="padding: 0.3rem 0;">&#10003; Fewer dependencies = smaller attack surface</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> <strong>DEMO:</strong> Open a React project. Run <code>ls node_modules | wc -l</code> to show how many packages are installed (often 800+). "Every one of these ran code on your machine when you did npm install. Some run postinstall scripts automatically." Then run <code>npm audit</code> to show any known vulnerabilities. Tell the event-stream story in detail: "A popular package maintainer got tired of maintaining it. A new person offered to take over. They seemed legit. A few months later, they added a dependency that specifically targeted a Bitcoin wallet app called Copay. It stole wallet keys and sent them to the attacker." Key lesson: "Be skeptical of packages. Do you really need that left-pad library, or can you write the function yourself?"
+        </div>
+      </section>
+
+      <!-- Slide 5: Summary -->
+      <section class="slide" aria-label="Part 5 summary">
+        <header class="slide-title">
+          <div class="icon icon-yellow" aria-hidden="true">NPM</div>
+          <div><h2>Part 5 Complete!</h2><p class="subtitle">Secrets &amp; Supply Chain Security</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="list-card list-card-yellow">
+            <ul style="font-size: 1.1rem;">
+              <li><span class="check">&#10003;</span> All frontend code is public &mdash; anyone can read it</li>
+              <li><span class="check">&#10003;</span> .env values in React/Vite are bundled into the JS &mdash; NOT secret</li>
+              <li><span class="check">&#10003;</span> Use a backend proxy for real API secrets</li>
+              <li><span class="check">&#10003;</span> npm packages are code from strangers &mdash; be cautious</li>
+              <li><span class="check">&#10003;</span> Run npm audit, check packages before installing</li>
+              <li><span class="check">&#10003;</span> Fewer dependencies = smaller attack surface</li>
+            </ul>
+          </div>
+          <p style="text-align: center; color: #b45309; font-size: 1.25rem; margin-top: 1.5rem; font-weight: 500;">Next up: Part 6 &mdash; Authentication &amp; Token Security &#8594;</p>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> Recap. The two big takeaways: (1) Your frontend code is not private. Never put real secrets there. (2) Your npm dependencies are a trust relationship &mdash; treat them accordingly. "For your final projects, use npm audit and think twice before adding a new dependency. Can you accomplish the same thing with a few lines of code?"
+        </div>
+      </section>
+
+    </div>
+
+    <div class="notes-panel" id="notesPanel"></div>
+
+    <nav class="controls" aria-label="Slide navigation">
+      <button class="btn btn-prev" onclick="prevSlide()" aria-label="Previous slide">&#8592; Previous</button>
+      <div class="dots" id="dots" role="tablist" aria-label="Slide indicators"></div>
+      <div style="display:flex;align-items:center;gap:1rem">
+        <span class="counter" id="counter" aria-live="polite">1 / 5</span>
+        <button class="btn btn-next" onclick="nextSlide()" aria-label="Next slide">Next &#8594;</button>
+      </div>
+    </nav>
+  </main>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const dotsContainer = document.getElementById('dots');
+    const counter = document.getElementById('counter');
+    const notesPanel = document.getElementById('notesPanel');
+    let current = 0;
+    let notesVisible = false;
+    slides.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.className = 'dot' + (i === 0 ? ' active' : '');
+      dot.onclick = () => goToSlide(i);
+      dot.setAttribute('aria-label', 'Go to slide ' + (i + 1));
+      dotsContainer.appendChild(dot);
+    });
+    function updateNotes() {
+      const currentSlide = slides[current];
+      const notes = currentSlide.querySelector('.notes');
+      if (notes) {
+        notesPanel.innerHTML = notes.innerHTML;
+      } else {
+        notesPanel.innerHTML = '<strong>No notes for this slide.</strong>';
+      }
+    }
+    function updateSlide() {
+      slides.forEach((s, i) => s.classList.toggle('active', i === current));
+      document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
+      counter.textContent = `${current + 1} / ${slides.length}`;
+      document.querySelector('.btn-prev').disabled = current === 0;
+      document.querySelector('.btn-next').disabled = current === slides.length - 1;
+      if (notesVisible) updateNotes();
+    }
+    function nextSlide() { if (current < slides.length - 1) { current++; updateSlide(); } }
+    function prevSlide() { if (current > 0) { current--; updateSlide(); } }
+    function goToSlide(i) { current = i; updateSlide(); }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+      if (e.key === 'ArrowLeft') prevSlide();
+      if (e.key === 'n' || e.key === 'N') {
+        notesVisible = !notesVisible;
+        notesPanel.classList.toggle('visible', notesVisible);
+        if (notesVisible) updateNotes();
+      }
+    });
+  </script>
+</body>
+</html>

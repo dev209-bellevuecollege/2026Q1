@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>No CSP — Everything Runs</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; min-height: 100vh; }
+    .banner { background: #dc2626; color: white; padding: 0.75rem 1.5rem; text-align: center; font-weight: 600; }
+    .container { max-width: 800px; margin: 2rem auto; padding: 0 1.5rem; }
+    h1 { color: #1f2937; margin-bottom: 1.5rem; }
+    .status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem; }
+    .status-card { padding: 1.25rem; border-radius: 0.75rem; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .status-card h3 { margin-bottom: 0.5rem; font-size: 1rem; }
+    .status-card .result { padding: 0.5rem 0.75rem; border-radius: 0.25rem; font-family: monospace; font-size: 0.85rem; margin-top: 0.5rem; }
+    .ran { background: #fef2f2; color: #dc2626; border: 1px solid #fca5a5; }
+    .pending { background: #f3f4f6; color: #6b7280; border: 1px solid #e5e7eb; }
+    button { padding: 0.75rem 1.5rem; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; color: white; margin-right: 0.5rem; margin-bottom: 0.5rem; }
+    .btn-red { background: #dc2626; }
+    .btn-red:hover { background: #b91c1c; }
+    .btn-blue { background: #1d4ed8; }
+    .btn-blue:hover { background: #1e40af; }
+    .actions { margin-bottom: 2rem; }
+    .log { background: #1f2937; color: #f9fafb; padding: 1.25rem; border-radius: 0.75rem; font-family: monospace; font-size: 0.85rem; min-height: 120px; max-height: 300px; overflow-y: auto; line-height: 1.6; }
+    .log .entry { padding: 0.25rem 0; }
+    .log .danger { color: #fca5a5; }
+    .log .info { color: #93c5fd; }
+    .note { margin-top: 1.5rem; background: #fef2f2; border: 2px solid #fca5a5; border-radius: 0.75rem; padding: 1.25rem; }
+    .note p { color: #dc2626; font-size: 0.95rem; }
+  </style>
+</head>
+<body>
+  <div class="banner">NO CSP &mdash; This page has no Content Security Policy. Everything runs.</div>
+
+  <div class="container">
+    <h1>Page Without CSP</h1>
+
+    <div class="status-grid">
+      <div class="status-card">
+        <h3>Inline Script (no nonce)</h3>
+        <p style="font-size: 0.85rem; color: #6b7280;">A &lt;script&gt; tag without a nonce attribute</p>
+        <div class="result" id="inlineStatus">Checking...</div>
+      </div>
+      <div class="status-card">
+        <h3>Nonced Script</h3>
+        <p style="font-size: 0.85rem; color: #6b7280;">A &lt;script nonce="demo123"&gt; tag</p>
+        <div class="result pending" id="noncedStatus">Checking...</div>
+      </div>
+      <div class="status-card">
+        <h3>Inline Event Handler</h3>
+        <p style="font-size: 0.85rem; color: #6b7280;">onclick="" attribute on a button</p>
+        <div class="result" id="handlerStatus">Click button below to test</div>
+      </div>
+      <div class="status-card">
+        <h3>eval()</h3>
+        <p style="font-size: 0.85rem; color: #6b7280;">Dynamic code execution</p>
+        <div class="result" id="evalStatus">Click button below to test</div>
+      </div>
+      <div class="status-card">
+        <h3>Dynamic Script Injection</h3>
+        <p style="font-size: 0.85rem; color: #6b7280;">Creating a &lt;script&gt; element via JS</p>
+        <div class="result" id="dynamicStatus">Click button below to test</div>
+      </div>
+      <div class="status-card">
+        <h3>XSS via innerHTML</h3>
+        <p style="font-size: 0.85rem; color: #6b7280;">Injecting a &lt;script&gt; through innerHTML</p>
+        <div class="result pending" id="xssStatus">Click button below to test</div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <h3 style="margin-bottom: 0.75rem; color: #374151;">Test Actions</h3>
+      <button class="btn-red" onclick="testInlineHandler()">Test Inline Handler</button>
+      <button class="btn-red" onclick="testEval()">Test eval()</button>
+      <button class="btn-red" onclick="testDynamicScript()">Test Dynamic Script</button>
+      <button class="btn-blue" onclick="testSimulatedXSS()">Simulate XSS Injection</button>
+    </div>
+
+    <h3 style="margin-bottom: 0.75rem; color: #374151;">Activity Log</h3>
+    <div class="log" id="log">
+      <div class="entry info">Waiting for tests...</div>
+    </div>
+
+    <div id="xssTarget"></div>
+
+    <div class="note">
+      <p><strong>Notice:</strong> Everything runs without restriction. No CSP means the browser allows ALL scripts, inline handlers, eval(), and dynamic injections. Now open <code>with-csp.html</code> to see the difference.</p>
+    </div>
+  </div>
+
+  <!-- Inline script — will run because there's no CSP -->
+  <script>
+    const log = document.getElementById('log');
+
+    function addLog(msg, type = 'danger') {
+      const entry = document.createElement('div');
+      entry.className = `entry ${type}`;
+      entry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+      log.appendChild(entry);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    // This inline script runs freely
+    document.getElementById('inlineStatus').textContent = 'EXECUTED — inline script ran';
+    document.getElementById('inlineStatus').className = 'result ran';
+    addLog('Inline <script> executed successfully');
+
+    function testInlineHandler() {
+      document.getElementById('handlerStatus').textContent = 'EXECUTED — onclick handler ran';
+      document.getElementById('handlerStatus').className = 'result ran';
+      addLog('Inline onclick="" handler executed successfully');
+    }
+
+    function testEval() {
+      try {
+        eval('document.getElementById("evalStatus").textContent = "EXECUTED — eval() ran"');
+        document.getElementById('evalStatus').className = 'result ran';
+        addLog('eval() executed successfully');
+      } catch (e) {
+        document.getElementById('evalStatus').textContent = 'BLOCKED';
+        addLog('eval() was blocked: ' + e.message, 'info');
+      }
+    }
+
+    function testDynamicScript() {
+      const script = document.createElement('script');
+      script.textContent = `
+        document.getElementById('dynamicStatus').textContent = 'EXECUTED — dynamic script ran';
+        document.getElementById('dynamicStatus').className = 'result ran';
+      `;
+      document.body.appendChild(script);
+      addLog('Dynamic script injection executed successfully');
+    }
+
+    function testSimulatedXSS() {
+      const xssTarget = document.getElementById('xssTarget');
+      window.__xssRan = false;
+      xssTarget.innerHTML = '<img src=x onerror="window.__xssRan = true;">';
+
+      setTimeout(function() {
+        if (window.__xssRan) {
+          document.getElementById('xssStatus').textContent = 'EXECUTED — XSS injection ran';
+          document.getElementById('xssStatus').className = 'result ran';
+          addLog('XSS innerHTML injection executed successfully');
+        } else {
+          document.getElementById('xssStatus').textContent = 'BLOCKED';
+          addLog('XSS innerHTML injection was blocked', 'info');
+        }
+      }, 50);
+    }
+  </script>
+
+  <!-- This script has a nonce attribute — runs because there's no CSP to check it -->
+  <script nonce="demo123">
+    document.getElementById('noncedStatus').textContent = 'EXECUTED — nonced script ran';
+    document.getElementById('noncedStatus').className = 'result ran';
+    addLog('Script with nonce="demo123" executed (no CSP to check nonces)');
+  </script>
+</body>
+</html>

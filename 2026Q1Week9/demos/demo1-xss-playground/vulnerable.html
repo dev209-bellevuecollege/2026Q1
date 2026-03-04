@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Search Results (VULNERABLE)</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; min-height: 100vh; }
+    .warning-banner { background: #dc2626; color: white; padding: 0.75rem 1.5rem; text-align: center; font-weight: 600; font-size: 0.9rem; }
+    .container { max-width: 800px; margin: 2rem auto; padding: 0 1.5rem; }
+    h1 { color: #1f2937; margin-bottom: 0.5rem; font-size: 1.75rem; }
+    .search-box { display: flex; gap: 0.5rem; margin-bottom: 2rem; }
+    .search-box input { flex: 1; padding: 0.75rem 1rem; border: 2px solid #e5e7eb; border-radius: 0.5rem; font-size: 1rem; }
+    .search-box button { padding: 0.75rem 1.5rem; background: #dc2626; color: white; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; }
+    .search-box button:hover { background: #b91c1c; }
+    #results { background: white; border-radius: 0.75rem; padding: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); min-height: 100px; }
+    .code-panel { margin-top: 2rem; background: #1f2937; color: #f9fafb; padding: 1.5rem; border-radius: 0.75rem; font-family: 'Monaco', 'Menlo', monospace; font-size: 0.85rem; line-height: 1.6; overflow-x: auto; }
+    .code-panel .comment { color: #6b7280; }
+    .code-panel .danger { color: #fca5a5; }
+    .code-panel .keyword { color: #f472b6; }
+    .code-panel .string { color: #a5f3fc; }
+    .try-these { margin-top: 2rem; background: #fef2f2; border: 2px solid #fca5a5; border-radius: 0.75rem; padding: 1.5rem; }
+    .try-these h3 { color: #dc2626; margin-bottom: 0.75rem; }
+    .try-these code { background: #1f2937; color: #fca5a5; padding: 0.2rem 0.5rem; border-radius: 0.25rem; font-size: 0.85rem; display: inline-block; margin: 0.25rem 0; word-break: break-all; }
+    .try-these li { margin-bottom: 0.75rem; color: #374151; font-size: 0.95rem; }
+    .try-these p { font-size: 0.9rem; color: #6b7280; }
+  </style>
+</head>
+<body>
+  <div class="warning-banner">VULNERABLE DEMO &mdash; This page intentionally uses innerHTML to demonstrate XSS</div>
+
+  <div class="container">
+    <h1>Product Search</h1>
+    <p style="color: #6b7280; margin-bottom: 1.5rem;">Search for products in our catalog</p>
+
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="Search for anything...">
+      <button onclick="doSearch()">Search</button>
+    </div>
+
+    <div id="results">
+      <p style="color: #6b7280;">Enter a search term above to see results.</p>
+    </div>
+
+    <div class="try-these">
+      <h3>Try These XSS Payloads</h3>
+      <p>Paste these into the search box (or add as ?q= parameter in the URL):</p>
+      <ol>
+        <li>
+          <strong>Basic alert:</strong><br>
+          <code>&lt;img src=x onerror="alert('XSS!')"&gt;</code>
+        </li>
+        <li>
+          <strong>Cookie theft simulation:</strong><br>
+          <code>&lt;img src=x onerror="alert('Stolen cookie: ' + document.cookie)"&gt;</code>
+        </li>
+        <li>
+          <strong>Page defacement:</strong><br>
+          <code>&lt;div style="position:fixed;top:0;left:0;width:100%;height:100%;background:red;color:white;font-size:3rem;display:flex;align-items:center;justify-content:center;z-index:9999"&gt;HACKED&lt;/div&gt;</code>
+        </li>
+        <li>
+          <strong>Keylogger injection:</strong><br>
+          <code>&lt;img src=x onerror="document.onkeypress=function(e){console.log('Key logged:',e.key)};alert('Keylogger installed! Check console.')"&gt;</code>
+        </li>
+      </ol>
+    </div>
+
+    <div class="code-panel">
+      <span class="comment">// THE VULNERABLE CODE:</span><br>
+      <span class="keyword">const</span> query = searchInput.value;<br><br>
+      <span class="comment">// DANGER: Using innerHTML with user input!</span><br>
+      results.<span class="danger">innerHTML</span> = <span class="string">`Showing results for: &lt;strong&gt;${query}&lt;/strong&gt;`</span>;<br><br>
+      <span class="comment">// The browser parses the HTML, including any &lt;script&gt; or event handlers</span><br>
+      <span class="comment">// that the user injected through the search input.</span>
+    </div>
+  </div>
+
+  <script>
+    // Set a demo cookie so students can see it gets "stolen"
+    document.cookie = "session_token=abc123secret; path=/";
+    document.cookie = "user=demo_student; path=/";
+
+    function doSearch() {
+      const query = document.getElementById('searchInput').value;
+      if (!query) return;
+
+      // VULNERABLE: Using innerHTML with user input!
+      document.getElementById('results').innerHTML = `
+        <h3>Showing results for: <strong>${query}</strong></h3>
+        <p style="color: #6b7280; margin-top: 0.5rem;">Found 0 products matching your search.</p>
+      `;
+
+      // Also update the URL so students can share XSS links
+      const url = new URL(window.location);
+      url.searchParams.set('q', query);
+      window.history.replaceState({}, '', url);
+    }
+
+    // Check for ?q= parameter on page load (Reflected XSS simulation)
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlQuery = urlParams.get('q');
+    if (urlQuery) {
+      document.getElementById('searchInput').value = urlQuery;
+      doSearch();
+    }
+  </script>
+</body>
+</html>

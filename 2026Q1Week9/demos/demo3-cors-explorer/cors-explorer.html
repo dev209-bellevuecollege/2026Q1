@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CORS Explorer</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; min-height: 100vh; }
+    .banner { background: #7c3aed; color: white; padding: 0.75rem 1.5rem; text-align: center; font-weight: 600; }
+    .container { max-width: 900px; margin: 2rem auto; padding: 0 1.5rem; }
+    h1 { color: #1f2937; margin-bottom: 0.5rem; }
+    h3 { color: #374151; margin-bottom: 0.75rem; }
+    .subtitle { color: #6b7280; margin-bottom: 2rem; font-size: 1rem; }
+    .origin-box { background: #f3e8ff; border: 2px solid #c4b5fd; border-radius: 0.75rem; padding: 1rem 1.25rem; margin-bottom: 2rem; display: flex; align-items: center; gap: 0.75rem; }
+    .origin-box .label { color: #7c3aed; font-weight: 600; font-size: 0.9rem; white-space: nowrap; }
+    .origin-box .value { font-family: monospace; color: #374151; font-size: 0.95rem; }
+    .test-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem; }
+    .test-card { background: white; border-radius: 0.75rem; padding: 1.25rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); display: flex; flex-direction: column; }
+    .test-card h4 { color: #1f2937; margin-bottom: 0.25rem; font-size: 1rem; }
+    .test-card .url { font-family: monospace; font-size: 0.8rem; color: #6b7280; margin-bottom: 0.75rem; word-break: break-all; }
+    .test-card .description { font-size: 0.85rem; color: #6b7280; margin-bottom: 0.75rem; flex: 1; }
+    .test-card button { padding: 0.5rem 1rem; border: none; border-radius: 0.5rem; font-size: 0.9rem; cursor: pointer; color: white; }
+    .btn-purple { background: #7c3aed; }
+    .btn-purple:hover { background: #6d28d9; }
+    .btn-purple:disabled { background: #d1d5db; cursor: not-allowed; }
+    .test-card .result { margin-top: 0.75rem; padding: 0.75rem; border-radius: 0.5rem; font-family: monospace; font-size: 0.8rem; line-height: 1.5; max-height: 120px; overflow-y: auto; display: none; }
+    .result-success { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+    .result-error { background: #fef2f2; color: #dc2626; border: 1px solid #fca5a5; }
+    .result-info { background: #dbeafe; color: #1d4ed8; border: 1px solid #93c5fd; }
+    .custom-section { background: white; border-radius: 0.75rem; padding: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 2rem; }
+    .custom-section input { flex: 1; padding: 0.5rem 0.75rem; border: 2px solid #e5e7eb; border-radius: 0.5rem; font-family: monospace; font-size: 0.9rem; }
+    .custom-section .input-row { display: flex; gap: 0.5rem; margin-bottom: 0.75rem; }
+    .network-panel { background: #1f2937; border-radius: 0.75rem; padding: 1.25rem; font-family: monospace; font-size: 0.8rem; color: #f9fafb; min-height: 150px; max-height: 400px; overflow-y: auto; line-height: 1.6; }
+    .network-panel .request { color: #93c5fd; }
+    .network-panel .response { color: #86efac; }
+    .network-panel .error { color: #fca5a5; }
+    .network-panel .header { color: #fcd34d; }
+    .network-panel .divider { color: #4b5563; }
+  </style>
+</head>
+<body>
+  <div class="banner">CORS Explorer &mdash; See Same-Origin Policy and CORS in Action</div>
+
+  <div class="container">
+    <h1>CORS Explorer</h1>
+    <p class="subtitle">Make fetch() requests to different origins and see what happens</p>
+
+    <div class="origin-box">
+      <span class="label">Your Current Origin:</span>
+      <span class="value" id="currentOrigin"></span>
+    </div>
+
+    <h3>Pre-Built Tests</h3>
+    <div class="test-grid">
+      <div class="test-card">
+        <h4>GitHub API (CORS Allowed)</h4>
+        <div class="url">https://api.github.com/users/octocat</div>
+        <div class="description">GitHub's API sets Access-Control-Allow-Origin: * so any origin can read responses.</div>
+        <button class="btn-purple" onclick="runTest(this, 'https://api.github.com/users/octocat', 'github')">Fetch</button>
+        <div class="result" id="result-github"></div>
+      </div>
+
+      <div class="test-card">
+        <h4>JSONPlaceholder (CORS Allowed)</h4>
+        <div class="url">https://jsonplaceholder.typicode.com/todos/1</div>
+        <div class="description">A free fake API for testing. Also sets permissive CORS headers.</div>
+        <button class="btn-purple" onclick="runTest(this, 'https://jsonplaceholder.typicode.com/todos/1', 'jsonph')">Fetch</button>
+        <div class="result" id="result-jsonph"></div>
+      </div>
+
+      <div class="test-card">
+        <h4>Google.com (CORS Blocked)</h4>
+        <div class="url">https://www.google.com</div>
+        <div class="description">Google doesn't set CORS headers for its homepage. This request will be blocked by the browser.</div>
+        <button class="btn-purple" onclick="runTest(this, 'https://www.google.com', 'google')">Fetch</button>
+        <div class="result" id="result-google"></div>
+      </div>
+
+      <div class="test-card">
+        <h4>Wikipedia API (CORS Allowed)</h4>
+        <div class="url">https://en.wikipedia.org/api/rest_v1/page/summary/JavaScript</div>
+        <div class="description">Wikipedia's REST API allows cross-origin requests.</div>
+        <button class="btn-purple" onclick="runTest(this, 'https://en.wikipedia.org/api/rest_v1/page/summary/JavaScript', 'wiki')">Fetch</button>
+        <div class="result" id="result-wiki"></div>
+      </div>
+    </div>
+
+    <div class="custom-section">
+      <h3>Custom URL Test</h3>
+      <p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 0.75rem;">Try any URL to see if its server allows CORS from your origin.</p>
+      <div class="input-row">
+        <input type="text" id="customUrl" placeholder="https://example.com/api/data" value="https://httpbin.org/get">
+        <button class="btn-purple" onclick="runCustomTest()">Fetch</button>
+      </div>
+      <div class="result" id="result-custom" style="display: none;"></div>
+    </div>
+
+    <h3>Network Log</h3>
+    <div class="network-panel" id="networkLog">
+      <div class="divider">Waiting for requests...</div>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('currentOrigin').textContent = window.location.origin;
+
+    const networkLog = document.getElementById('networkLog');
+    let firstLog = true;
+
+    function addNetworkLog(msg, type = 'request') {
+      if (firstLog) {
+        networkLog.innerHTML = '';
+        firstLog = false;
+      }
+      const div = document.createElement('div');
+      div.className = type;
+      div.textContent = msg;
+      networkLog.appendChild(div);
+      networkLog.scrollTop = networkLog.scrollHeight;
+    }
+
+    function addDivider() {
+      addNetworkLog('─'.repeat(60), 'divider');
+    }
+
+    async function runTest(btn, url, id) {
+      const resultEl = document.getElementById(`result-${id}`);
+      resultEl.style.display = 'block';
+      resultEl.className = 'result result-info';
+      resultEl.textContent = 'Fetching...';
+      btn.disabled = true;
+
+      addDivider();
+      addNetworkLog(`→ GET ${url}`, 'request');
+      addNetworkLog(`  Origin: ${window.location.origin}`, 'header');
+
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+
+        resultEl.className = 'result result-success';
+        resultEl.textContent = `SUCCESS (${response.status})\n${JSON.stringify(data, null, 2).slice(0, 200)}...`;
+
+        addNetworkLog(`← ${response.status} ${response.statusText}`, 'response');
+
+        // Try to read CORS headers
+        const corsHeader = response.headers.get('access-control-allow-origin');
+        if (corsHeader) {
+          addNetworkLog(`  Access-Control-Allow-Origin: ${corsHeader}`, 'header');
+        }
+        addNetworkLog(`  Response body received (${JSON.stringify(data).length} bytes)`, 'response');
+      } catch (error) {
+        resultEl.className = 'result result-error';
+        resultEl.textContent = `CORS ERROR!\n${error.message}\n\nThe server did not send an Access-Control-Allow-Origin header allowing your origin.`;
+
+        addNetworkLog(`✗ CORS Error: ${error.message}`, 'error');
+        addNetworkLog('  The request was sent, but the browser blocked the response.', 'error');
+        addNetworkLog('  Fix: The SERVER must add Access-Control-Allow-Origin header.', 'error');
+      }
+
+      btn.disabled = false;
+    }
+
+    async function runCustomTest() {
+      const url = document.getElementById('customUrl').value.trim();
+      if (!url) return;
+
+      const resultEl = document.getElementById('result-custom');
+      resultEl.style.display = 'block';
+      resultEl.className = 'result result-info';
+      resultEl.textContent = 'Fetching...';
+
+      addDivider();
+      addNetworkLog(`→ GET ${url}`, 'request');
+      addNetworkLog(`  Origin: ${window.location.origin}`, 'header');
+
+      try {
+        const response = await fetch(url);
+        const text = await response.text();
+
+        resultEl.className = 'result result-success';
+        resultEl.textContent = `SUCCESS (${response.status})\n${text.slice(0, 300)}...`;
+
+        addNetworkLog(`← ${response.status} ${response.statusText}`, 'response');
+        const corsHeader = response.headers.get('access-control-allow-origin');
+        if (corsHeader) {
+          addNetworkLog(`  Access-Control-Allow-Origin: ${corsHeader}`, 'header');
+        }
+      } catch (error) {
+        resultEl.className = 'result result-error';
+        resultEl.textContent = `CORS ERROR!\n${error.message}`;
+
+        addNetworkLog(`✗ CORS Error: ${error.message}`, 'error');
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Search Results (SAFE)</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; min-height: 100vh; }
+    .safe-banner { background: #15803d; color: white; padding: 0.75rem 1.5rem; text-align: center; font-weight: 600; font-size: 0.9rem; }
+    .container { max-width: 800px; margin: 2rem auto; padding: 0 1.5rem; }
+    h1 { color: #1f2937; margin-bottom: 0.5rem; font-size: 1.75rem; }
+    .search-box { display: flex; gap: 0.5rem; margin-bottom: 2rem; }
+    .search-box input { flex: 1; padding: 0.75rem 1rem; border: 2px solid #e5e7eb; border-radius: 0.5rem; font-size: 1rem; }
+    .search-box button { padding: 0.75rem 1.5rem; background: #15803d; color: white; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; }
+    .search-box button:hover { background: #166534; }
+    #results { background: white; border-radius: 0.75rem; padding: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); min-height: 100px; }
+    .code-panel { margin-top: 2rem; background: #1f2937; color: #f9fafb; padding: 1.5rem; border-radius: 0.75rem; font-family: 'Monaco', 'Menlo', monospace; font-size: 0.85rem; line-height: 1.6; overflow-x: auto; }
+    .code-panel .comment { color: #6b7280; }
+    .code-panel .safe { color: #86efac; }
+    .code-panel .keyword { color: #f472b6; }
+    .code-panel .string { color: #a5f3fc; }
+    .explanation { margin-top: 2rem; background: #dcfce7; border: 2px solid #86efac; border-radius: 0.75rem; padding: 1.5rem; }
+    .explanation h3 { color: #15803d; margin-bottom: 0.75rem; }
+    .explanation li { margin-bottom: 0.5rem; color: #374151; font-size: 0.95rem; }
+    .explanation code { background: #1f2937; color: #86efac; padding: 0.2rem 0.5rem; border-radius: 0.25rem; font-size: 0.85rem; }
+    .comparison { margin-top: 2rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .comparison > div { padding: 1.25rem; border-radius: 0.75rem; }
+    .comparison .bad { background: #fef2f2; border: 1px solid #fca5a5; }
+    .comparison .good { background: #dcfce7; border: 1px solid #86efac; }
+    .comparison h4 { margin-bottom: 0.5rem; }
+  </style>
+</head>
+<body>
+  <div class="safe-banner">SAFE VERSION &mdash; This page uses textContent and DOM methods to prevent XSS</div>
+
+  <div class="container">
+    <h1>Product Search</h1>
+    <p style="color: #6b7280; margin-bottom: 1.5rem;">Search for products in our catalog</p>
+
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="Search for anything...">
+      <button onclick="doSearch()">Search</button>
+    </div>
+
+    <div id="results">
+      <p style="color: #6b7280;">Enter a search term above to see results.</p>
+    </div>
+
+    <div class="explanation">
+      <h3>Why Is This Safe?</h3>
+      <ol>
+        <li><code>textContent</code> treats everything as plain text &mdash; HTML tags are displayed literally, not executed</li>
+        <li><code>document.createElement()</code> builds DOM nodes safely without parsing HTML strings</li>
+        <li>Even if someone enters <code>&lt;script&gt;alert('xss')&lt;/script&gt;</code>, it shows up as text on the page</li>
+      </ol>
+    </div>
+
+    <div class="comparison">
+      <div class="bad">
+        <h4 style="color: #dc2626;">Vulnerable (innerHTML)</h4>
+        <code style="background: #1f2937; color: #fca5a5; display: block; padding: 0.75rem; border-radius: 0.25rem; font-size: 0.8rem; margin-top: 0.5rem;">
+          el.innerHTML = `Results for: ${query}`
+        </code>
+        <p style="font-size: 0.85rem; color: #374151; margin-top: 0.5rem;">Parses HTML &mdash; script tags and event handlers execute!</p>
+      </div>
+      <div class="good">
+        <h4 style="color: #15803d;">Safe (textContent)</h4>
+        <code style="background: #1f2937; color: #86efac; display: block; padding: 0.75rem; border-radius: 0.25rem; font-size: 0.8rem; margin-top: 0.5rem;">
+          el.textContent = `Results for: ${query}`
+        </code>
+        <p style="font-size: 0.85rem; color: #374151; margin-top: 0.5rem;">Escapes HTML &mdash; everything renders as plain text.</p>
+      </div>
+    </div>
+
+    <div class="code-panel">
+      <span class="comment">// THE SAFE CODE:</span><br>
+      <span class="keyword">const</span> query = searchInput.value;<br><br>
+      <span class="comment">// SAFE: Build DOM elements programmatically</span><br>
+      <span class="keyword">const</span> h3 = document.createElement(<span class="string">'h3'</span>);<br>
+      h3.<span class="safe">textContent</span> = <span class="string">`Showing results for: ${query}`</span>;<br><br>
+      <span class="comment">// textContent escapes all HTML characters automatically.</span><br>
+      <span class="comment">// &lt;script&gt; becomes &amp;lt;script&amp;gt; &mdash; displayed, not executed.</span>
+    </div>
+  </div>
+
+  <script>
+    document.cookie = "session_token=abc123secret; path=/";
+    document.cookie = "user=demo_student; path=/";
+
+    function doSearch() {
+      const query = document.getElementById('searchInput').value;
+      if (!query) return;
+
+      const results = document.getElementById('results');
+
+      // SAFE: Clear previous results
+      results.innerHTML = '';
+
+      // SAFE: Build DOM elements programmatically
+      const h3 = document.createElement('h3');
+      h3.textContent = `Showing results for: ${query}`;
+
+      const p = document.createElement('p');
+      p.style.color = '#6b7280';
+      p.style.marginTop = '0.5rem';
+      p.textContent = 'Found 0 products matching your search.';
+
+      results.appendChild(h3);
+      results.appendChild(p);
+
+      // Update URL
+      const url = new URL(window.location);
+      url.searchParams.set('q', query);
+      window.history.replaceState({}, '', url);
+    }
+
+    // Check for ?q= parameter on page load
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlQuery = urlParams.get('q');
+    if (urlQuery) {
+      document.getElementById('searchInput').value = urlQuery;
+      doSearch();
+    }
+  </script>
+</body>
+</html>
