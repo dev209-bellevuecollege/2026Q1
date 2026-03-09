@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Part 2: The AI Development Tool Landscape</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; }
+    .slideshow { height: 100vh; display: flex; flex-direction: column; }
+    .slide-container { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+    .slide { background: white; border-radius: 1rem; box-shadow: 0 10px 40px rgba(0,0,0,0.1); width: 100%; max-width: 1000px; height: 600px; padding: 3rem; display: none; flex-direction: column; }
+    .slide.active { display: flex; }
+    .controls { background: white; border-top: 1px solid #e5e7eb; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+    .btn { padding: 0.5rem 1.5rem; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; }
+    .btn-prev, .btn-next { background: #0d9488; color: white; }
+    .btn:disabled { background: #d1d5db; cursor: not-allowed; }
+    .dots { display: flex; gap: 0.5rem; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #d1d5db; border: none; cursor: pointer; }
+    .dot.active { background: #0d9488; width: 20px; border-radius: 5px; }
+    .slide-title { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+    .icon { width: 50px; height: 50px; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: bold; }
+    .icon-teal { background: #ccfbf1; color: #0d9488; }
+    .icon-emerald { background: #d1fae5; color: #059669; }
+    .icon-cyan { background: #cffafe; color: #0891b2; }
+    .icon-blue { background: #dbeafe; color: #1d4ed8; }
+    .icon-purple { background: #f3e8ff; color: #7c3aed; }
+    .icon-orange { background: #ffedd5; color: #c2410c; }
+    .icon-amber { background: #fef3c7; color: #b45309; }
+    .icon-pink { background: #fce7f3; color: #db2777; }
+    .icon-green { background: #dcfce7; color: #15803d; }
+    h1 { font-size: 2.5rem; color: #1f2937; }
+    h2 { font-size: 1.75rem; color: #1f2937; }
+    h3 { font-size: 1.25rem; color: #374151; margin-bottom: 0.5rem; }
+    .subtitle { color: #6b7280; font-size: 1.1rem; }
+    .content { flex: 1; display: flex; flex-direction: column; gap: 1rem; }
+    .card { background: #f9fafb; border-radius: 0.75rem; padding: 1.25rem; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; flex: 1; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; flex: 1; }
+    .title-slide { align-items: center; justify-content: center; text-align: center; }
+    .title-slide .icon { width: 80px; height: 80px; font-size: 1.5rem; margin-bottom: 1.5rem; border-radius: 50%; }
+    .title-slide h1 { margin-bottom: 1rem; }
+    .title-slide .subtitle { margin-bottom: 1.5rem; font-size: 1.25rem; }
+    .badge { background: #ccfbf1; color: #0d9488; padding: 0.5rem 1rem; border-radius: 2rem; font-size: 0.9rem; }
+    .counter { color: #6b7280; font-size: 0.9rem; }
+    pre { background: #1f2937; color: #f9fafb; padding: 1.25rem; border-radius: 0.5rem; font-size: 0.9rem; overflow-x: auto; font-family: 'Monaco', 'Menlo', monospace; }
+    .list-card { border-radius: 0.75rem; padding: 1.5rem; }
+    .list-card ul { list-style: none; }
+    .list-card li { padding: 0.4rem 0; display: flex; align-items: flex-start; gap: 0.5rem; color: #374151; font-size: 0.9rem; }
+    .highlight-box { background: #f0fdfa; border: 2px solid #5eead4; border-radius: 0.75rem; padding: 1.5rem; text-align: center; }
+    .highlight-box p { color: #115e59; font-weight: 500; font-size: 1.1rem; }
+    .tool-card { border-radius: 0.75rem; padding: 1.25rem; display: flex; flex-direction: column; gap: 0.5rem; }
+    .tool-card h4 { font-size: 1rem; margin-bottom: 0.25rem; }
+    .tool-card p { font-size: 0.8rem; color: #374151; line-height: 1.4; }
+    .tool-tag { display: inline-block; font-size: 0.7rem; padding: 0.15rem 0.5rem; border-radius: 1rem; font-weight: 600; }
+    .takeaway { display: flex; align-items: center; gap: 1rem; background: linear-gradient(to right, #f0fdfa, transparent); padding: 1rem; border-radius: 0.5rem; }
+    .takeaway-num { background: #0d9488; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0; }
+    .evolution-flow { display: flex; align-items: center; justify-content: space-between; flex: 1; gap: 0.25rem; }
+    .evo-step { text-align: center; padding: 1rem 0.75rem; border-radius: 0.75rem; flex: 1; }
+    .evo-step h4 { font-size: 0.85rem; margin-bottom: 0.25rem; }
+    .evo-step p { font-size: 0.7rem; color: #6b7280; }
+    .evo-arrow { color: #14b8a6; font-size: 1.25rem; flex-shrink: 0; }
+    .notes { display: none; }
+    .notes-panel { display: none; background: #1f2937; color: #f9fafb; padding: 1.5rem 2rem; font-size: 0.95rem; line-height: 1.6; border-top: 3px solid #0d9488; max-height: 200px; overflow-y: auto; }
+    .notes-panel.visible { display: block; }
+    .notes-panel strong { color: #5eead4; }
+  </style>
+</head>
+<body>
+  <main class="slideshow">
+    <div class="slide-container" role="region" aria-label="Slide presentation">
+
+      <!-- Slide 1: Title -->
+      <section class="slide active title-slide" aria-label="Title slide">
+        <div class="icon icon-teal" aria-hidden="true">TOOL</div>
+        <h1>Part 2: The AI Development Tool Landscape</h1>
+        <p class="subtitle">From Chat to Autonomous Agents</p>
+        <span class="badge">20 Minutes</span>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> The AI tool landscape is moving incredibly fast. Six months ago, most of these tools didn't exist or were in beta. Today they're production-ready. We're going to walk through the major categories and tools so you understand what's available and how they differ.
+        </div>
+      </section>
+
+      <!-- Slide 2: The Progression -->
+      <section class="slide" aria-label="Tool evolution">
+        <header class="slide-title">
+          <div class="icon icon-teal" aria-hidden="true">1-4</div>
+          <div><h2>The Progression of AI Dev Tools</h2><p class="subtitle">Four Generations in Two Years</p></div>
+        </header>
+        <div class="evolution-flow">
+          <div class="evo-step" style="background: #f0fdfa; border: 1px solid #99f6e4;">
+            <h4 style="color: #0d9488;">Gen 1: Chat</h4>
+            <p>Copy-paste from ChatGPT / Claude.ai</p>
+            <p style="margin-top: 0.5rem; font-size: 0.65rem; color: #0d9488;">You are the integrator</p>
+          </div>
+          <div class="evo-arrow">&#8594;</div>
+          <div class="evo-step" style="background: #ecfdf5; border: 1px solid #6ee7b7;">
+            <h4 style="color: #059669;">Gen 2: Autocomplete</h4>
+            <p>GitHub Copilot inline suggestions</p>
+            <p style="margin-top: 0.5rem; font-size: 0.65rem; color: #059669;">Tab to accept, one line at a time</p>
+          </div>
+          <div class="evo-arrow">&#8594;</div>
+          <div class="evo-step" style="background: #dbeafe; border: 1px solid #93c5fd;">
+            <h4 style="color: #1d4ed8;">Gen 3: Agentic</h4>
+            <p>Claude Code, Cursor, Codex CLI</p>
+            <p style="margin-top: 0.5rem; font-size: 0.65rem; color: #1d4ed8;">Multi-file edits, runs commands</p>
+          </div>
+        </div>
+        <div class="highlight-box" style="margin-top: 1rem;">
+          <p>We're living through generation 3 <strong>right now</strong>. The best developers use tools from multiple generations.</p>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> Walk through each generation. Gen 1 (2023): Chat interfaces. You ask ChatGPT or Claude a question, copy the code, paste it into your editor. Gen 2 (2023-2024): Autocomplete tools like Copilot that suggest code inline as you type. Gen 3 (2024-2025): Agentic tools that understand your whole codebase, edit multiple files, run tests, and iterate. Emphasize that Gen 1 is still useful! Sometimes a simple chat question is the right tool.
+        </div>
+      </section>
+
+      <!-- Slide 3: Terminal Agents -->
+      <section class="slide" aria-label="Terminal agents">
+        <header class="slide-title">
+          <div class="icon icon-emerald" aria-hidden="true">$_</div>
+          <div><h2>Terminal-Based Agents</h2><p class="subtitle">The "Big Three" CLI Tools</p></div>
+        </header>
+        <div class="grid-3">
+          <div class="tool-card" style="background: #fff7ed; border: 1px solid #fed7aa;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <h4 style="color: #c2410c;">Claude Code</h4>
+              <span class="tool-tag" style="background:#ffedd5;color:#c2410c;">Anthropic</span>
+            </div>
+            <p>Agentic coding in your terminal. Reads your entire codebase, edits files, runs tests, creates commits and PRs.</p>
+            <ul style="list-style:none;font-size:0.75rem;margin-top:auto;">
+              <li>&#8226; Multi-agent orchestration</li>
+              <li>&#8226; Voice mode (talk to it!)</li>
+              <li>&#8226; MCP extensibility</li>
+              <li>&#8226; Full git workflow</li>
+            </ul>
+          </div>
+          <div class="tool-card" style="background: #f0fdf4; border: 1px solid #bbf7d0;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <h4 style="color: #15803d;">Codex CLI</h4>
+              <span class="tool-tag" style="background:#dcfce7;color:#15803d;">OpenAI</span>
+            </div>
+            <p>Open-source, Rust-based terminal agent. Uses GPT-5-Codex for coding tasks. Multi-agent support with isolated git worktrees.</p>
+            <ul style="list-style:none;font-size:0.75rem;margin-top:auto;">
+              <li>&#8226; Open source (Rust)</li>
+              <li>&#8226; GPT-5-Codex model</li>
+              <li>&#8226; Built-in code review</li>
+              <li>&#8226; Adjustable reasoning</li>
+            </ul>
+          </div>
+          <div class="tool-card" style="background: #eff6ff; border: 1px solid #bfdbfe;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <h4 style="color: #1d4ed8;">Gemini CLI</h4>
+              <span class="tool-tag" style="background:#dbeafe;color:#1d4ed8;">Google</span>
+            </div>
+            <p>Free access to Gemini 2.5 Pro with your Google account. 60 requests/min, 1,000/day. Open source.</p>
+            <ul style="list-style:none;font-size:0.75rem;margin-top:auto;">
+              <li>&#8226; Free tier (generous!)</li>
+              <li>&#8226; Google Search grounding</li>
+              <li>&#8226; Open source</li>
+              <li>&#8226; MCP extensibility</li>
+            </ul>
+          </div>
+        </div>
+        <div class="highlight-box" style="margin-top: 1rem;">
+          <p>All three share a pattern: <strong>read your code &#8594; plan changes &#8594; edit files &#8594; run commands &#8594; iterate</strong></p>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> These three are converging on similar capabilities. The main differences are the underlying model (Claude vs GPT-5 vs Gemini), ecosystem integrations, and pricing. Claude Code has the most mature multi-agent story. Codex CLI is open source and built in Rust. Gemini CLI has the most generous free tier. For students, Gemini CLI is the easiest to get started with since it's free. We'll demo Claude Code later. Point out that these all run in the terminal &mdash; no IDE required. You can use them with any editor.
+        </div>
+      </section>
+
+      <!-- Slide 4: AI IDEs -->
+      <section class="slide" aria-label="AI IDEs">
+        <header class="slide-title">
+          <div class="icon icon-blue" aria-hidden="true">IDE</div>
+          <div><h2>AI-Native IDEs</h2><p class="subtitle">The Editor IS the AI</p></div>
+        </header>
+        <div class="grid-2">
+          <div>
+            <div class="tool-card" style="background: #eff6ff; border: 1px solid #bfdbfe; margin-bottom: 1rem;">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <h4 style="color: #1d4ed8;">Cursor</h4>
+                <span class="tool-tag" style="background:#dbeafe;color:#1d4ed8;">Anysphere</span>
+              </div>
+              <p>VS Code fork with AI as a core feature. Composer mode plans and executes multi-file edits. Visual editor for drag-and-drop UI changes.</p>
+              <ul style="list-style:none;font-size:0.75rem;">
+                <li>&#8226; "Composer" agent for multi-file edits</li>
+                <li>&#8226; Visual editor: point-and-prompt UI</li>
+                <li>&#8226; Choose any model (Claude, GPT, Gemini)</li>
+                <li>&#8226; Most popular AI IDE (&gt;2M users)</li>
+              </ul>
+            </div>
+            <div class="tool-card" style="background: #fdf4ff; border: 1px solid #e9d5ff;">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <h4 style="color: #7c3aed;">Windsurf</h4>
+                <span class="tool-tag" style="background:#f3e8ff;color:#7c3aed;">Cognition AI</span>
+              </div>
+              <p>"Cascade" agentic system handles multi-file edits autonomously. Free tier available.</p>
+              <ul style="list-style:none;font-size:0.75rem;">
+                <li>&#8226; Cascade: autonomous multi-file agent</li>
+                <li>&#8226; Multi-model support</li>
+                <li>&#8226; Free tier to get started</li>
+              </ul>
+            </div>
+          </div>
+          <div>
+            <div class="tool-card" style="background: #fef3c7; border: 1px solid #fde68a; margin-bottom: 1rem;">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <h4 style="color: #b45309;">GitHub Copilot</h4>
+                <span class="tool-tag" style="background:#fef9c3;color:#b45309;">Microsoft</span>
+              </div>
+              <p>The original AI coding assistant. 20M+ users. Now has an autonomous coding agent that creates PRs from issues.</p>
+              <ul style="list-style:none;font-size:0.75rem;">
+                <li>&#8226; Most widely adopted (90% Fortune 100)</li>
+                <li>&#8226; Autonomous PR creation from issues</li>
+                <li>&#8226; Works in VS Code, JetBrains, Neovim</li>
+                <li>&#8226; $10/month (Pro)</li>
+              </ul>
+            </div>
+            <div class="card" style="background: #f0fdfa; border: 1px solid #99f6e4;">
+              <h3 style="color: #0d9488; font-size: 1rem;">Key Difference from Terminal Agents</h3>
+              <p style="font-size: 0.85rem; color: #374151;">IDE tools give you a visual, side-by-side experience. You see the diffs in real time and accept/reject changes inline. Terminal agents give you more flexibility and can be used with ANY editor.</p>
+            </div>
+          </div>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> The difference between terminal agents and AI IDEs is mainly the interface. Terminal agents are editor-agnostic &mdash; you can use them with Vim, VS Code, or anything. AI IDEs give you a tighter feedback loop with inline diffs. Many developers use both: an AI IDE for day-to-day work and a terminal agent for bigger tasks. GitHub Copilot is the most widely adopted because it was first and has the biggest distribution through VS Code. Cursor is the most popular dedicated AI IDE. Point out that multi-model support is now standard &mdash; you're not locked in.
+        </div>
+      </section>
+
+      <!-- Slide 5: Spec-Driven Tools -->
+      <section class="slide" aria-label="Spec-driven tools">
+        <header class="slide-title">
+          <div class="icon icon-purple" aria-hidden="true">SPEC</div>
+          <div><h2>Spec-Driven &amp; Agent-First Platforms</h2><p class="subtitle">Requirements Before Code</p></div>
+        </header>
+        <div class="grid-2">
+          <div>
+            <div class="tool-card" style="background: #fff7ed; border: 1px solid #fed7aa; margin-bottom: 1rem;">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <h4 style="color: #c2410c;">Amazon Kiro</h4>
+                <span class="tool-tag" style="background:#ffedd5;color:#c2410c;">AWS</span>
+              </div>
+              <p>Spec-driven IDE. Before writing code, Kiro generates:</p>
+              <ol style="font-size: 0.8rem; color: #374151; padding-left: 1.25rem; margin-top: 0.5rem;">
+                <li>Requirements document (EARS notation)</li>
+                <li>System design with architecture decisions</li>
+                <li>Dependency-ordered task list</li>
+              </ol>
+              <p style="font-size: 0.8rem; color: #374151; margin-top: 0.5rem;">Only THEN does it write implementation code.</p>
+            </div>
+          </div>
+          <div>
+            <div class="tool-card" style="background: #eff6ff; border: 1px solid #bfdbfe; margin-bottom: 1rem;">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <h4 style="color: #1d4ed8;">Google Antigravity</h4>
+                <span class="tool-tag" style="background:#dbeafe;color:#1d4ed8;">Google</span>
+              </div>
+              <p>Agent-first development platform with two modes:</p>
+              <ul style="font-size: 0.8rem; color: #374151; list-style: none; margin-top: 0.5rem;">
+                <li><strong>Editor View:</strong> Traditional AI-powered IDE for synchronous coding</li>
+                <li style="margin-top: 0.25rem;"><strong>Manager View:</strong> Orchestrate multiple agents working in parallel across workspaces</li>
+              </ul>
+              <p style="font-size: 0.8rem; color: #374151; margin-top: 0.5rem;">Agents produce "artifacts" (plans, screenshots, recordings) for verification.</p>
+            </div>
+          </div>
+        </div>
+        <div class="highlight-box">
+          <p>The philosophical difference: <strong>think first, code second.</strong> These tools formalize the planning step that good developers already do.</p>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> This is the most interesting category. Kiro's approach is "specs before code" &mdash; it forces you to think through requirements and design before writing implementation. This mirrors what experienced software engineers already do. Antigravity takes a different angle &mdash; the Manager View lets you delegate tasks to multiple AI agents that work simultaneously. Think of it as being the project manager of a team of AI developers. We'll demo Antigravity later. Emphasize that the spec-driven approach is particularly valuable for larger projects where diving straight into code leads to rework.
+        </div>
+      </section>
+
+      <!-- Slide 6: Vibe Coding -->
+      <section class="slide" aria-label="Vibe coding">
+        <header class="slide-title">
+          <div class="icon icon-pink" aria-hidden="true">VIBE</div>
+          <div><h2>"Vibe Coding" &amp; Prompt-to-App</h2><p class="subtitle">Describe an App, Get a Working App</p></div>
+        </header>
+        <div class="content">
+          <div class="card" style="background: #fdf4ff; border: 1px solid #e9d5ff; margin-bottom: 0.5rem;">
+            <h3 style="color: #7c3aed; font-size: 1rem;">What is "Vibe Coding"?</h3>
+            <p style="font-size: 0.9rem; color: #374151;">Term coined by Andrej Karpathy (OpenAI co-founder). Collins Dictionary's 2025 Word of the Year. It means using AI to generate code by describing what you want &mdash; accepting the output without deeply reviewing the structure.</p>
+          </div>
+          <div class="grid-3">
+            <div class="tool-card" style="background: #f9fafb; border: 1px solid #e5e7eb;">
+              <h4 style="color: #1f2937;">v0 (Vercel)</h4>
+              <p>Generates Next.js apps with beautiful UI. Best for design-focused workflows.</p>
+            </div>
+            <div class="tool-card" style="background: #f9fafb; border: 1px solid #e5e7eb;">
+              <h4 style="color: #1f2937;">Bolt.new (StackBlitz)</h4>
+              <p>Most framework flexibility. Full deployment pipelines and team workspaces.</p>
+            </div>
+            <div class="tool-card" style="background: #f9fafb; border: 1px solid #e5e7eb;">
+              <h4 style="color: #1f2937;">Lovable</h4>
+              <p>Produces clean React code. Most accessible for non-technical users. $6.6B valuation.</p>
+            </div>
+          </div>
+          <div class="grid-2" style="flex: 0;">
+            <div class="card" style="background: #dcfce7; border: 1px solid #86efac;">
+              <h3 style="color: #15803d; font-size: 0.95rem;">Power</h3>
+              <p style="font-size: 0.8rem; color: #374151;">Rapid prototyping, idea validation, accessibility for non-developers. Great for MVPs and hackathons.</p>
+            </div>
+            <div class="card" style="background: #fef2f2; border: 1px solid #fca5a5;">
+              <h3 style="color: #dc2626; font-size: 0.95rem;">Risk</h3>
+              <p style="font-size: 0.8rem; color: #374151;">Technical debt, security vulnerabilities, lack of understanding. Not suitable for production without review.</p>
+            </div>
+          </div>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> "Vibe coding" is a real cultural phenomenon. Y Combinator reported 25% of its Winter 2025 batch had codebases that were 95% AI-generated. The tools are genuinely impressive for prototyping. But there's a real tension: vibe coding is fast but fragile. For learning, it can be counterproductive if you never understand what was generated. For production, it creates technical debt. Discuss: "When is vibe coding appropriate?" Answer: prototypes, hackathons, idea validation. When is it NOT? Production code, security-sensitive features, code you need to maintain long-term.
+        </div>
+      </section>
+
+      <!-- Slide 7: Summary -->
+      <section class="slide" aria-label="Part 2 summary">
+        <header class="slide-title">
+          <div class="icon icon-teal" aria-hidden="true">TOOL</div>
+          <div><h2>Part 2 Complete!</h2><p class="subtitle">The AI Development Tool Landscape</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="takeaway"><div class="takeaway-num">1</div><p>Four generations: <strong>Chat &#8594; Autocomplete &#8594; Agentic &#8594; Autonomous</strong></p></div>
+          <div class="takeaway"><div class="takeaway-num">2</div><p>Terminal agents (Claude Code, Codex, Gemini CLI) are <strong>editor-agnostic</strong> and powerful</p></div>
+          <div class="takeaway"><div class="takeaway-num">3</div><p>AI IDEs (Cursor, Windsurf, Copilot) give <strong>tight visual feedback</strong> with inline diffs</p></div>
+          <div class="takeaway"><div class="takeaway-num">4</div><p>Spec-driven tools (Kiro, Antigravity) formalize <strong>thinking before coding</strong></p></div>
+          <div class="takeaway"><div class="takeaway-num">5</div><p>"Vibe coding" is powerful for prototyping but <strong>risky for production</strong></p></div>
+          <p style="text-align: center; color: #0d9488; font-size: 1.25rem; margin-top: 1rem; font-weight: 500;">Next up: Part 3 &mdash; Working Effectively with AI Tools &#8594;</p>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> Quick recap. The tools are evolving fast, but the categories are stabilizing. Students should experiment with multiple tools to find what works for them. Gemini CLI is free, Cursor and Windsurf have free tiers. The key is not which tool you use, but how effectively you use it &mdash; which is what Part 3 is about.
+        </div>
+      </section>
+
+    </div>
+
+    <div class="notes-panel" id="notesPanel"></div>
+
+    <nav class="controls" aria-label="Slide navigation">
+      <button class="btn btn-prev" onclick="prevSlide()" aria-label="Previous slide">&#8592; Previous</button>
+      <div class="dots" id="dots" role="tablist" aria-label="Slide indicators"></div>
+      <div style="display:flex;align-items:center;gap:1rem">
+        <span class="counter" id="counter" aria-live="polite">1 / 7</span>
+        <button class="btn btn-next" onclick="nextSlide()" aria-label="Next slide">Next &#8594;</button>
+      </div>
+    </nav>
+  </main>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const dotsContainer = document.getElementById('dots');
+    const counter = document.getElementById('counter');
+    const notesPanel = document.getElementById('notesPanel');
+    let current = 0;
+    let notesVisible = false;
+    slides.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.className = 'dot' + (i === 0 ? ' active' : '');
+      dot.onclick = () => goToSlide(i);
+      dot.setAttribute('aria-label', 'Go to slide ' + (i + 1));
+      dotsContainer.appendChild(dot);
+    });
+    function updateNotes() {
+      const currentSlide = slides[current];
+      const notes = currentSlide.querySelector('.notes');
+      if (notes) {
+        notesPanel.innerHTML = notes.innerHTML;
+      } else {
+        notesPanel.innerHTML = '<strong>No notes for this slide.</strong>';
+      }
+    }
+    function updateSlide() {
+      slides.forEach((s, i) => s.classList.toggle('active', i === current));
+      document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
+      counter.textContent = `${current + 1} / ${slides.length}`;
+      document.querySelector('.btn-prev').disabled = current === 0;
+      document.querySelector('.btn-next').disabled = current === slides.length - 1;
+      if (notesVisible) updateNotes();
+    }
+    function nextSlide() { if (current < slides.length - 1) { current++; updateSlide(); } }
+    function prevSlide() { if (current > 0) { current--; updateSlide(); } }
+    function goToSlide(i) { current = i; updateSlide(); }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+      if (e.key === 'ArrowLeft') prevSlide();
+      if (e.key === 'n' || e.key === 'N') {
+        notesVisible = !notesVisible;
+        notesPanel.classList.toggle('visible', notesVisible);
+        if (notesVisible) updateNotes();
+      }
+    });
+  </script>
+</body>
+</html>

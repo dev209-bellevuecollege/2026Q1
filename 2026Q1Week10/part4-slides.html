@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Part 4: Future-Proofing Your Career</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; }
+    .slideshow { height: 100vh; display: flex; flex-direction: column; }
+    .slide-container { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+    .slide { background: white; border-radius: 1rem; box-shadow: 0 10px 40px rgba(0,0,0,0.1); width: 100%; max-width: 1000px; height: 600px; padding: 3rem; display: none; flex-direction: column; }
+    .slide.active { display: flex; }
+    .controls { background: white; border-top: 1px solid #e5e7eb; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+    .btn { padding: 0.5rem 1.5rem; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; }
+    .btn-prev, .btn-next { background: #0284c7; color: white; }
+    .btn:disabled { background: #d1d5db; cursor: not-allowed; }
+    .dots { display: flex; gap: 0.5rem; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #d1d5db; border: none; cursor: pointer; }
+    .dot.active { background: #0284c7; width: 20px; border-radius: 5px; }
+    .slide-title { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+    .icon { width: 50px; height: 50px; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: bold; }
+    .icon-sky { background: #e0f2fe; color: #0284c7; }
+    .icon-amber { background: #fef3c7; color: #b45309; }
+    .icon-emerald { background: #d1fae5; color: #059669; }
+    .icon-purple { background: #f3e8ff; color: #7c3aed; }
+    .icon-blue { background: #dbeafe; color: #1d4ed8; }
+    .icon-rose { background: #ffe4e6; color: #e11d48; }
+    h1 { font-size: 2.5rem; color: #1f2937; }
+    h2 { font-size: 1.75rem; color: #1f2937; }
+    h3 { font-size: 1.25rem; color: #374151; margin-bottom: 0.5rem; }
+    .subtitle { color: #6b7280; font-size: 1.1rem; }
+    .content { flex: 1; display: flex; flex-direction: column; gap: 1rem; }
+    .card { background: #f9fafb; border-radius: 0.75rem; padding: 1.25rem; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; flex: 1; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; flex: 1; }
+    .title-slide { align-items: center; justify-content: center; text-align: center; }
+    .title-slide .icon { width: 80px; height: 80px; font-size: 1.5rem; margin-bottom: 1.5rem; border-radius: 50%; }
+    .title-slide h1 { margin-bottom: 1rem; }
+    .title-slide .subtitle { margin-bottom: 1.5rem; font-size: 1.25rem; }
+    .badge { background: #e0f2fe; color: #0284c7; padding: 0.5rem 1rem; border-radius: 2rem; font-size: 0.9rem; }
+    .counter { color: #6b7280; font-size: 0.9rem; }
+    .list-card { border-radius: 0.75rem; padding: 1.5rem; }
+    .list-card-sky { background: #f0f9ff; border: 1px solid #bae6fd; }
+    .list-card-green { background: #f0fdf4; border: 1px solid #bbf7d0; }
+    .list-card-amber { background: #fffbeb; border: 1px solid #fde68a; }
+    .list-card ul { list-style: none; }
+    .list-card li { padding: 0.5rem 0; display: flex; align-items: flex-start; gap: 0.5rem; color: #374151; font-size: 0.9rem; }
+    .highlight-box { background: #f0f9ff; border: 2px solid #7dd3fc; border-radius: 0.75rem; padding: 1.5rem; text-align: center; }
+    .highlight-box p { color: #0c4a6e; font-weight: 500; font-size: 1.1rem; }
+    .quote-box { background: linear-gradient(135deg, #f0f9ff, #e0f2fe); border-left: 4px solid #0284c7; border-radius: 0 0.75rem 0.75rem 0; padding: 1.5rem; }
+    .quote-box blockquote { font-size: 1.15rem; color: #1e3a5f; font-style: italic; line-height: 1.6; }
+    .quote-box cite { display: block; margin-top: 0.75rem; font-size: 0.9rem; color: #6b7280; font-style: normal; }
+    .pillar { border-radius: 0.75rem; padding: 1.25rem; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; }
+    .pillar-icon { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; font-weight: bold; color: white; }
+    .pillar h4 { font-size: 1rem; color: #1f2937; }
+    .pillar p { font-size: 0.8rem; color: #6b7280; line-height: 1.4; }
+    .takeaway { display: flex; align-items: center; gap: 1rem; background: linear-gradient(to right, #f0f9ff, transparent); padding: 1rem; border-radius: 0.5rem; }
+    .takeaway-num { background: #0284c7; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0; }
+    .notes { display: none; }
+    .notes-panel { display: none; background: #1f2937; color: #f9fafb; padding: 1.5rem 2rem; font-size: 0.95rem; line-height: 1.6; border-top: 3px solid #0284c7; max-height: 200px; overflow-y: auto; }
+    .notes-panel.visible { display: block; }
+    .notes-panel strong { color: #7dd3fc; }
+  </style>
+</head>
+<body>
+  <main class="slideshow">
+    <div class="slide-container" role="region" aria-label="Slide presentation">
+
+      <!-- Slide 1: Title -->
+      <section class="slide active title-slide" aria-label="Title slide">
+        <div class="icon icon-sky" aria-hidden="true">NEXT</div>
+        <h1>Part 4: Future-Proofing Your Career</h1>
+        <p class="subtitle">What Matters When AI Can Write Code</p>
+        <span class="badge">15 Minutes</span>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> This is the most important section of today's lecture. Tools will change &mdash; the ones we talked about today might be replaced in 6 months. But the principles we're about to discuss will remain relevant for the rest of your careers. Open with: "If AI can write code, what's left for us?"
+        </div>
+      </section>
+
+      <!-- Slide 2: The Four Pillars -->
+      <section class="slide" aria-label="Four pillars">
+        <header class="slide-title">
+          <div class="icon icon-sky" aria-hidden="true">4</div>
+          <div><h2>Four Pillars of the AI-Era Developer</h2><p class="subtitle">Skills That Can't Be Automated</p></div>
+        </header>
+        <div class="content">
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; flex: 1;">
+            <div class="pillar" style="background: #f0f9ff; border: 1px solid #bae6fd;">
+              <div class="pillar-icon" style="background: #0284c7;">?</div>
+              <h4>Curiosity</h4>
+              <p>Always be learning. Try new tools. Question how things work. Read beyond your comfort zone.</p>
+            </div>
+            <div class="pillar" style="background: #f0fdf4; border: 1px solid #bbf7d0;">
+              <div class="pillar-icon" style="background: #059669;">F</div>
+              <h4>Fundamentals</h4>
+              <p>Understand how the web works. Know HTTP, the DOM, state management. Direct the tools with knowledge.</p>
+            </div>
+            <div class="pillar" style="background: #fef3c7; border: 1px solid #fde68a;">
+              <div class="pillar-icon" style="background: #b45309;">A</div>
+              <h4>Communication</h4>
+              <p>Write clearly to people AND to AI. Specs, docs, emails, prompts. Clear thinking = clear writing.</p>
+            </div>
+            <div class="pillar" style="background: #f3e8ff; border: 1px solid #c4b5fd;">
+              <div class="pillar-icon" style="background: #7c3aed;">!</div>
+              <h4>Problem Finding</h4>
+              <p>Identify what's actually worth building. Understand users. Ask "why?" before "how?"</p>
+            </div>
+          </div>
+          <div class="highlight-box">
+            <p>AI can write code. It cannot decide <strong>what code should be written</strong> or <strong>why it matters</strong>.</p>
+          </div>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> These four pillars are what separate a developer who uses AI effectively from one who is replaced by AI. Walk through each: (1) Curiosity &mdash; the tools change every month. The people who thrive are the ones who try the new thing on day one, not the ones who wait until it's mandatory. (2) Fundamentals &mdash; you can't direct a tool you don't understand. If you don't know how HTTP works, you can't tell the AI to "use a POST request with a JSON body" vs. "submit the form." (3) Communication &mdash; the better you write, the better AI works for you. But it's not just about AI; it's about working with teams, writing docs, explaining decisions. (4) Problem finding &mdash; the hardest and most valuable skill. Anyone can build a solution. Knowing what problem to solve is the real challenge.
+        </div>
+      </section>
+
+      <!-- Slide 3: Curiosity -->
+      <section class="slide" aria-label="Curiosity">
+        <header class="slide-title">
+          <div class="icon icon-sky" aria-hidden="true">?</div>
+          <div><h2>Pillar 1: Be Relentlessly Curious</h2><p class="subtitle">The Learning Never Stops</p></div>
+        </header>
+        <div class="content">
+          <div class="quote-box">
+            <blockquote>"The illiterate of the 21st century will not be those who cannot read and write, but those who cannot learn, unlearn, and relearn."</blockquote>
+            <cite>&mdash; Alvin Toffler</cite>
+          </div>
+          <div class="grid-2">
+            <div class="list-card list-card-sky">
+              <h3 style="color: #0284c7;">Practical Curiosity</h3>
+              <ul>
+                <li>&#8226; Try a new AI tool every month</li>
+                <li>&#8226; Read changelogs of tools you use</li>
+                <li>&#8226; Follow developers who build these tools</li>
+                <li>&#8226; Build a small project with each new tool</li>
+                <li>&#8226; Share what you learn with peers</li>
+              </ul>
+            </div>
+            <div class="list-card list-card-amber">
+              <h3 style="color: #b45309;">The Unlearning Part</h3>
+              <ul>
+                <li>&#8226; "That's how we've always done it" is dangerous</li>
+                <li>&#8226; Best practices evolve &mdash; stay updated</li>
+                <li>&#8226; What was true 2 years ago may not be true today</li>
+                <li>&#8226; Be willing to change your workflow</li>
+                <li>&#8226; Don't let ego block better approaches</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> The Toffler quote is from 1970 but feels more relevant than ever. The rate of change in AI tools is unprecedented. Claude Code didn't exist a year ago. Cursor was a niche tool 18 months ago. Students who graduate and stop learning will be outdated within a year. But curiosity isn't just about AI &mdash; it's about understanding your domain, your users, adjacent technologies. The "unlearning" part is equally important: if you learned that "you should never let AI write code for you," that was good advice in 2022 but limiting advice in 2026.
+        </div>
+      </section>
+
+      <!-- Slide 4: Fundamentals -->
+      <section class="slide" aria-label="Fundamentals">
+        <header class="slide-title">
+          <div class="icon icon-emerald" aria-hidden="true">F</div>
+          <div><h2>Pillar 2: Know the Fundamentals</h2><p class="subtitle">You Can't Direct What You Don't Understand</p></div>
+        </header>
+        <div class="content">
+          <div class="card" style="background: #ecfdf5; border: 2px solid #6ee7b7; margin-bottom: 0.5rem;">
+            <p style="font-size: 1rem; color: #065f46; font-weight: 500; text-align: center;">A developer who knows fundamentals + AI tools will always outperform one who knows <strong>only</strong> AI tools.</p>
+          </div>
+          <div class="grid-2">
+            <div>
+              <div class="card" style="margin-bottom: 0.75rem;">
+                <h3 style="font-size: 1rem;">What to Know Deeply</h3>
+                <ul style="font-size: 0.85rem; color: #374151; list-style: none;">
+                  <li style="padding: 0.3rem 0;">&#8226; How HTTP requests and responses work</li>
+                  <li style="padding: 0.3rem 0;">&#8226; How the DOM renders and updates</li>
+                  <li style="padding: 0.3rem 0;">&#8226; JavaScript fundamentals (scope, closures, async)</li>
+                  <li style="padding: 0.3rem 0;">&#8226; State management patterns</li>
+                  <li style="padding: 0.3rem 0;">&#8226; Web security basics (XSS, CORS, auth)</li>
+                  <li style="padding: 0.3rem 0;">&#8226; How to read and debug code</li>
+                </ul>
+              </div>
+            </div>
+            <div>
+              <div class="card" style="margin-bottom: 0.75rem;">
+                <h3 style="font-size: 1rem;">Why Fundamentals + AI = Superpower</h3>
+                <ul style="font-size: 0.85rem; color: #374151; list-style: none;">
+                  <li style="padding: 0.3rem 0;">&#8226; You can write precise specs (you know the vocabulary)</li>
+                  <li style="padding: 0.3rem 0;">&#8226; You catch AI mistakes (you know what's wrong)</li>
+                  <li style="padding: 0.3rem 0;">&#8226; You debug faster (you understand the stack)</li>
+                  <li style="padding: 0.3rem 0;">&#8226; You make architecture decisions (AI can't)</li>
+                  <li style="padding: 0.3rem 0;">&#8226; You know when AI is hallucinating</li>
+                  <li style="padding: 0.3rem 0;">&#8226; You can learn new frameworks quickly</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="highlight-box">
+            <p>Everything we've covered in this course &mdash; HTML, CSS, JS, HTTP, React, security &mdash; is <strong>more valuable now</strong>, not less.</p>
+          </div>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> This is the most important message for students who might be wondering "why am I learning JavaScript if AI can write it for me?" The answer: BECAUSE AI can write it, you need to understand it even more. You're the quality control. You're the architect. You're the one who decides whether the AI's output is good or dangerous. Connect to the course: "Everything we've learned &mdash; HTTP in Week 4, React in Week 5, security in Week 9 &mdash; these are the fundamentals that let you use AI tools effectively. Without them, you're just accepting code you don't understand."
+        </div>
+      </section>
+
+      <!-- Slide 5: Communication -->
+      <section class="slide" aria-label="Communication">
+        <header class="slide-title">
+          <div class="icon icon-amber" aria-hidden="true">A</div>
+          <div><h2>Pillar 3: Write and Communicate Clearly</h2><p class="subtitle">To People AND to Machines</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <div class="list-card list-card-amber" style="height: 100%;">
+                <h3 style="color: #b45309;">Writing for AI</h3>
+                <ul>
+                  <li>&#8226; Precise specifications get precise output</li>
+                  <li>&#8226; Ambiguity in your prompt = ambiguity in the result</li>
+                  <li>&#8226; Structure your requests (context, task, constraints)</li>
+                  <li>&#8226; Use examples to anchor expectations</li>
+                  <li>&#8226; State what you DON'T want as clearly as what you do</li>
+                </ul>
+              </div>
+            </div>
+            <div>
+              <div class="list-card list-card-sky" style="height: 100%;">
+                <h3 style="color: #0284c7;">Writing for People</h3>
+                <ul>
+                  <li>&#8226; Clear commit messages explain WHY, not just what</li>
+                  <li>&#8226; Good PR descriptions save reviewer time</li>
+                  <li>&#8226; Documentation helps future-you (and your team)</li>
+                  <li>&#8226; Bug reports with reproduction steps get fixed faster</li>
+                  <li>&#8226; Emails that get to the point get responses</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="quote-box" style="margin-top: 0.5rem;">
+            <blockquote>"Clear thinking becomes clear writing; one can't exist without the other."</blockquote>
+            <cite>&mdash; William Zinsser, <em>On Writing Well</em></cite>
+          </div>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> Here's the irony: in an age of AI, the most valuable skill might be WRITING. Not writing code &mdash; writing in human language. The better you can express what you want, the better AI tools work for you. But it's the same skill that makes you effective with people: writing clear specs, clear commit messages, clear documentation. Ask students: "How many of you have spent 30 minutes trying to understand a vague Slack message or email?" Clear writing is a superpower in any profession, and it's even more important now. Point out that the spec-driven process from Part 3 is fundamentally a writing exercise.
+        </div>
+      </section>
+
+      <!-- Slide 6: Problem Finding -->
+      <section class="slide" aria-label="Problem finding">
+        <header class="slide-title">
+          <div class="icon icon-purple" aria-hidden="true">!</div>
+          <div><h2>Pillar 4: Find the Real Problem</h2><p class="subtitle">Build What Matters</p></div>
+        </header>
+        <div class="content">
+          <div class="card" style="background: #faf5ff; border: 2px solid #c4b5fd; margin-bottom: 0.5rem;">
+            <p style="font-size: 1.05rem; color: #4c1d95; font-weight: 500; text-align: center;">The most dangerous trap: building a perfect solution to the <strong>wrong problem</strong>.</p>
+          </div>
+          <div class="grid-2">
+            <div>
+              <div class="card" style="margin-bottom: 0.75rem;">
+                <h3 style="font-size: 1rem;">Ask "Why?" Five Times</h3>
+                <ul style="font-size: 0.85rem; color: #374151; list-style: none;">
+                  <li style="padding: 0.4rem 0;"><strong>Request:</strong> "Build a dashboard"</li>
+                  <li style="padding: 0.3rem 0;">Why? "To see sales data"</li>
+                  <li style="padding: 0.3rem 0;">Why? "To know which products sell"</li>
+                  <li style="padding: 0.3rem 0;">Why? "To decide what to restock"</li>
+                  <li style="padding: 0.3rem 0;">Why? "To avoid running out of popular items"</li>
+                  <li style="padding: 0.4rem 0; color: #7c3aed;"><strong>Real need:</strong> Automated restock alerts, not a dashboard</li>
+                </ul>
+              </div>
+            </div>
+            <div>
+              <div class="list-card" style="background: #f3e8ff; border: 1px solid #c4b5fd;">
+                <h3 style="color: #7c3aed;">Problem-Finding Skills</h3>
+                <ul>
+                  <li>&#8226; Talk to actual users, not just stakeholders</li>
+                  <li>&#8226; Watch people use existing solutions</li>
+                  <li>&#8226; Ask "what's the most painful part of your day?"</li>
+                  <li>&#8226; Look for workarounds &mdash; they reveal real needs</li>
+                  <li>&#8226; Question every assumption</li>
+                  <li>&#8226; An unused feature is worse than a missing one</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="highlight-box" style="background: #faf5ff; border-color: #c4b5fd;">
+            <p style="color: #4c1d95;">AI makes it easy to build anything. Your job is to figure out what's <strong>worth building</strong>.</p>
+          </div>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> This is the highest-leverage skill. AI dramatically reduces the cost of building things. When building is cheap, the bottleneck shifts to knowing WHAT to build. Walk through the "5 Whys" example &mdash; the initial request was "build a dashboard" but the real need was automated alerts. The dashboard would have taken weeks to build and might have gone unused. The alert system takes a day and solves the actual problem. This is where human judgment is irreplaceable. AI can build either solution, but it can't tell you which one matters. This is what makes software engineering a creative profession, not just a technical one.
+        </div>
+      </section>
+
+      <!-- Slide 7: The Developer's New Role -->
+      <section class="slide" aria-label="New role">
+        <header class="slide-title">
+          <div class="icon icon-blue" aria-hidden="true">DEV</div>
+          <div><h2>The Developer's Evolving Role</h2><p class="subtitle">From Typist to Director</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div class="card" style="background: #f3f4f6; border: 1px solid #d1d5db;">
+              <h3 style="font-size: 1rem; color: #6b7280;">Yesterday's Developer</h3>
+              <ul style="font-size: 0.85rem; color: #6b7280; list-style: none;">
+                <li style="padding: 0.3rem 0;">&#8226; Writes every line of code manually</li>
+                <li style="padding: 0.3rem 0;">&#8226; Memorizes syntax and APIs</li>
+                <li style="padding: 0.3rem 0;">&#8226; Measures productivity by lines of code</li>
+                <li style="padding: 0.3rem 0;">&#8226; Works alone in a text editor</li>
+                <li style="padding: 0.3rem 0;">&#8226; Valued for speed of typing</li>
+              </ul>
+            </div>
+            <div class="card" style="background: #ecfdf5; border: 1px solid #6ee7b7;">
+              <h3 style="font-size: 1rem; color: #059669;">Tomorrow's Developer</h3>
+              <ul style="font-size: 0.85rem; color: #374151; list-style: none;">
+                <li style="padding: 0.3rem 0;">&#8226; Directs AI agents to implement solutions</li>
+                <li style="padding: 0.3rem 0;">&#8226; Understands systems and architecture</li>
+                <li style="padding: 0.3rem 0;">&#8226; Measures productivity by problems solved</li>
+                <li style="padding: 0.3rem 0;">&#8226; Orchestrates human + AI collaboration</li>
+                <li style="padding: 0.3rem 0;">&#8226; Valued for judgment and taste</li>
+              </ul>
+            </div>
+          </div>
+          <div class="quote-box" style="margin-top: 0.5rem;">
+            <blockquote>"The best developers won't be the ones who write the most code. They'll be the ones who solve the most important problems."</blockquote>
+            <cite>&mdash; The central thesis of this lecture</cite>
+          </div>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> This is the capstone message. The role isn't disappearing &mdash; it's evolving. Think of it like filmmaking: a director doesn't hold the camera, light the set, or edit the footage. They make the creative decisions about what story to tell and how to tell it. A film with great technicians but no director produces nothing memorable. A director with a clear vision and skilled team (including AI "team members") can create something remarkable. Students shouldn't feel threatened by AI &mdash; they should feel empowered. The bar for what one person can build has been raised dramatically.
+        </div>
+      </section>
+
+      <!-- Slide 8: Summary -->
+      <section class="slide" aria-label="Part 4 summary">
+        <header class="slide-title">
+          <div class="icon icon-sky" aria-hidden="true">NEXT</div>
+          <div><h2>Part 4 Complete!</h2><p class="subtitle">Future-Proofing Your Career</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="takeaway"><div class="takeaway-num">1</div><p><strong>Be curious</strong> &mdash; try new tools, learn constantly, be willing to unlearn</p></div>
+          <div class="takeaway"><div class="takeaway-num">2</div><p><strong>Know the fundamentals</strong> &mdash; they let you direct the tools and catch their mistakes</p></div>
+          <div class="takeaway"><div class="takeaway-num">3</div><p><strong>Write and communicate clearly</strong> &mdash; to people and to AI. Clear thinking = clear output.</p></div>
+          <div class="takeaway"><div class="takeaway-num">4</div><p><strong>Find the real problem</strong> &mdash; AI makes building easy; knowing WHAT to build is the hard part</p></div>
+          <div class="takeaway"><div class="takeaway-num">5</div><p>Your role is shifting from <strong>typist to director</strong> &mdash; embrace it</p></div>
+          <p style="text-align: center; color: #0284c7; font-size: 1.25rem; margin-top: 1rem; font-weight: 500;">Next up: Part 5 &mdash; Live Demo &amp; Hands-On &#8594;</p>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> Final recap before the demo. The four pillars: curiosity, fundamentals, communication, and problem finding. These aren't just career advice &mdash; they're the framework for how to approach your final projects, your internships, and your first jobs. The tools will change. These principles won't. Now let's see some of these tools in action!
+        </div>
+      </section>
+
+    </div>
+
+    <div class="notes-panel" id="notesPanel"></div>
+
+    <nav class="controls" aria-label="Slide navigation">
+      <button class="btn btn-prev" onclick="prevSlide()" aria-label="Previous slide">&#8592; Previous</button>
+      <div class="dots" id="dots" role="tablist" aria-label="Slide indicators"></div>
+      <div style="display:flex;align-items:center;gap:1rem">
+        <span class="counter" id="counter" aria-live="polite">1 / 8</span>
+        <button class="btn btn-next" onclick="nextSlide()" aria-label="Next slide">Next &#8594;</button>
+      </div>
+    </nav>
+  </main>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const dotsContainer = document.getElementById('dots');
+    const counter = document.getElementById('counter');
+    const notesPanel = document.getElementById('notesPanel');
+    let current = 0;
+    let notesVisible = false;
+    slides.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.className = 'dot' + (i === 0 ? ' active' : '');
+      dot.onclick = () => goToSlide(i);
+      dot.setAttribute('aria-label', 'Go to slide ' + (i + 1));
+      dotsContainer.appendChild(dot);
+    });
+    function updateNotes() {
+      const currentSlide = slides[current];
+      const notes = currentSlide.querySelector('.notes');
+      if (notes) {
+        notesPanel.innerHTML = notes.innerHTML;
+      } else {
+        notesPanel.innerHTML = '<strong>No notes for this slide.</strong>';
+      }
+    }
+    function updateSlide() {
+      slides.forEach((s, i) => s.classList.toggle('active', i === current));
+      document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
+      counter.textContent = `${current + 1} / ${slides.length}`;
+      document.querySelector('.btn-prev').disabled = current === 0;
+      document.querySelector('.btn-next').disabled = current === slides.length - 1;
+      if (notesVisible) updateNotes();
+    }
+    function nextSlide() { if (current < slides.length - 1) { current++; updateSlide(); } }
+    function prevSlide() { if (current > 0) { current--; updateSlide(); } }
+    function goToSlide(i) { current = i; updateSlide(); }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+      if (e.key === 'ArrowLeft') prevSlide();
+      if (e.key === 'n' || e.key === 'N') {
+        notesVisible = !notesVisible;
+        notesPanel.classList.toggle('visible', notesVisible);
+        if (notesVisible) updateNotes();
+      }
+    });
+  </script>
+</body>
+</html>

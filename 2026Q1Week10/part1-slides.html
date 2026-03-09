@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Part 1: The Evolution of Programming</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; }
+    .slideshow { height: 100vh; display: flex; flex-direction: column; }
+    .slide-container { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+    .slide { background: white; border-radius: 1rem; box-shadow: 0 10px 40px rgba(0,0,0,0.1); width: 100%; max-width: 1000px; height: 600px; padding: 3rem; display: none; flex-direction: column; }
+    .slide.active { display: flex; }
+    .controls { background: white; border-top: 1px solid #e5e7eb; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+    .btn { padding: 0.5rem 1.5rem; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; }
+    .btn-prev, .btn-next { background: #059669; color: white; }
+    .btn:disabled { background: #d1d5db; cursor: not-allowed; }
+    .dots { display: flex; gap: 0.5rem; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #d1d5db; border: none; cursor: pointer; }
+    .dot.active { background: #059669; width: 20px; border-radius: 5px; }
+    .slide-title { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+    .icon { width: 50px; height: 50px; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: bold; }
+    .icon-emerald { background: #d1fae5; color: #059669; }
+    .icon-teal { background: #ccfbf1; color: #0d9488; }
+    .icon-cyan { background: #cffafe; color: #0891b2; }
+    .icon-blue { background: #dbeafe; color: #1d4ed8; }
+    .icon-purple { background: #f3e8ff; color: #7c3aed; }
+    .icon-amber { background: #fef3c7; color: #b45309; }
+    .icon-green { background: #dcfce7; color: #15803d; }
+    h1 { font-size: 2.5rem; color: #1f2937; }
+    h2 { font-size: 1.75rem; color: #1f2937; }
+    h3 { font-size: 1.25rem; color: #374151; margin-bottom: 0.5rem; }
+    .subtitle { color: #6b7280; font-size: 1.1rem; }
+    .content { flex: 1; display: flex; flex-direction: column; gap: 1rem; }
+    .card { background: #f9fafb; border-radius: 0.75rem; padding: 1.25rem; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; flex: 1; }
+    .title-slide { align-items: center; justify-content: center; text-align: center; }
+    .title-slide .icon { width: 80px; height: 80px; font-size: 1.5rem; margin-bottom: 1.5rem; border-radius: 50%; }
+    .title-slide h1 { margin-bottom: 1rem; }
+    .title-slide .subtitle { margin-bottom: 1.5rem; font-size: 1.25rem; }
+    .badge { background: #d1fae5; color: #059669; padding: 0.5rem 1rem; border-radius: 2rem; font-size: 0.9rem; }
+    .counter { color: #6b7280; font-size: 0.9rem; }
+    pre { background: #1f2937; color: #f9fafb; padding: 1.25rem; border-radius: 0.5rem; font-size: 0.9rem; overflow-x: auto; font-family: 'Monaco', 'Menlo', monospace; }
+    .list-card { border-radius: 0.75rem; padding: 1.5rem; }
+    .list-card-green { background: #f0fdf4; border: 1px solid #bbf7d0; }
+    .list-card-teal { background: #f0fdfa; border: 1px solid #99f6e4; }
+    .list-card-amber { background: #fffbeb; border: 1px solid #fde68a; }
+    .list-card ul { list-style: none; }
+    .list-card li { padding: 0.5rem 0; display: flex; align-items: flex-start; gap: 0.5rem; color: #374151; }
+    .highlight-box { background: #ecfdf5; border: 2px solid #6ee7b7; border-radius: 0.75rem; padding: 1.5rem; text-align: center; }
+    .highlight-box p { color: #065f46; font-weight: 500; font-size: 1.1rem; }
+    .timeline { display: flex; align-items: stretch; gap: 0; flex: 1; }
+    .timeline-item { flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 0.75rem 0.5rem; position: relative; }
+    .timeline-item::after { content: ''; position: absolute; top: 24px; right: 0; width: 2px; height: calc(100% - 48px); background: #d1d5db; }
+    .timeline-item:last-child::after { display: none; }
+    .timeline-dot { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: bold; color: white; margin-bottom: 0.5rem; flex-shrink: 0; }
+    .timeline-item h4 { font-size: 0.85rem; color: #1f2937; margin-bottom: 0.25rem; }
+    .timeline-item p { font-size: 0.7rem; color: #6b7280; line-height: 1.3; }
+    .era-label { font-size: 0.65rem; color: #9ca3af; margin-bottom: 0.25rem; }
+    .flow-arrow { font-size: 1.5rem; color: #10b981; display: flex; align-items: center; }
+    .takeaway { display: flex; align-items: center; gap: 1rem; background: linear-gradient(to right, #ecfdf5, transparent); padding: 1rem; border-radius: 0.5rem; }
+    .takeaway-num { background: #059669; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0; }
+    .notes { display: none; }
+    .notes-panel { display: none; background: #1f2937; color: #f9fafb; padding: 1.5rem 2rem; font-size: 0.95rem; line-height: 1.6; border-top: 3px solid #059669; max-height: 200px; overflow-y: auto; }
+    .notes-panel.visible { display: block; }
+    .notes-panel strong { color: #6ee7b7; }
+  </style>
+</head>
+<body>
+  <main class="slideshow">
+    <div class="slide-container" role="region" aria-label="Slide presentation">
+
+      <!-- Slide 1: Title -->
+      <section class="slide active title-slide" aria-label="Title slide">
+        <div class="icon icon-emerald" aria-hidden="true">EVO</div>
+        <h1>Part 1: The Evolution of Programming</h1>
+        <p class="subtitle">From Punch Cards to AI &mdash; How We Got Here</p>
+        <span class="badge">15 Minutes</span>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> Open with a question: "Who here has ever seen a punch card?" Show of hands. This section traces the arc of programming history to show that AI-assisted development is the natural next step in a pattern that's been repeating for 80 years. Each generation abstracts away the "how" and lets us focus more on the "what."
+        </div>
+      </section>
+
+      <!-- Slide 2: The Timeline -->
+      <section class="slide" aria-label="Programming evolution timeline">
+        <header class="slide-title">
+          <div class="icon icon-emerald" aria-hidden="true">1940</div>
+          <div><h2>The Arc of Abstraction</h2><p class="subtitle">Each Generation Moved Us Higher</p></div>
+        </header>
+        <div class="timeline">
+          <div class="timeline-item">
+            <div class="era-label">1940s</div>
+            <div class="timeline-dot" style="background:#6b7280;">0/1</div>
+            <h4>Punch Cards</h4>
+            <p>Physical holes in paper cards. One mistake = re-punch the entire deck.</p>
+          </div>
+          <div class="timeline-item">
+            <div class="era-label">1950s</div>
+            <div class="timeline-dot" style="background:#92400e;">BIN</div>
+            <h4>Machine Code</h4>
+            <p>Raw binary. Directly controls hardware registers and memory.</p>
+          </div>
+          <div class="timeline-item">
+            <div class="era-label">1960s</div>
+            <div class="timeline-dot" style="background:#b45309;">ASM</div>
+            <h4>Assembly</h4>
+            <p>Human-readable mnemonics (MOV, ADD). An assembler translates to machine code.</p>
+          </div>
+          <div class="timeline-item">
+            <div class="era-label">1970s</div>
+            <div class="timeline-dot" style="background:#0284c7;">C</div>
+            <h4>C Language</h4>
+            <p>Portable, compiled. A compiler generates assembly/machine code for you.</p>
+          </div>
+          <div class="timeline-item">
+            <div class="era-label">1990s</div>
+            <div class="timeline-dot" style="background:#7c3aed;">OOP</div>
+            <h4>Java / C# / Python</h4>
+            <p>Managed runtimes, garbage collection. Focus on objects and logic.</p>
+          </div>
+          <div class="timeline-item">
+            <div class="era-label">2020s</div>
+            <div class="timeline-dot" style="background:#059669;">AI</div>
+            <h4>AI-Assisted</h4>
+            <p>Describe what you want in human language. The AI generates the code.</p>
+          </div>
+        </div>
+        <div class="highlight-box" style="margin-top: 1rem;">
+          <p>The pattern: each generation lets us think at a <strong>higher level</strong> and worry less about the mechanics.</p>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> Walk through each era. The key insight: at every step, someone invented a tool that let the next generation of programmers think at a higher level. Assemblers translated mnemonics to machine code. Compilers translated C to assembly. Today, LLMs translate human language to code in any language. Ask: "What's the common thread?" Each tool handles the lower-level details so we can focus on the problem we're actually trying to solve.
+        </div>
+      </section>
+
+      <!-- Slide 3: The Compiler Analogy -->
+      <section class="slide" aria-label="Compiler analogy">
+        <header class="slide-title">
+          <div class="icon icon-teal" aria-hidden="true">gcc</div>
+          <div><h2>The Compiler Analogy</h2><p class="subtitle">AI as the Next-Generation Compiler</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <div class="card" style="margin-bottom: 1rem; background: #f0fdfa; border: 1px solid #99f6e4;">
+                <h3 style="color: #0d9488;">Traditional Compiler</h3>
+                <p style="font-size: 0.95rem; color: #374151; margin-bottom: 0.75rem;">You write C code. The compiler generates assembly and machine code.</p>
+                <pre style="font-size: 0.8rem; margin-top: 0.5rem;">
+<span style="color:#6ee7b7">// You write this:</span>
+int add(int a, int b) {
+  return a + b;
+}
+
+<span style="color:#6b7280">// Compiler produces assembly:</span>
+<span style="color:#fcd34d">// MOV eax, [esp+4]</span>
+<span style="color:#fcd34d">// ADD eax, [esp+8]</span>
+<span style="color:#fcd34d">// RET</span></pre>
+              </div>
+            </div>
+            <div>
+              <div class="card" style="margin-bottom: 1rem; background: #ecfdf5; border: 1px solid #6ee7b7;">
+                <h3 style="color: #059669;">AI "Compiler"</h3>
+                <p style="font-size: 0.95rem; color: #374151; margin-bottom: 0.75rem;">You describe what you want. The AI generates the implementation.</p>
+                <pre style="font-size: 0.8rem; margin-top: 0.5rem;">
+<span style="color:#6ee7b7">// You write this:</span>
+"Create a React component
+that fetches user data from
+/api/users and displays it
+in a sortable table with
+pagination."
+
+<span style="color:#6b7280">// AI produces: UserTable.tsx</span>
+<span style="color:#fcd34d">// 120 lines of working code</span></pre>
+              </div>
+            </div>
+          </div>
+          <div class="highlight-box">
+            <p>You trust the compiler to generate correct machine code. Can you trust AI the same way? <strong>Not yet.</strong> That's why review matters.</p>
+          </div>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> This analogy is powerful but has limits. Point out that compilers are deterministic &mdash; the same input always produces the same output. LLMs are stochastic &mdash; they can produce different output each time. Compilers have formal correctness proofs. LLMs have probabilities. This is why we still need to review AI output, and why understanding the fundamentals remains essential. You wouldn't trust a compiler that sometimes produces wrong code &mdash; and LLMs DO sometimes produce wrong code.
+        </div>
+      </section>
+
+      <!-- Slide 4: Declarative Thinking -->
+      <section class="slide" aria-label="Declarative thinking">
+        <header class="slide-title">
+          <div class="icon icon-cyan" aria-hidden="true">WHAT</div>
+          <div><h2>Declarative Thinking</h2><p class="subtitle">Specify <em>What</em>, Not <em>How</em></p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <div class="list-card list-card-teal">
+                <h3 style="color: #0d9488;">You Already Think This Way</h3>
+                <ul>
+                  <li><strong>SQL:</strong> "Give me all users older than 25" &mdash; you don't specify HOW to scan rows</li>
+                  <li><strong>CSS Flexbox:</strong> "Make these items center-aligned in a row" &mdash; the browser handles the math</li>
+                  <li><strong>React:</strong> "Here's what the UI should look like given this state" &mdash; React figures out what changed</li>
+                  <li><strong>HTML:</strong> "This is a navigation list" &mdash; the browser decides how to render and make it accessible</li>
+                </ul>
+              </div>
+            </div>
+            <div>
+              <div class="list-card list-card-green">
+                <h3 style="color: #15803d;">AI Takes This Further</h3>
+                <ul>
+                  <li><span><strong>Spec:</strong> "Build a todo app with drag-and-drop reordering, localStorage persistence, and dark mode"</span></li>
+                  <li><span><strong>Result:</strong> Complete working application</span></li>
+                  <li><span><strong>Your role:</strong> Review, refine, direct &mdash; like an architect reviewing blueprints</span></li>
+                  <li><span><strong>Key shift:</strong> From writing every line to <em>directing</em> the solution</span></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="highlight-box">
+            <p>Declarative programming says "describe the result." AI-assisted development says "describe the <strong>problem</strong>."</p>
+          </div>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> Students already use declarative approaches every day! SQL doesn't require you to write a loop over database rows. CSS Flexbox doesn't require you to calculate pixel positions. React doesn't require you to manually diff the DOM. AI-assisted development is the next step in this same direction: you describe the problem or the desired outcome, and the system figures out the implementation. But just like SQL can produce slow queries and React can produce performance issues, AI can produce buggy or insecure code. The human still needs to understand what's happening underneath.
+        </div>
+      </section>
+
+      <!-- Slide 5: Solving Human Problems -->
+      <section class="slide" aria-label="Solving human problems">
+        <header class="slide-title">
+          <div class="icon icon-blue" aria-hidden="true">WHY</div>
+          <div><h2>Closer to the Real Problem</h2><p class="subtitle">From Mechanics to Meaning</p></div>
+        </header>
+        <div class="content">
+          <div class="card" style="margin-bottom: 1rem; background: #ecfdf5; border: 1px solid #6ee7b7;">
+            <h3 style="color: #059669;">The Real Question Was Always:</h3>
+            <p style="font-size: 1.1rem; color: #374151; font-weight: 500;">"What problem are we actually trying to solve for the user?"</p>
+          </div>
+          <div class="grid-2">
+            <div>
+              <div class="card" style="background: #fef2f2; border: 1px solid #fca5a5;">
+                <h3 style="color: #dc2626; font-size: 1rem;">Where Time Used to Go</h3>
+                <ul style="font-size: 0.9rem; color: #374151; list-style: none;">
+                  <li style="padding: 0.3rem 0;">60% &mdash; Boilerplate &amp; configuration</li>
+                  <li style="padding: 0.3rem 0;">20% &mdash; Debugging syntax &amp; type errors</li>
+                  <li style="padding: 0.3rem 0;">10% &mdash; Searching Stack Overflow</li>
+                  <li style="padding: 0.3rem 0;">10% &mdash; Thinking about the actual problem</li>
+                </ul>
+              </div>
+            </div>
+            <div>
+              <div class="card" style="background: #dcfce7; border: 1px solid #86efac;">
+                <h3 style="color: #15803d; font-size: 1rem;">Where Time Can Go Now</h3>
+                <ul style="font-size: 0.9rem; color: #374151; list-style: none;">
+                  <li style="padding: 0.3rem 0;">40% &mdash; Understanding the user's problem</li>
+                  <li style="padding: 0.3rem 0;">25% &mdash; Designing the right solution</li>
+                  <li style="padding: 0.3rem 0;">20% &mdash; Reviewing &amp; refining AI output</li>
+                  <li style="padding: 0.3rem 0;">15% &mdash; Testing &amp; validation</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="highlight-box">
+            <p>Technology exists to solve human problems. AI tools let us spend more time on the <strong>"why"</strong> and less on the <strong>"how."</strong></p>
+          </div>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> This is the most important slide in Part 1. The promise of AI-assisted development isn't "write code faster." It's "spend more of your time on the things that actually matter." The mechanical parts of programming &mdash; setting up build systems, writing CRUD routes, configuring authentication &mdash; are increasingly automatable. What isn't automatable is understanding what the user actually needs, what problem is worth solving, and whether the solution actually works in the real world. That's where YOUR value lies.
+        </div>
+      </section>
+
+      <!-- Slide 6: Key Takeaways -->
+      <section class="slide" aria-label="Key takeaways">
+        <header class="slide-title">
+          <div class="icon icon-emerald" aria-hidden="true">EVO</div>
+          <div><h2>Part 1 Complete!</h2><p class="subtitle">The Evolution of Programming</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="takeaway"><div class="takeaway-num">1</div><p>Programming history is a story of <strong>rising abstraction</strong> &mdash; each generation hides the layer below</p></div>
+          <div class="takeaway"><div class="takeaway-num">2</div><p>AI is the next "compiler" &mdash; translating human intent into code, but it's <strong>not deterministic</strong></p></div>
+          <div class="takeaway"><div class="takeaway-num">3</div><p>Declarative thinking ("what, not how") is a skill you already have &mdash; AI extends it further</p></div>
+          <div class="takeaway"><div class="takeaway-num">4</div><p>The real shift: more time on <strong>understanding problems</strong>, less time on mechanical implementation</p></div>
+          <p style="text-align: center; color: #059669; font-size: 1.25rem; margin-top: 1.5rem; font-weight: 500;">Next up: Part 2 &mdash; The AI Development Tool Landscape &#8594;</p>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> Quick recap. The key message: AI-assisted development isn't a fad &mdash; it's the continuation of an 80-year trend of rising abstraction. But the difference from a traditional compiler is that AI is probabilistic, not deterministic. That's why the human in the loop still matters. Next we'll look at the specific tools available today and how they differ.
+        </div>
+      </section>
+
+    </div>
+
+    <div class="notes-panel" id="notesPanel"></div>
+
+    <nav class="controls" aria-label="Slide navigation">
+      <button class="btn btn-prev" onclick="prevSlide()" aria-label="Previous slide">&#8592; Previous</button>
+      <div class="dots" id="dots" role="tablist" aria-label="Slide indicators"></div>
+      <div style="display:flex;align-items:center;gap:1rem">
+        <span class="counter" id="counter" aria-live="polite">1 / 6</span>
+        <button class="btn btn-next" onclick="nextSlide()" aria-label="Next slide">Next &#8594;</button>
+      </div>
+    </nav>
+  </main>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const dotsContainer = document.getElementById('dots');
+    const counter = document.getElementById('counter');
+    const notesPanel = document.getElementById('notesPanel');
+    let current = 0;
+    let notesVisible = false;
+    slides.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.className = 'dot' + (i === 0 ? ' active' : '');
+      dot.onclick = () => goToSlide(i);
+      dot.setAttribute('aria-label', 'Go to slide ' + (i + 1));
+      dotsContainer.appendChild(dot);
+    });
+    function updateNotes() {
+      const currentSlide = slides[current];
+      const notes = currentSlide.querySelector('.notes');
+      if (notes) {
+        notesPanel.innerHTML = notes.innerHTML;
+      } else {
+        notesPanel.innerHTML = '<strong>No notes for this slide.</strong>';
+      }
+    }
+    function updateSlide() {
+      slides.forEach((s, i) => s.classList.toggle('active', i === current));
+      document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
+      counter.textContent = `${current + 1} / ${slides.length}`;
+      document.querySelector('.btn-prev').disabled = current === 0;
+      document.querySelector('.btn-next').disabled = current === slides.length - 1;
+      if (notesVisible) updateNotes();
+    }
+    function nextSlide() { if (current < slides.length - 1) { current++; updateSlide(); } }
+    function prevSlide() { if (current > 0) { current--; updateSlide(); } }
+    function goToSlide(i) { current = i; updateSlide(); }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+      if (e.key === 'ArrowLeft') prevSlide();
+      if (e.key === 'n' || e.key === 'N') {
+        notesVisible = !notesVisible;
+        notesPanel.classList.toggle('visible', notesVisible);
+        if (notesVisible) updateNotes();
+      }
+    });
+  </script>
+</body>
+</html>

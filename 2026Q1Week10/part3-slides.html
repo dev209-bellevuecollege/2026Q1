@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Part 3: Working Effectively with AI Tools</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; }
+    .slideshow { height: 100vh; display: flex; flex-direction: column; }
+    .slide-container { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+    .slide { background: white; border-radius: 1rem; box-shadow: 0 10px 40px rgba(0,0,0,0.1); width: 100%; max-width: 1000px; height: 600px; padding: 3rem; display: none; flex-direction: column; }
+    .slide.active { display: flex; }
+    .controls { background: white; border-top: 1px solid #e5e7eb; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+    .btn { padding: 0.5rem 1.5rem; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; }
+    .btn-prev, .btn-next { background: #0891b2; color: white; }
+    .btn:disabled { background: #d1d5db; cursor: not-allowed; }
+    .dots { display: flex; gap: 0.5rem; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #d1d5db; border: none; cursor: pointer; }
+    .dot.active { background: #0891b2; width: 20px; border-radius: 5px; }
+    .slide-title { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+    .icon { width: 50px; height: 50px; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: bold; }
+    .icon-cyan { background: #cffafe; color: #0891b2; }
+    .icon-teal { background: #ccfbf1; color: #0d9488; }
+    .icon-emerald { background: #d1fae5; color: #059669; }
+    .icon-blue { background: #dbeafe; color: #1d4ed8; }
+    .icon-purple { background: #f3e8ff; color: #7c3aed; }
+    .icon-amber { background: #fef3c7; color: #b45309; }
+    .icon-red { background: #fef2f2; color: #dc2626; }
+    .icon-green { background: #dcfce7; color: #15803d; }
+    h1 { font-size: 2.5rem; color: #1f2937; }
+    h2 { font-size: 1.75rem; color: #1f2937; }
+    h3 { font-size: 1.25rem; color: #374151; margin-bottom: 0.5rem; }
+    .subtitle { color: #6b7280; font-size: 1.1rem; }
+    .content { flex: 1; display: flex; flex-direction: column; gap: 1rem; }
+    .card { background: #f9fafb; border-radius: 0.75rem; padding: 1.25rem; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; flex: 1; }
+    .title-slide { align-items: center; justify-content: center; text-align: center; }
+    .title-slide .icon { width: 80px; height: 80px; font-size: 1.5rem; margin-bottom: 1.5rem; border-radius: 50%; }
+    .title-slide h1 { margin-bottom: 1rem; }
+    .title-slide .subtitle { margin-bottom: 1.5rem; font-size: 1.25rem; }
+    .badge { background: #cffafe; color: #0891b2; padding: 0.5rem 1rem; border-radius: 2rem; font-size: 0.9rem; }
+    .counter { color: #6b7280; font-size: 0.9rem; }
+    pre { background: #1f2937; color: #f9fafb; padding: 1.25rem; border-radius: 0.5rem; font-size: 0.85rem; overflow-x: auto; font-family: 'Monaco', 'Menlo', monospace; line-height: 1.5; }
+    .list-card { border-radius: 0.75rem; padding: 1.5rem; }
+    .list-card-cyan { background: #ecfeff; border: 1px solid #a5f3fc; }
+    .list-card-green { background: #f0fdf4; border: 1px solid #bbf7d0; }
+    .list-card-red { background: #fef2f2; border: 1px solid #fca5a5; }
+    .list-card ul { list-style: none; }
+    .list-card li { padding: 0.4rem 0; display: flex; align-items: flex-start; gap: 0.5rem; color: #374151; font-size: 0.9rem; }
+    .highlight-box { background: #ecfeff; border: 2px solid #67e8f9; border-radius: 0.75rem; padding: 1.5rem; text-align: center; }
+    .highlight-box p { color: #155e75; font-weight: 500; font-size: 1.1rem; }
+    .takeaway { display: flex; align-items: center; gap: 1rem; background: linear-gradient(to right, #ecfeff, transparent); padding: 1rem; border-radius: 0.5rem; }
+    .takeaway-num { background: #0891b2; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0; }
+    .workflow { display: flex; align-items: center; justify-content: center; gap: 0.5rem; flex-wrap: wrap; }
+    .workflow-step { background: white; border: 2px solid #a5f3fc; border-radius: 0.75rem; padding: 0.75rem; width: 150px; text-align: center; }
+    .workflow-num { background: #0891b2; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.5rem; font-weight: bold; font-size: 0.85rem; }
+    .workflow-step h4 { font-size: 0.85rem; color: #1f2937; margin-bottom: 0.25rem; }
+    .workflow-step p { font-size: 0.7rem; color: #6b7280; }
+    .arrow { color: #67e8f9; font-size: 1.25rem; }
+    .notes { display: none; }
+    .notes-panel { display: none; background: #1f2937; color: #f9fafb; padding: 1.5rem 2rem; font-size: 0.95rem; line-height: 1.6; border-top: 3px solid #0891b2; max-height: 200px; overflow-y: auto; }
+    .notes-panel.visible { display: block; }
+    .notes-panel strong { color: #67e8f9; }
+  </style>
+</head>
+<body>
+  <main class="slideshow">
+    <div class="slide-container" role="region" aria-label="Slide presentation">
+
+      <!-- Slide 1: Title -->
+      <section class="slide active title-slide" aria-label="Title slide">
+        <div class="icon icon-cyan" aria-hidden="true">CTX</div>
+        <h1>Part 3: Working Effectively with AI Tools</h1>
+        <p class="subtitle">Context, Specs &amp; the Human in the Loop</p>
+        <span class="badge">20 Minutes</span>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> Now that we know what tools exist, let's talk about how to use them well. Having a powerful tool doesn't help if you don't know how to wield it. The single most important concept in AI-assisted development is CONTEXT. Let's dig in.
+        </div>
+      </section>
+
+      <!-- Slide 2: What is Context -->
+      <section class="slide" aria-label="What is context">
+        <header class="slide-title">
+          <div class="icon icon-cyan" aria-hidden="true">CTX</div>
+          <div><h2>What is "Context"?</h2><p class="subtitle">The #1 Factor in AI Output Quality</p></div>
+        </header>
+        <div class="content">
+          <div class="card" style="background: #ecfeff; border: 1px solid #a5f3fc; margin-bottom: 0.5rem;">
+            <h3 style="color: #0891b2;">Definition</h3>
+            <p style="font-size: 1rem; color: #374151;"><strong>Context</strong> is everything the AI can "see" when generating a response: your code, your prompt, project files, conversation history, and any rules or specifications you've provided.</p>
+          </div>
+          <div class="grid-2">
+            <div>
+              <div class="card" style="margin-bottom: 0.75rem;">
+                <h3 style="font-size: 1rem;">Context Includes:</h3>
+                <ul style="font-size: 0.85rem; color: #374151; list-style: none;">
+                  <li style="padding: 0.3rem 0;">&#8226; Your current codebase files</li>
+                  <li style="padding: 0.3rem 0;">&#8226; The conversation history so far</li>
+                  <li style="padding: 0.3rem 0;">&#8226; Project configuration (package.json, etc.)</li>
+                  <li style="padding: 0.3rem 0;">&#8226; Rules files (CLAUDE.md, .cursorrules)</li>
+                  <li style="padding: 0.3rem 0;">&#8226; Error messages you share</li>
+                  <li style="padding: 0.3rem 0;">&#8226; Screenshots and images</li>
+                </ul>
+              </div>
+            </div>
+            <div>
+              <div class="card" style="margin-bottom: 0.75rem;">
+                <h3 style="font-size: 1rem;">Context Window Limits</h3>
+                <ul style="font-size: 0.85rem; color: #374151; list-style: none;">
+                  <li style="padding: 0.3rem 0;">&#8226; Every AI has a maximum context window</li>
+                  <li style="padding: 0.3rem 0;">&#8226; Ranges from 128K to 1M+ tokens</li>
+                  <li style="padding: 0.3rem 0;">&#8226; More context = better results (usually)</li>
+                  <li style="padding: 0.3rem 0;">&#8226; Too much context = noise and confusion</li>
+                  <li style="padding: 0.3rem 0;">&#8226; Agentic tools manage this automatically</li>
+                  <li style="padding: 0.3rem 0;">&#8226; <strong>Quality &gt; Quantity</strong></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="highlight-box">
+            <p><strong>Better context = better output.</strong> The AI is only as good as what you give it to work with.</p>
+          </div>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> Think of context like a briefing for a new team member. If you say "fix the bug," they have no idea where to start. If you say "there's a null reference error in the UserProfile component on line 47 when the user has no avatar set; here's the error message and the relevant code," they can help immediately. The AI is the same way. Agentic tools like Claude Code automatically read relevant files from your codebase, which is why they produce better results than chat interfaces &mdash; they have more context. But even with agentic tools, you get better results when you provide clear, specific instructions.
+        </div>
+      </section>
+
+      <!-- Slide 3: Managing Context -->
+      <section class="slide" aria-label="Managing context">
+        <header class="slide-title">
+          <div class="icon icon-teal" aria-hidden="true">FILE</div>
+          <div><h2>Managing Context with Project Files</h2><p class="subtitle">Tell the AI About Your Project Once</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <div class="card" style="background: #f0fdfa; border: 1px solid #99f6e4; margin-bottom: 0.75rem;">
+                <h3 style="color: #0d9488; font-size: 1rem;">CLAUDE.md (Claude Code)</h3>
+                <pre style="font-size: 0.75rem;">
+<span style="color:#6ee7b7"># Project: Student Portal</span>
+<span style="color:#6ee7b7"># Stack: React 19 + TypeScript</span>
+<span style="color:#6ee7b7"># Build: Vite</span>
+
+<span style="color:#9ca3af">## Conventions</span>
+- Use functional components
+- Use Tailwind CSS for styling
+- Follow existing naming patterns
+- Write tests for new features
+- Use React Router for navigation
+
+<span style="color:#9ca3af">## Important</span>
+- API base URL: /api/v2
+- Auth: JWT stored in httpOnly cookie
+- Never use localStorage for tokens</pre>
+              </div>
+            </div>
+            <div>
+              <div class="card" style="background: #eff6ff; border: 1px solid #bfdbfe; margin-bottom: 0.75rem;">
+                <h3 style="color: #1d4ed8; font-size: 1rem;">.cursorrules (Cursor)</h3>
+                <pre style="font-size: 0.75rem;">
+<span style="color:#93c5fd">You are an expert in React</span>
+<span style="color:#93c5fd">and TypeScript.</span>
+
+<span style="color:#9ca3af">Key conventions:</span>
+- Prefer named exports
+- Use CSS modules, not inline styles
+- Components in PascalCase
+- Hooks in camelCase with "use" prefix
+- Always handle loading and error states
+- Use Zod for runtime validation
+
+<span style="color:#9ca3af">Testing:</span>
+- Vitest + React Testing Library
+- Test behavior, not implementation</pre>
+              </div>
+            </div>
+          </div>
+          <div class="highlight-box">
+            <p>Write it once, benefit every time. These files are <strong>persistent context</strong> &mdash; the AI reads them automatically on every interaction.</p>
+          </div>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> This is one of the most practical tips in the whole lecture. Every project should have one of these files. Claude Code reads CLAUDE.md automatically. Cursor reads .cursorrules. Codex reads AGENTS.md. The point is the same: you're telling the AI about your project's conventions, tech stack, and constraints ONCE, and it applies that knowledge to every interaction. Without these files, you'd have to repeat "use Tailwind, not CSS modules" or "we use React Router, not Next.js routing" every single time. Show the students: it takes 5 minutes to create, saves hours over the life of a project.
+        </div>
+      </section>
+
+      <!-- Slide 4: The AI Toolbox -->
+      <section class="slide" aria-label="AI toolbox">
+        <header class="slide-title">
+          <div class="icon icon-purple" aria-hidden="true">TOOL</div>
+          <div><h2>The AI Toolbox</h2><p class="subtitle">Slash Commands, Skills, MCP &amp; Sub-Agents</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div>
+              <div class="card" style="background: #f3e8ff; border: 1px solid #c4b5fd; margin-bottom: 0.75rem;">
+                <h3 style="color: #7c3aed; font-size: 1rem;">Slash Commands</h3>
+                <p style="font-size: 0.85rem; color: #374151; margin-bottom: 0.5rem;">Quick actions you invoke by typing <code style="background:#1f2937;color:#c4b5fd;padding:0.1rem 0.3rem;border-radius:0.2rem;font-size:0.8rem;">/</code> in the AI tool.</p>
+                <ul style="font-size: 0.8rem; color: #374151; list-style: none;">
+                  <li style="padding: 0.2rem 0;"><code style="background:#1f2937;color:#a78bfa;padding:0.1rem 0.3rem;border-radius:0.2rem;font-size:0.75rem;">/init</code> &mdash; Generate a CLAUDE.md for the project</li>
+                  <li style="padding: 0.2rem 0;"><code style="background:#1f2937;color:#a78bfa;padding:0.1rem 0.3rem;border-radius:0.2rem;font-size:0.75rem;">/clear</code> &mdash; Reset conversation context</li>
+                  <li style="padding: 0.2rem 0;"><code style="background:#1f2937;color:#a78bfa;padding:0.1rem 0.3rem;border-radius:0.2rem;font-size:0.75rem;">/compact</code> &mdash; Summarize &amp; compress context</li>
+                  <li style="padding: 0.2rem 0;"><code style="background:#1f2937;color:#a78bfa;padding:0.1rem 0.3rem;border-radius:0.2rem;font-size:0.75rem;">/review</code> &mdash; Review code changes</li>
+                </ul>
+                <p style="font-size: 0.75rem; color: #6b7280; margin-top: 0.5rem;">Think of these as keyboard shortcuts for common AI workflows.</p>
+              </div>
+            </div>
+            <div>
+              <div class="card" style="background: #ecfdf5; border: 1px solid #6ee7b7; margin-bottom: 0.75rem;">
+                <h3 style="color: #059669; font-size: 1rem;">Skills</h3>
+                <p style="font-size: 0.85rem; color: #374151; margin-bottom: 0.5rem;">Pre-built, specialized prompts that package expertise into a single command.</p>
+                <ul style="font-size: 0.8rem; color: #374151; list-style: none;">
+                  <li style="padding: 0.2rem 0;">&#8226; <strong>Triggered via slash commands</strong> (e.g., <code style="background:#1f2937;color:#6ee7b7;padding:0.1rem 0.3rem;border-radius:0.2rem;font-size:0.75rem;">/commit</code>)</li>
+                  <li style="padding: 0.2rem 0;">&#8226; Inject a <strong>detailed system prompt</strong> with best practices</li>
+                  <li style="padding: 0.2rem 0;">&#8226; Ensure <strong>consistency</strong> &mdash; same quality every time</li>
+                  <li style="padding: 0.2rem 0;">&#8226; Can be <strong>custom-built</strong> for your team's workflows</li>
+                </ul>
+                <p style="font-size: 0.75rem; color: #6b7280; margin-top: 0.5rem;">A skill = a reusable prompt template with tool access baked in.</p>
+              </div>
+            </div>
+          </div>
+          <div class="grid-2" style="flex: 0;">
+            <div class="card" style="background: #fff7ed; border: 1px solid #fed7aa;">
+              <h3 style="color: #c2410c; font-size: 1rem;">MCP (Model Context Protocol)</h3>
+              <p style="font-size: 0.8rem; color: #374151;">An open standard that lets AI tools <strong>connect to external services</strong>: databases, APIs, GitHub, Jira, Figma, your own tools. Like USB for AI &mdash; plug in any data source and the AI can read from it.</p>
+            </div>
+            <div class="card" style="background: #ecfeff; border: 1px solid #a5f3fc;">
+              <h3 style="color: #0891b2; font-size: 1rem;">Sub-Agents</h3>
+              <p style="font-size: 0.8rem; color: #374151;">The AI spawns <strong>child agents</strong> to handle parallel tasks. The main agent coordinates while sub-agents research, explore code, or execute independently &mdash; then report back. Divide and conquer.</p>
+            </div>
+          </div>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> These four primitives are the building blocks of modern AI development tools. Slash commands are the simplest &mdash; quick actions like /init to bootstrap a project or /clear to reset context when you're starting a new task. Skills are the next level: they're specialized prompts that encode expertise. When you type /commit, you're not just asking the AI to commit; you're invoking a skill that knows how to write good commit messages, check for sensitive files, and follow your project's conventions. MCP is the most powerful concept here: it's how AI tools connect to the outside world. Without MCP, the AI can only see your files. With MCP, it can query your database, check your Jira board, pull designs from Figma. It's an open protocol, meaning any tool can implement it. Sub-agents are about parallelism: instead of doing everything sequentially, the AI can spin up workers. "You go research the API docs, you go find similar patterns in our codebase, you go check the test coverage" &mdash; all at the same time.
+        </div>
+      </section>
+
+      <!-- Slide 5: How They Work Together -->
+      <section class="slide" aria-label="How they work together">
+        <header class="slide-title">
+          <div class="icon icon-cyan" aria-hidden="true">SYS</div>
+          <div><h2>How They Work Together</h2><p class="subtitle">Context Flow &amp; the Right Tool for the Job</p></div>
+        </header>
+        <div class="content">
+          <div class="card" style="background: #ecfeff; border: 1px solid #a5f3fc; margin-bottom: 0.5rem; padding: 1rem;">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 0.25rem; flex-wrap: wrap; font-size: 0.85rem;">
+              <span style="background:#f3e8ff;color:#7c3aed;padding:0.4rem 0.75rem;border-radius:0.5rem;font-weight:600;">CLAUDE.md</span>
+              <span style="color:#67e8f9;">+</span>
+              <span style="background:#fff7ed;color:#c2410c;padding:0.4rem 0.75rem;border-radius:0.5rem;font-weight:600;">MCP Servers</span>
+              <span style="color:#67e8f9;">+</span>
+              <span style="background:#ecfdf5;color:#059669;padding:0.4rem 0.75rem;border-radius:0.5rem;font-weight:600;">Your Prompt</span>
+              <span style="color:#67e8f9;">+</span>
+              <span style="background:#fef3c7;color:#b45309;padding:0.4rem 0.75rem;border-radius:0.5rem;font-weight:600;">Codebase Files</span>
+              <span style="color:#67e8f9;">&#8594;</span>
+              <span style="background:#1f2937;color:#f9fafb;padding:0.4rem 0.75rem;border-radius:0.5rem;font-weight:600;">Context Window</span>
+            </div>
+          </div>
+          <div class="grid-2">
+            <div>
+              <div class="card" style="margin-bottom: 0.75rem;">
+                <h3 style="font-size: 0.95rem;">How Each Affects Context</h3>
+                <ul style="font-size: 0.8rem; color: #374151; list-style: none;">
+                  <li style="padding: 0.35rem 0;"><span style="background:#f3e8ff;color:#7c3aed;padding:0.1rem 0.4rem;border-radius:0.2rem;font-size:0.75rem;font-weight:600;">Slash Cmds</span> &mdash; <strong>Manage</strong> context (<code style="font-size:0.75rem;">/clear</code> resets, <code style="font-size:0.75rem;">/compact</code> compresses)</li>
+                  <li style="padding: 0.35rem 0;"><span style="background:#ecfdf5;color:#059669;padding:0.1rem 0.4rem;border-radius:0.2rem;font-size:0.75rem;font-weight:600;">Skills</span> &mdash; <strong>Inject</strong> context (add specialized prompts and instructions)</li>
+                  <li style="padding: 0.35rem 0;"><span style="background:#fff7ed;color:#c2410c;padding:0.1rem 0.4rem;border-radius:0.2rem;font-size:0.75rem;font-weight:600;">MCP</span> &mdash; <strong>Expand</strong> context (connect to external data sources)</li>
+                  <li style="padding: 0.35rem 0;"><span style="background:#ecfeff;color:#0891b2;padding:0.1rem 0.4rem;border-radius:0.2rem;font-size:0.75rem;font-weight:600;">Sub-Agents</span> &mdash; <strong>Protect</strong> context (offload work so the main window stays focused)</li>
+                </ul>
+              </div>
+              <div class="card" style="background: #fef3c7; border: 1px solid #fde68a;">
+                <h3 style="color: #b45309; font-size: 0.95rem;">Why Context Management Matters</h3>
+                <p style="font-size: 0.8rem; color: #374151;">The context window is finite. Fill it with noise and quality drops. Sub-agents do heavy exploration <strong>in their own window</strong> and return only the answer, keeping your main context clean.</p>
+              </div>
+            </div>
+            <div>
+              <div class="card" style="margin-bottom: 0.75rem;">
+                <h3 style="font-size: 0.95rem;">When to Use Each</h3>
+                <ul style="font-size: 0.8rem; color: #374151; list-style: none;">
+                  <li style="padding: 0.35rem 0;"><span style="font-weight:600;">Slash Commands</span> &mdash; Quick actions. Starting a task, committing, reviewing, clearing stale context.</li>
+                  <li style="padding: 0.35rem 0;"><span style="font-weight:600;">Skills</span> &mdash; Repeatable workflows. Standardizing how your team writes commits, reviews PRs, or grades assignments.</li>
+                  <li style="padding: 0.35rem 0;"><span style="font-weight:600;">MCP</span> &mdash; When the AI needs data it can't get from your files: issue trackers, design tools, databases, documentation sites.</li>
+                  <li style="padding: 0.35rem 0;"><span style="font-weight:600;">Sub-Agents</span> &mdash; Complex tasks with independent parts. "Research this API, refactor that module, and write tests" &mdash; all in parallel.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> Draw the analogy to a professional kitchen. Slash commands are like the quick-access tools on your belt &mdash; knife, tongs, thermometer. Skills are your recipe cards &mdash; proven procedures that produce consistent results. MCP is your supply chain &mdash; connections to the pantry, the fridge, the delivery service. Sub-agents are your sous chefs &mdash; you delegate prep work so you can focus on the main dish. The context window diagram at the top is key: everything flows into one shared space. If you fill it with irrelevant file contents from a broad search, the AI loses focus. That's why sub-agents are so valuable &mdash; they do the messy exploration in their OWN context and report back a clean summary. Practical tip: if the AI starts giving worse answers after a long conversation, use /compact or /clear to reset. Context pollution is real.
+        </div>
+      </section>
+
+      <!-- Slide 6: The Spec-Driven Process -->
+      <section class="slide" aria-label="Spec-driven process">
+        <header class="slide-title">
+          <div class="icon icon-blue" aria-hidden="true">SPEC</div>
+          <div><h2>The Spec-Driven Process</h2><p class="subtitle">Think, Then Build</p></div>
+        </header>
+        <div class="content">
+          <div class="workflow">
+            <div class="workflow-step">
+              <div class="workflow-num">1</div>
+              <h4>Define the Problem</h4>
+              <p>What user problem are you solving?</p>
+            </div>
+            <span class="arrow">&#8594;</span>
+            <div class="workflow-step">
+              <div class="workflow-num">2</div>
+              <h4>Write the Spec</h4>
+              <p>Requirements, constraints, edge cases</p>
+            </div>
+            <span class="arrow">&#8594;</span>
+            <div class="workflow-step">
+              <div class="workflow-num">3</div>
+              <h4>Review the Plan</h4>
+              <p>AI generates architecture &amp; task list</p>
+            </div>
+            <span class="arrow">&#8594;</span>
+            <div class="workflow-step">
+              <div class="workflow-num">4</div>
+              <h4>Implement</h4>
+              <p>AI writes code following the spec</p>
+            </div>
+            <span class="arrow">&#8594;</span>
+            <div class="workflow-step">
+              <div class="workflow-num">5</div>
+              <h4>Validate</h4>
+              <p>Review, test, iterate</p>
+            </div>
+          </div>
+          <div class="grid-2" style="margin-top: 1rem;">
+            <div class="card" style="background: #fef2f2; border: 1px solid #fca5a5;">
+              <h3 style="color: #dc2626; font-size: 0.95rem;">Without a Spec</h3>
+              <p style="font-size: 0.85rem; color: #374151;">"Build me a todo app"</p>
+              <p style="font-size: 0.8rem; color: #6b7280; margin-top: 0.25rem;">Result: generic, missing features, wrong assumptions, needs 5 rounds of "no, I meant..."</p>
+            </div>
+            <div class="card" style="background: #dcfce7; border: 1px solid #86efac;">
+              <h3 style="color: #15803d; font-size: 0.95rem;">With a Spec</h3>
+              <p style="font-size: 0.85rem; color: #374151;">"Build a todo app with: drag-and-drop reorder, due dates with overdue highlighting, localStorage persistence, dark mode toggle, keyboard shortcuts (Enter to add, Delete to remove), and a 'clear completed' button."</p>
+              <p style="font-size: 0.8rem; color: #6b7280; margin-top: 0.25rem;">Result: exactly what you asked for, first try.</p>
+            </div>
+          </div>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> The spec-driven process is how professional software teams have always worked &mdash; AI tools just make it even more important. When you give vague instructions, you get vague results. When you give precise specs, you get precise implementations. Walk through the example: "Build me a todo app" could mean a hundred different things. The detailed spec leaves nothing to interpretation. This doesn't mean you need a 50-page document &mdash; even a bullet list of 5-10 requirements dramatically improves output quality. The AI can also help you WRITE the spec: "Help me think through what a todo app needs" is a great first prompt.
+        </div>
+      </section>
+
+      <!-- Slide 5: Writing Precise Specifications -->
+      <section class="slide" aria-label="Writing specs">
+        <header class="slide-title">
+          <div class="icon icon-emerald" aria-hidden="true">LANG</div>
+          <div><h2>Writing Precise Specifications</h2><p class="subtitle">Human Language as a Programming Language</p></div>
+        </header>
+        <div class="content">
+          <div class="card" style="background: #ecfdf5; border: 2px solid #6ee7b7; margin-bottom: 0.5rem;">
+            <p style="font-size: 1rem; color: #065f46; font-weight: 500; text-align: center;">The better you write, the better the AI codes. <strong>Precision in language = precision in output.</strong></p>
+          </div>
+          <div class="grid-2">
+            <div>
+              <div class="list-card list-card-cyan">
+                <h3 style="color: #0891b2;">A Good Spec Includes:</h3>
+                <ul>
+                  <li><strong>What</strong> &mdash; The feature or behavior you want</li>
+                  <li><strong>Who</strong> &mdash; The user and their goal</li>
+                  <li><strong>Constraints</strong> &mdash; Tech stack, patterns, limits</li>
+                  <li><strong>Edge cases</strong> &mdash; What happens when things go wrong?</li>
+                  <li><strong>Examples</strong> &mdash; Sample inputs and expected outputs</li>
+                  <li><strong>Non-goals</strong> &mdash; What you explicitly don't want</li>
+                </ul>
+              </div>
+            </div>
+            <div>
+              <div class="list-card list-card-green">
+                <h3 style="color: #15803d;">Precision Techniques:</h3>
+                <ul>
+                  <li><strong>Be specific:</strong> "3 columns" not "a few columns"</li>
+                  <li><strong>Give examples:</strong> "Like GitHub's issue list"</li>
+                  <li><strong>State constraints:</strong> "No external libraries"</li>
+                  <li><strong>Define boundaries:</strong> "Max 100 items in the list"</li>
+                  <li><strong>Specify behavior:</strong> "On error, show a toast notification that auto-dismisses after 3 seconds"</li>
+                  <li><strong>Use non-goals:</strong> "Don't add authentication"</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> This is a skill that transcends AI tools. Writing precise specifications is the same skill as writing good user stories, bug reports, or technical documents. It's a communication skill. Emphasize that "non-goals" are incredibly valuable &mdash; they prevent the AI from over-engineering. If you say "build a search feature" without non-goals, the AI might add full-text search with fuzzy matching and autocomplete when all you needed was a simple filter. Also: examples are powerful. Saying "the table should look like GitHub's issues list" gives the AI a visual reference it can reason about.
+        </div>
+      </section>
+
+      <!-- Slide 6: Common Anti-Patterns -->
+      <section class="slide" aria-label="Anti-patterns">
+        <header class="slide-title">
+          <div class="icon icon-red" aria-hidden="true">STOP</div>
+          <div><h2>Common Anti-Patterns</h2><p class="subtitle">What NOT to Do</p></div>
+        </header>
+        <div class="content">
+          <div class="grid-2">
+            <div class="list-card list-card-red">
+              <h3 style="color: #dc2626;">Don't</h3>
+              <ul>
+                <li><strong>Blindly accept output</strong> &mdash; Always read what was generated. AI makes subtle mistakes (wrong API endpoints, missing error handling, security flaws).</li>
+                <li><strong>Use AI for what you don't understand</strong> &mdash; If you can't verify the output, you can't catch the bugs. Learn the fundamentals first.</li>
+                <li><strong>Skip testing</strong> &mdash; AI-generated code needs the same testing as human-written code. Maybe more.</li>
+                <li><strong>Ignore the conversation</strong> &mdash; If the AI asks clarifying questions, answer them. It's trying to give you better context.</li>
+              </ul>
+            </div>
+            <div class="list-card list-card-green">
+              <h3 style="color: #15803d;">Do</h3>
+              <ul>
+                <li><strong>Start with a plan</strong> &mdash; Use "plan mode" or ask the AI to outline its approach before coding.</li>
+                <li><strong>Iterate in small steps</strong> &mdash; Build feature by feature, not everything at once. Verify each step.</li>
+                <li><strong>Provide feedback</strong> &mdash; "That's close, but change X" is more effective than starting over.</li>
+                <li><strong>Use version control</strong> &mdash; Commit working states so you can roll back if the AI breaks something.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="highlight-box">
+            <p>Remember from Week 1: <strong>"If you can't explain what the AI wrote, you haven't finished the task."</strong></p>
+          </div>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> Call back to Week 1's "audit rule." These anti-patterns are extremely common, especially among developers new to AI tools. The most dangerous one is "use AI for what you don't understand." If someone asks an AI to implement authentication and doesn't understand JWT tokens or session management, they won't catch a critical security flaw. That's how vulnerabilities get shipped. The "iterate in small steps" principle is crucial: instead of "build me an entire e-commerce site," start with "create the product listing page" and verify it works before moving on.
+        </div>
+      </section>
+
+      <!-- Slide 7: The Review Checklist -->
+      <section class="slide" aria-label="Review checklist">
+        <header class="slide-title">
+          <div class="icon icon-green" aria-hidden="true">OK?</div>
+          <div><h2>The AI Output Review Checklist</h2><p class="subtitle">Before You Accept, Verify</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="grid-2">
+            <div>
+              <div class="card" style="margin-bottom: 0.75rem; background: #f0fdf4; border: 1px solid #bbf7d0;">
+                <h3 style="color: #15803d; font-size: 1rem;">Correctness</h3>
+                <ul style="font-size: 0.85rem; color: #374151; list-style: none;">
+                  <li style="padding: 0.3rem 0;">&#9744; Does it do what I asked?</li>
+                  <li style="padding: 0.3rem 0;">&#9744; Does it handle edge cases?</li>
+                  <li style="padding: 0.3rem 0;">&#9744; Does it match our existing patterns?</li>
+                  <li style="padding: 0.3rem 0;">&#9744; Did it introduce any regressions?</li>
+                </ul>
+              </div>
+              <div class="card" style="background: #ecfeff; border: 1px solid #a5f3fc;">
+                <h3 style="color: #0891b2; font-size: 1rem;">Quality</h3>
+                <ul style="font-size: 0.85rem; color: #374151; list-style: none;">
+                  <li style="padding: 0.3rem 0;">&#9744; Is the code readable?</li>
+                  <li style="padding: 0.3rem 0;">&#9744; Is it over-engineered?</li>
+                  <li style="padding: 0.3rem 0;">&#9744; Are there unnecessary dependencies?</li>
+                  <li style="padding: 0.3rem 0;">&#9744; Would I approve this in a code review?</li>
+                </ul>
+              </div>
+            </div>
+            <div>
+              <div class="card" style="margin-bottom: 0.75rem; background: #fef2f2; border: 1px solid #fca5a5;">
+                <h3 style="color: #dc2626; font-size: 1rem;">Security (Week 9 Review!)</h3>
+                <ul style="font-size: 0.85rem; color: #374151; list-style: none;">
+                  <li style="padding: 0.3rem 0;">&#9744; Any XSS vulnerabilities?</li>
+                  <li style="padding: 0.3rem 0;">&#9744; Is user input sanitized?</li>
+                  <li style="padding: 0.3rem 0;">&#9744; Are secrets kept server-side?</li>
+                  <li style="padding: 0.3rem 0;">&#9744; Auth tokens stored securely?</li>
+                </ul>
+              </div>
+              <div class="card" style="background: #fef3c7; border: 1px solid #fde68a;">
+                <h3 style="color: #b45309; font-size: 1rem;">Understanding</h3>
+                <ul style="font-size: 0.85rem; color: #374151; list-style: none;">
+                  <li style="padding: 0.3rem 0;">&#9744; Can I explain every line?</li>
+                  <li style="padding: 0.3rem 0;">&#9744; Do I understand WHY this approach?</li>
+                  <li style="padding: 0.3rem 0;">&#9744; Could I modify it if requirements change?</li>
+                  <li style="padding: 0.3rem 0;">&#9744; Have I learned something new?</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> This checklist ties together everything from the course. Security from Week 9. Code quality from throughout the course. Understanding from the audit rule in Week 1. The "understanding" section is the most important for students: if the AI teaches you something new, great! But if you accept code you don't understand, you're accumulating "understanding debt" that will bite you later. This checklist should become second nature. Print it out, stick it next to your monitor.
+        </div>
+      </section>
+
+      <!-- Slide 8: Summary -->
+      <section class="slide" aria-label="Part 3 summary">
+        <header class="slide-title">
+          <div class="icon icon-cyan" aria-hidden="true">CTX</div>
+          <div><h2>Part 3 Complete!</h2><p class="subtitle">Working Effectively with AI Tools</p></div>
+        </header>
+        <div class="content" style="justify-content: center;">
+          <div class="takeaway"><div class="takeaway-num">1</div><p><strong>Context is everything</strong> &mdash; better context in, better code out</p></div>
+          <div class="takeaway"><div class="takeaway-num">2</div><p>Use <strong>project files</strong> (CLAUDE.md, .cursorrules) for persistent context</p></div>
+          <div class="takeaway"><div class="takeaway-num">3</div><p><strong>Slash commands, skills, MCP, sub-agents</strong> &mdash; know your toolbox and how each affects context</p></div>
+          <div class="takeaway"><div class="takeaway-num">4</div><p>Write <strong>precise specs</strong> &mdash; what, who, constraints, edge cases, examples, non-goals</p></div>
+          <div class="takeaway"><div class="takeaway-num">5</div><p><strong>Iterate in small steps</strong>, verify each one, and <strong>review for correctness, security, and understanding</strong></p></div>
+          <p style="text-align: center; color: #0891b2; font-size: 1.25rem; margin-top: 1rem; font-weight: 500;">Next up: Part 4 &mdash; Future-Proofing Your Career &#8594;</p>
+        </div>
+        <div class="notes">
+          <strong>Speaker Notes:</strong> Quick recap. The practical takeaways are: (1) Create a CLAUDE.md or .cursorrules file for every project. (2) Write specs before asking AI to code. (3) Use the review checklist. These three habits will make students dramatically more effective with AI tools compared to their peers who just type "build me X" and accept whatever comes back.
+        </div>
+      </section>
+
+    </div>
+
+    <div class="notes-panel" id="notesPanel"></div>
+
+    <nav class="controls" aria-label="Slide navigation">
+      <button class="btn btn-prev" onclick="prevSlide()" aria-label="Previous slide">&#8592; Previous</button>
+      <div class="dots" id="dots" role="tablist" aria-label="Slide indicators"></div>
+      <div style="display:flex;align-items:center;gap:1rem">
+        <span class="counter" id="counter" aria-live="polite">1 / 10</span>
+        <button class="btn btn-next" onclick="nextSlide()" aria-label="Next slide">Next &#8594;</button>
+      </div>
+    </nav>
+  </main>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const dotsContainer = document.getElementById('dots');
+    const counter = document.getElementById('counter');
+    const notesPanel = document.getElementById('notesPanel');
+    let current = 0;
+    let notesVisible = false;
+    slides.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.className = 'dot' + (i === 0 ? ' active' : '');
+      dot.onclick = () => goToSlide(i);
+      dot.setAttribute('aria-label', 'Go to slide ' + (i + 1));
+      dotsContainer.appendChild(dot);
+    });
+    function updateNotes() {
+      const currentSlide = slides[current];
+      const notes = currentSlide.querySelector('.notes');
+      if (notes) {
+        notesPanel.innerHTML = notes.innerHTML;
+      } else {
+        notesPanel.innerHTML = '<strong>No notes for this slide.</strong>';
+      }
+    }
+    function updateSlide() {
+      slides.forEach((s, i) => s.classList.toggle('active', i === current));
+      document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
+      counter.textContent = `${current + 1} / ${slides.length}`;
+      document.querySelector('.btn-prev').disabled = current === 0;
+      document.querySelector('.btn-next').disabled = current === slides.length - 1;
+      if (notesVisible) updateNotes();
+    }
+    function nextSlide() { if (current < slides.length - 1) { current++; updateSlide(); } }
+    function prevSlide() { if (current > 0) { current--; updateSlide(); } }
+    function goToSlide(i) { current = i; updateSlide(); }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+      if (e.key === 'ArrowLeft') prevSlide();
+      if (e.key === 'n' || e.key === 'N') {
+        notesVisible = !notesVisible;
+        notesPanel.classList.toggle('visible', notesVisible);
+        if (notesVisible) updateNotes();
+      }
+    });
+  </script>
+</body>
+</html>

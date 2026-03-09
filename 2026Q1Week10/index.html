@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Client-Side Web Programming - Lesson 10</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f3f4f6;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+    .container {
+      background: white;
+      border-radius: 1rem;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+      max-width: 800px;
+      width: 100%;
+      padding: 3rem;
+    }
+    h1 {
+      font-size: 2.5rem;
+      color: #1f2937;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+    .subtitle {
+      color: #6b7280;
+      text-align: center;
+      margin-bottom: 3rem;
+      font-size: 1.1rem;
+    }
+    .parts-grid {
+      display: grid;
+      gap: 1.5rem;
+    }
+    .part-link {
+      display: block;
+      padding: 1.5rem;
+      background: #f9fafb;
+      border: 2px solid #e5e7eb;
+      border-radius: 0.75rem;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+    .part-link:hover {
+      border-color: #10b981;
+      background: #ecfdf5;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .part-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 0.5rem;
+    }
+    .part-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      font-weight: bold;
+    }
+    .icon-emerald { background: #d1fae5; color: #059669; }
+    .icon-teal { background: #ccfbf1; color: #0d9488; }
+    .icon-cyan { background: #cffafe; color: #0891b2; }
+    .icon-sky { background: #e0f2fe; color: #0284c7; }
+    .icon-violet { background: #ede9fe; color: #7c3aed; }
+    .part-title {
+      font-size: 1.25rem;
+      color: #1f2937;
+      font-weight: 600;
+    }
+    .part-description {
+      color: #6b7280;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+    .duration {
+      display: inline-block;
+      background: #e5e7eb;
+      color: #4b5563;
+      padding: 0.25rem 0.75rem;
+      border-radius: 1rem;
+      font-size: 0.85rem;
+      margin-top: 0.75rem;
+    }
+    footer {
+      margin-top: 3rem;
+      padding-top: 2rem;
+      border-top: 1px solid #e5e7eb;
+      text-align: center;
+      color: #6b7280;
+      font-size: 0.9rem;
+    }
+    @media (max-width: 640px) {
+      body { padding: 1rem; }
+      .container { padding: 2rem; }
+      h1 { font-size: 2rem; }
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <header>
+      <h1>Client-Side Web Programming</h1>
+      <p class="subtitle">Lesson 10: AI-Assisted Software Development</p>
+    </header>
+
+    <nav class="parts-grid">
+      <a href="part1-slides.html" class="part-link" aria-label="Part 1: The Evolution of Programming">
+        <article class="part-header">
+          <div class="part-icon icon-emerald" aria-hidden="true">EVO</div>
+          <h2 class="part-title">Part 1: The Evolution of Programming</h2>
+        </article>
+        <p class="part-description">From punch cards to AI: how each generation of programming abstracted away the "how" and moved us closer to solving human problems.</p>
+        <time class="duration">15 minutes</time>
+      </a>
+
+      <a href="part2-slides.html" class="part-link" aria-label="Part 2: The AI Development Tool Landscape">
+        <article class="part-header">
+          <div class="part-icon icon-teal" aria-hidden="true">TOOL</div>
+          <h2 class="part-title">Part 2: The AI Development Tool Landscape</h2>
+        </article>
+        <p class="part-description">From chat interfaces to autonomous agents: Claude Code, Codex CLI, Gemini CLI, Cursor, Kiro, Antigravity, and the rise of "vibe coding."</p>
+        <time class="duration">20 minutes</time>
+      </a>
+
+      <a href="part3-slides.html" class="part-link" aria-label="Part 3: Working Effectively with AI Tools">
+        <article class="part-header">
+          <div class="part-icon icon-cyan" aria-hidden="true">CTX</div>
+          <h2 class="part-title">Part 3: Working Effectively with AI Tools</h2>
+        </article>
+        <p class="part-description">Context management, the spec-driven process, writing precise specifications in human language, and reviewing AI output critically.</p>
+        <time class="duration">20 minutes</time>
+      </a>
+
+      <a href="part4-slides.html" class="part-link" aria-label="Part 4: Future-Proofing Your Career">
+        <article class="part-header">
+          <div class="part-icon icon-sky" aria-hidden="true">NEXT</div>
+          <h2 class="part-title">Part 4: Future-Proofing Your Career</h2>
+        </article>
+        <p class="part-description">Curiosity as a superpower, understanding fundamentals, clear communication, and learning to identify the real problems worth solving.</p>
+        <time class="duration">15 minutes</time>
+      </a>
+
+      <a href="part5-slides.html" class="part-link" aria-label="Part 5: Live Demo &amp; Hands-On">
+        <article class="part-header">
+          <div class="part-icon icon-violet" aria-hidden="true">DEMO</div>
+          <h2 class="part-title">Part 5: Live Demo &amp; Hands-On</h2>
+        </article>
+        <p class="part-description">Watch AI tools in action: building a feature with Claude Code and exploring Google Antigravity. Tips for getting started on your own.</p>
+        <time class="duration">20 minutes</time>
+      </a>
+    </nav>
+  </main>
+
+  <footer>
+    <p>Use arrow keys or click to navigate within each presentation &mdash; Press <strong>N</strong> to toggle speaker notes</p>
+  </footer>
+</body>
+</html>
